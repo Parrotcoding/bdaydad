@@ -2,152 +2,322 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Hidden Letter Game - Reveal the Secret Message</title>
+  <title>Platformer Letter Hunt Game</title>
   <style>
-    /* Reset some basic defaults */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
+    /* Remove default spacing and prevent scrollbars */
     body {
-      font-family: Arial, sans-serif;
+      margin: 0;
       overflow: hidden;
+      background: #87CEEB; /* Sky blue */
     }
-    
-    /* The game container covers most of the viewport.
-       Replace the background URL with your own image if desired. */
-    #game-container {
-      position: relative;
-      width: 100vw;
-      height: 90vh;
-      background: url('https://source.unsplash.com/1600x900/?nature,landscape') no-repeat center center;
-      background-size: cover;
-    }
-    
-    /* Style for each hidden letter */
-    .letter {
-      position: absolute;
-      font-size: 28px;
-      font-weight: bold;
-      color: #fff;
-      cursor: pointer;
-      transition: transform 0.3s, opacity 0.3s;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-      user-select: none;
-    }
-    
-    .letter:hover {
-      transform: scale(1.2);
-    }
-    
-    /* The message container fixed at the bottom displays the target slots */
-    #message-container {
-      width: 100vw;
-      height: 10vh;
-      background-color: #222;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      letter-spacing: 6px;
-    }
-    
-    /* Each slot where a letter will appear */
-    .message-slot {
-      width: 40px;
-      height: 40px;
-      border-bottom: 2px solid #fff;
-      margin: 0 5px;
-      font-size: 28px;
-      font-weight: bold;
-      color: #fff;
-      text-align: center;
-      line-height: 40px;
+    canvas {
+      display: block;
+      background: #87CEEB;
     }
   </style>
 </head>
 <body>
-  <!-- Game container with the background image -->
-  <div id="game-container"></div>
-  <!-- Message container that will show the secret message as letters are found -->
-  <div id="message-container"></div>
-  
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
   <script>
-    /* 
-      We want the secret message “YOU’RE THE BEST DAD EVER”.
-      The supplied letters (in order) are:
-      Y, O, U, R, E, T, H, E, B, E, S, T, D, A, D, E, V, E, R.
-      
-      Each letter is assigned a data-index for its proper placement.
-    */
-    const secretLetters = [
-      { letter: 'Y', index: 0 },
-      { letter: 'O', index: 1 },
-      { letter: 'U', index: 2 },
-      { letter: 'R', index: 3 },
-      { letter: 'E', index: 4 },
-      { letter: 'T', index: 5 },
-      { letter: 'H', index: 6 },
-      { letter: 'E', index: 7 },
-      { letter: 'B', index: 8 },
-      { letter: 'E', index: 9 },
-      { letter: 'S', index: 10 },
-      { letter: 'T', index: 11 },
-      { letter: 'D', index: 12 },
-      { letter: 'A', index: 13 },
-      { letter: 'D', index: 14 },
-      { letter: 'E', index: 15 },
-      { letter: 'V', index: 16 },
-      { letter: 'E', index: 17 },
-      { letter: 'R', index: 18 }
+    // ---------------------------
+    // SETUP & GLOBAL VARIABLES
+    // ---------------------------
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Level dimensions
+    const levelWidth = 4000;  // The level spans 4000 pixels wide
+    const levelHeight = 600;  // Same height as canvas
+
+    // Camera offset (for side‑scrolling)
+    let camX = 0;
+
+    // ---------------------------
+    // PLAYER DEFINITION & CONTROLS
+    // ---------------------------
+    const player = {
+      x: 100,
+      y: 450,
+      width: 30,
+      height: 50,
+      vx: 0,
+      vy: 0,
+      onGround: false
+    };
+
+    const keys = {};
+    document.addEventListener('keydown', e => { keys[e.key] = true; });
+    document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+    // ---------------------------
+    // PHYSICS PARAMETERS
+    // ---------------------------
+    const gravity = 0.5;
+    const moveSpeed = 3;
+    const jumpForce = -10;
+
+    // ---------------------------
+    // LEVEL DATA
+    // ---------------------------
+    // Platforms (collidable surfaces)
+    const platforms = [
+      { x: 0, y: 500, width: levelWidth, height: 100 },
+      { x: 1200, y: 400, width: 200, height: 20 } // A floating platform for variety
     ];
-    
-    // Build the bottom message area with blank slots
-    const messageContainer = document.getElementById('message-container');
-    secretLetters.forEach(letterObj => {
-      const slot = document.createElement('div');
-      slot.classList.add('message-slot');
-      // Using data-index to link this slot with the correct hidden letter.
-      slot.dataset.index = letterObj.index;
-      messageContainer.appendChild(slot);
-    });
-    
-    // Place hidden letters on the game board at random positions
-    const gameContainer = document.getElementById('game-container');
-    
-    secretLetters.forEach(letterObj => {
-      const span = document.createElement('span');
-      span.classList.add('letter');
-      span.textContent = letterObj.letter;
-      // Associate each letter with its target index.
-      span.dataset.index = letterObj.index;
+
+    // Collectible letters (each corresponds to one letter in the secret message).
+    // Each has an index so the HUD shows them in the correct order.
+    const collectibles = [
+      { index: 0, letter: 'Y', x: 150,  y: 450, width: 20, height: 20, collected: false },
+      { index: 1, letter: 'O', x: 350,  y: 400, width: 20, height: 20, collected: false },
+      { index: 2, letter: 'U', x: 550,  y: 450, width: 20, height: 20, collected: false },
+      { index: 3, letter: 'R', x: 750,  y: 430, width: 20, height: 20, collected: false },
+      { index: 4, letter: 'E', x: 950,  y: 370, width: 20, height: 20, collected: false },
+      { index: 5, letter: 'T', x: 1150, y: 420, width: 20, height: 20, collected: false },
+      { index: 6, letter: 'H', x: 1350, y: 430, width: 20, height: 20, collected: false },
+      { index: 7, letter: 'E', x: 1550, y: 350, width: 20, height: 20, collected: false },
+      { index: 8, letter: 'B', x: 1750, y: 410, width: 20, height: 20, collected: false },
+      { index: 9, letter: 'E', x: 1950, y: 330, width: 20, height: 20, collected: false },
+      { index: 10, letter: 'S', x: 2150, y: 300, width: 20, height: 20, collected: false },
+      { index: 11, letter: 'T', x: 2350, y: 340, width: 20, height: 20, collected: false },
+      { index: 12, letter: 'D', x: 2550, y: 390, width: 20, height: 20, collected: false },
+      { index: 13, letter: 'A', x: 2750, y: 360, width: 20, height: 20, collected: false },
+      { index: 14, letter: 'D', x: 2950, y: 410, width: 20, height: 20, collected: false },
+      { index: 15, letter: 'E', x: 3150, y: 320, width: 20, height: 20, collected: false },
+      { index: 16, letter: 'V', x: 3350, y: 380, width: 20, height: 20, collected: false },
+      { index: 17, letter: 'E', x: 3550, y: 330, width: 20, height: 20, collected: false },
+      { index: 18, letter: 'R', x: 3750, y: 370, width: 20, height: 20, collected: false }
+    ];
+
+    // Background decorations – these are drawn behind the platforms & collectibles.
+    // In this game, mountains serve as a scenic backdrop.
+    const bgDecorations = [
+      { type: 'mountain', x: 800,  y: 200, width: 200, height: 300 },
+      { type: 'mountain', x: 2200, y: 150, width: 250, height: 350 },
+      { type: 'mountain', x: 3200, y: 170, width: 250, height: 350 }
+    ];
+
+    // Foreground decorations – these are drawn after the collectibles so they can obscure (hide) them.
+    // They represent bushes, trees, and houses that you might run behind or even enter.
+    const fgDecorations = [
+      { type: 'bush',  x: 100,  y: 460, width: 80,  height: 40 },
+      { type: 'tree',  x: 300,  y: 360, width: 60,  height: 120 },
+      { type: 'house', x: 500,  y: 360, width: 120, height: 140 },
+      { type: 'bush',  x: 700,  y: 440, width: 80,  height: 40 },
+      { type: 'tree',  x: 1120, y: 400, width: 60,  height: 120 },
+      { type: 'house', x: 1320, y: 370, width: 120, height: 140 },
+      { type: 'bush',  x: 1520, y: 340, width: 100, height: 50 },
+      { type: 'tree',  x: 1800, y: 380, width: 60,  height: 120 },
+      { type: 'house', x: 2000, y: 300, width: 150, height: 180 },
+      { type: 'bush',  x: 2700, y: 350, width: 80,  height: 40 },
+      { type: 'tree',  x: 2930, y: 400, width: 60,  height: 120 },
+      { type: 'house', x: 3360, y: 340, width: 120, height: 140 },
+      { type: 'bush',  x: 3550, y: 320, width: 80,  height: 40 },
+      { type: 'house', x: 3700, y: 360, width: 120, height: 140 }
+    ];
+
+    // ---------------------------
+    // GAME UPDATE FUNCTION
+    // ---------------------------
+    function update() {
+      // --- Player Movement ---
+      if (keys['ArrowLeft'] || keys['a']) {
+        player.vx = -moveSpeed;
+      } else if (keys['ArrowRight'] || keys['d']) {
+        player.vx = moveSpeed;
+      } else {
+        player.vx = 0;
+      }
+      if ((keys['ArrowUp'] || keys['w'] || keys[' ']) && player.onGround) {
+        player.vy = jumpForce;
+        player.onGround = false;
+      }
+      // Apply gravity
+      player.vy += gravity;
+      // Update position
+      player.x += player.vx;
+      player.y += player.vy;
+
+      // --- Platform Collision ---
+      player.onGround = false;
+      platforms.forEach(platform => {
+        if (rectIntersect(player, platform)) {
+          // If falling, clamp player on top of the platform
+          if (player.vy > 0) {
+            player.y = platform.y - player.height;
+            player.vy = 0;
+            player.onGround = true;
+          }
+        }
+      });
+
+      // Keep player within level boundaries
+      if (player.x < 0) player.x = 0;
+      if (player.x + player.width > levelWidth) player.x = levelWidth - player.width;
+
+      // --- Collectible Collision ---
+      collectibles.forEach(item => {
+        if (!item.collected && rectIntersect(player, item)) {
+          item.collected = true;
+          // (You could add sound effects or particle effects here.)
+        }
+      });
+
+      // --- Camera Update ---
+      camX = player.x + player.width / 2 - canvas.width / 2;
+      if (camX < 0) camX = 0;
+      if (camX > levelWidth - canvas.width) camX = levelWidth - canvas.width;
+    }
+
+    // Rectangle collision detection utility
+    function rectIntersect(a, b) {
+      return a.x < b.x + b.width &&
+             a.x + a.width > b.x &&
+             a.y < b.y + b.height &&
+             a.y + a.height > b.y;
+    }
+
+    // ---------------------------
+    // RENDERING FUNCTIONS
+    // ---------------------------
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Random placement logic: subtract a fixed amount (e.g., 50) to keep letters within view.
-      const containerWidth = gameContainer.clientWidth;
-      const containerHeight = gameContainer.clientHeight;
-      const x = Math.random() * (containerWidth - 50);
-      const y = Math.random() * (containerHeight - 50);
-      span.style.left = `${x}px`;
-      span.style.top = `${y}px`;
+      // Save the context and apply the camera horizontal offset
+      ctx.save();
+      ctx.translate(-camX, 0);
       
-      // When a letter is clicked, it moves to its designated slot at the bottom.
-      span.addEventListener('click', function() {
-        const targetIndex = this.dataset.index;
-        // Find the corresponding slot that has not yet been filled
-        const slot = document.querySelector(`.message-slot[data-index="${targetIndex}"]`);
-        // Only fill the slot if it's still empty
-        if (slot && slot.textContent === '') {
-          slot.textContent = this.textContent;
-          // Optionally animate the letter fading out from the board:
-          this.style.opacity = '0';
-          // Disable further clicks
-          this.style.pointerEvents = 'none';
+      // Draw the sky (background for the whole level)
+      ctx.fillStyle = '#87CEEB';
+      ctx.fillRect(0, 0, levelWidth, canvas.height);
+      
+      // --- Background Decorations (Mountains) ---
+      bgDecorations.forEach(obj => {
+        drawMountain(obj);
+      });
+      
+      // --- Platforms ---
+      platforms.forEach(platform => {
+        ctx.fillStyle = '#654321';
+        ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+      });
+      
+      // --- Collectible Letters ---
+      collectibles.forEach(item => {
+        if (!item.collected) {
+          // Draw the collectible as a gold circle with the letter centered inside
+          ctx.fillStyle = '#FFD700';
+          ctx.beginPath();
+          ctx.arc(item.x + item.width/2, item.y + item.height/2, item.width, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#000';
+          ctx.font = "16px Arial";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(item.letter, item.x + item.width/2, item.y + item.height/2);
         }
       });
       
-      gameContainer.appendChild(span);
-    });
+      // --- Foreground Decorations (Bushes, Trees, Houses) ---
+      fgDecorations.forEach(obj => {
+        if (obj.type === 'bush') {
+          drawBush(obj);
+        } else if (obj.type === 'tree') {
+          drawTree(obj);
+        } else if (obj.type === 'house') {
+          drawHouse(obj);
+        }
+      });
+      
+      // --- Draw the Player ---
+      ctx.fillStyle = '#FF0000';
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+      
+      ctx.restore();
+      
+      // --- HUD: Display Collected Letters ---
+      drawHUD();
+    }
+
+    // Draw a mountain as a simple triangle
+    function drawMountain(m) {
+      ctx.fillStyle = '#A9A9A9';
+      ctx.beginPath();
+      ctx.moveTo(m.x, m.y + m.height);
+      ctx.lineTo(m.x + m.width/2, m.y);
+      ctx.lineTo(m.x + m.width, m.y + m.height);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Draw a bush as an ellipse
+    function drawBush(b) {
+      ctx.fillStyle = '#228B22';
+      ctx.beginPath();
+      ctx.ellipse(b.x + b.width/2, b.y + b.height/2, b.width/2, b.height/2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Draw a tree: a brown trunk with a green canopy
+    function drawTree(t) {
+      // Trunk
+      ctx.fillStyle = '#8B4513';
+      const trunkWidth = t.width / 3;
+      const trunkHeight = t.height / 2;
+      ctx.fillRect(t.x + t.width/2 - trunkWidth/2, t.y + t.height - trunkHeight, trunkWidth, trunkHeight);
+      // Canopy (circle)
+      ctx.fillStyle = '#006400';
+      ctx.beginPath();
+      ctx.arc(t.x + t.width/2, t.y + t.height/2, t.width/2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Draw a house: a rectangle with a triangular roof and a door
+    function drawHouse(h) {
+      // House body
+      ctx.fillStyle = '#FFDAB9';
+      ctx.fillRect(h.x, h.y, h.width, h.height);
+      // Roof
+      ctx.fillStyle = '#B22222';
+      ctx.beginPath();
+      ctx.moveTo(h.x, h.y);
+      ctx.lineTo(h.x + h.width/2, h.y - h.height/2);
+      ctx.lineTo(h.x + h.width, h.y);
+      ctx.closePath();
+      ctx.fill();
+      // Door
+      ctx.fillStyle = '#654321';
+      ctx.fillRect(h.x + h.width/2 - 10, h.y + h.height - 30, 20, 30);
+    }
+
+    // Draw the Heads-Up Display showing your secret message progress
+    function drawHUD() {
+      let collectedLetters = [];
+      // Sort collectibles by the secret message order (index)
+      collectibles.sort((a, b) => a.index - b.index).forEach(item => {
+        collectedLetters.push(item.collected ? item.letter : '_');
+      });
+      const message = collectedLetters.join(' ');
+      
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+      ctx.fillStyle = '#FFF';
+      ctx.font = "20px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("Secret Message: " + message, canvas.width/2, canvas.height - 10);
+      ctx.restore();
+    }
+
+    // ---------------------------
+    // GAME LOOP
+    // ---------------------------
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+    gameLoop();
   </script>
 </body>
 </html>
