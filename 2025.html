@@ -3,136 +3,135 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hidden Letters – Complex Scene</title>
+  <title>Hidden Letters – Integrated Scene</title>
   <style>
+    /* Basic page and container styles */
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      overflow: hidden;
-    }
-
-    .instruction {
-      margin: 10px;
-      font-size: 20px;
+      background: #333;
+      font-family: sans-serif;
+      text-align: center;
       color: #fff;
     }
-
+    .instruction {
+      margin: 15px;
+      font-size: 20px;
+    }
     .game-container {
       position: relative;
       width: 1200px;
       height: 800px;
+      margin: 0 auto;
       border: 2px solid #444;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
       overflow: hidden;
-      background-color: #87CEEB; /* fallback */
+      background: #87CEEB; /* fallback sky */
     }
-
-    /* Canvas is in the back */
-    #background {
+    /* The background canvas sits at the very back */
+    canvas {
       position: absolute;
       top: 0;
       left: 0;
       z-index: 0;
     }
-
-    /* Container for each letter object (positioned over the canvas) */
-    .letter-object {
+    /* Each interactive object container “hosts” one object and (optionally) a hidden letter. 
+       Its size is fixed so the letter can “stick out” at a set position relative to the object. */
+    .interactive-container {
       position: absolute;
       width: 120px;
-      height: 120px;
-      z-index: 2;
-      pointer-events: none; /* The clickable object inside will handle events */
+      height: 150px;
+      /* No background so the container is transparent */
     }
-
-    /* The letter element (only its top portion initially visible) */
-    .letter {
-      position: absolute;
-      bottom: 70px; /* so it “sticks out” above the object */
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 48px;
-      font-weight: bold;
-      color: #fff;
-      z-index: 1;
-      pointer-events: none;
-      transition: clip-path 0.5s;
-    }
-
-    /* Initially clip off most of the letter—only the top edge shows */
-    .hidden-letter {
-      clip-path: inset(0 0 35px 0);
-    }
-
-    /* When revealed, the full letter is visible */
-    .revealed-letter {
-      clip-path: none;
-    }
-
-    /* A more detailed house object */
-    .object.house {
+    /* Object styles – these represent houses, trees, rocks, or bushes.
+       They are anchored at the bottom of their container so they “sit on the ground.” */
+    .object {
       position: absolute;
       bottom: 0;
-      left: calc(50% - 40px);
+      transition: transform 0.6s ease, opacity 0.6s ease;
+      cursor: pointer;
+    }
+    /* When an object is clicked and removed, slide it to the right and fade it out */
+    .object.removed {
+      transform: translateX(100px);
+      opacity: 0;
+    }
+    .object.house {
       width: 80px;
-      height: 60px;
+      height: 80px;
       background: #D2691E;
       border: 2px solid #8B4513;
       border-radius: 4px;
       box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
-      cursor: pointer;
-      pointer-events: auto;
-      transition: transform 0.6s ease, opacity 0.6s ease;
+      margin: 0 auto;
     }
-    .object.house::before {
+    .object.house::after {
       content: "";
       position: absolute;
-      bottom: 60px;
       left: 0;
+      bottom: 80px;
       width: 0;
       height: 0;
       border-left: 40px solid transparent;
       border-right: 40px solid transparent;
       border-bottom: 30px solid #B22222;
     }
-
-    /* A more detailed tree object */
     .object.tree {
-      position: absolute;
-      bottom: 0;
-      left: calc(50% - 20px);
-      width: 40px;
-      height: 60px;
+      width: 60px;
+      height: 100px;
       background: #8B4513;
-      border-radius: 2px;
+      border-radius: 5px;
       box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-      cursor: pointer;
-      pointer-events: auto;
-      transition: transform 0.6s ease, opacity 0.6s ease;
+      margin: 0 auto;
     }
     .object.tree::after {
       content: "";
       position: absolute;
-      bottom: 50px;
+      bottom: 70px;
       left: -20px;
-      width: 80px;
-      height: 50px;
+      width: 100px;
+      height: 60px;
       background: #228B22;
       border-radius: 50%;
     }
-
-    /* When an object is clicked, it animates away */
-    .removed {
-      transform: translateX(150px);
-      opacity: 0;
+    .object.rock {
+      width: 50px;
+      height: 30px;
+      background: #808080;
+      border-radius: 50%;
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+      margin: 0 auto;
     }
-
-    /* The solution row at the bottom */
+    .object.bush {
+      width: 70px;
+      height: 40px;
+      background: #006400;
+      border-radius: 50%;
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+      margin: 0 auto;
+    }
+    /* Letter styling – these are positioned inside the container so they “stick out” above the object.
+       Their rotation (applied inline) creates variation in angle. */
+    .letter {
+      position: absolute;
+      bottom: 60px; /* Adjust this value so the letter emerges from the top of the object */
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 48px;
+      font-weight: bold;
+      color: #fff;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+    /* Letters start partially hidden (faded) and become fully revealed when the object is clicked. */
+    .letter.hidden {
+      opacity: 0.3;
+    }
+    .letter.revealed {
+      opacity: 1;
+    }
+    /* The solution display row */
     #solution {
       width: 1200px;
+      margin: 15px auto;
       min-height: 80px;
       background: #222;
       color: #fff;
@@ -141,7 +140,6 @@
       align-items: center;
       justify-content: center;
       letter-spacing: 8px;
-      margin-top: 10px;
     }
     .slot {
       display: inline-block;
@@ -155,44 +153,38 @@
   </style>
 </head>
 <body>
-  <div class="instruction">
-    Click on an object (house or tree) to reveal the hidden letter.
-  </div>
+  <div class="instruction">Click on the objects that hide a letter to reveal the secret message!</div>
   <div class="game-container" id="game">
-    <!-- The canvas will render the complex scene -->
+    <!-- The detailed background is drawn on this canvas -->
     <canvas id="background" width="1200" height="800"></canvas>
-    <!-- Letter objects are created dynamically -->
   </div>
-  <div id="solution">
-    <!-- As letters are revealed, they populate these slots -->
-  </div>
+  <div id="solution"></div>
 
   <script>
-    // Draw a complex, realistic scene on the canvas.
-    function drawScene() {
+    // Draw a detailed background scene on the canvas.
+    function drawBackground() {
       const canvas = document.getElementById('background');
       const ctx = canvas.getContext('2d');
-      const width = canvas.width;
-      const height = canvas.height;
+      const width = canvas.width, height = canvas.height;
       
-      // Sky gradient (top: blue, bottom: soft almond)
-      const skyGradient = ctx.createLinearGradient(0, 0, 0, height);
-      skyGradient.addColorStop(0, '#87CEEB');
-      skyGradient.addColorStop(1, '#FFEBCD');
-      ctx.fillStyle = skyGradient;
+      // Sky gradient: blue at the top blending to a warm tone
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+      skyGrad.addColorStop(0, '#87CEEB');
+      skyGrad.addColorStop(1, '#FFEBCD');
+      ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, width, height);
       
-      // Sun with radial gradient
+      // Sun with a soft glow
       const sunX = width * 0.8, sunY = height * 0.2, sunRadius = 50;
-      const sunGradient = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, sunRadius);
-      sunGradient.addColorStop(0, '#FFD700');
-      sunGradient.addColorStop(1, 'rgba(255,215,0,0)');
-      ctx.fillStyle = sunGradient;
+      const sunGrad = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, sunRadius);
+      sunGrad.addColorStop(0, '#FFD700');
+      sunGrad.addColorStop(1, 'rgba(255,215,0,0)');
+      ctx.fillStyle = sunGrad;
       ctx.beginPath();
       ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
       ctx.fill();
       
-      // Draw some fluffy clouds
+      // Draw several fluffy clouds
       function drawCloud(x, y, scale) {
         ctx.fillStyle = "rgba(255,255,255,0.8)";
         ctx.beginPath();
@@ -208,7 +200,7 @@
       drawCloud(700, 120, 1);
       drawCloud(1000, 80, 0.8);
       
-      // Draw mountains with snow caps
+      // Mountains with snow-capped peaks
       function drawMountain(x, y, widthFactor, heightFactor, color, snowCap) {
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -232,133 +224,124 @@
       drawMountain(600, height * 0.8, 1, 1.2, "#505050", true);
       drawMountain(900, height * 0.8, 1, 1, "#7F7F7F", true);
       
-      // Rolling green valley/hills at the bottom
+      // Grassy ground at the bottom
       ctx.fillStyle = "#228B22";
-      ctx.beginPath();
-      ctx.moveTo(0, height * 0.8);
-      ctx.quadraticCurveTo(width * 0.5, height * 0.7, width, height * 0.8);
-      ctx.lineTo(width, height);
-      ctx.lineTo(0, height);
-      ctx.closePath();
-      ctx.fill();
-      
-      // Draw a small village of houses in the valley
-      function drawHouse(x, y, scale) {
-        ctx.fillStyle = "#8B4513";
-        ctx.fillRect(x, y - 40 * scale, 50 * scale, 40 * scale);
-        ctx.fillStyle = "#A52A2A";
-        ctx.beginPath();
-        ctx.moveTo(x, y - 40 * scale);
-        ctx.lineTo(x + 25 * scale, y - 70 * scale);
-        ctx.lineTo(x + 50 * scale, y - 40 * scale);
-        ctx.closePath();
-        ctx.fill();
-      }
-      drawHouse(200, height * 0.8, 1);
-      drawHouse(280, height * 0.8, 1);
-      drawHouse(360, height * 0.8, 1);
-      drawHouse(450, height * 0.8, 1);
-      drawHouse(550, height * 0.8, 1);
-      
-      // Draw a few trees along the valley
-      function drawTree(x, y, scale) {
-        ctx.fillStyle = "#8B4513";
-        ctx.fillRect(x, y - 30 * scale, 10 * scale, 30 * scale);
-        ctx.fillStyle = "#006400";
-        ctx.beginPath();
-        ctx.arc(x + 5 * scale, y - 40 * scale, 15 * scale, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(x - 5 * scale, y - 30 * scale, 15 * scale, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(x + 15 * scale, y - 30 * scale, 15 * scale, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      drawTree(800, height * 0.8, 1);
-      drawTree(850, height * 0.8, 1);
-      drawTree(900, height * 0.8, 1);
+      ctx.fillRect(0, height * 0.8, width, height * 0.2);
     }
-    drawScene();
+    drawBackground();
     
-    // Define the secret phrase letters and their fixed positions.
-    // (Each object holds a letter and is placed using percentage values.)
-    const letters = [
-      { letter: "Y", left: "10%", top: "20%" },
-      { letter: "O", left: "30%", top: "15%" },
-      { letter: "U", left: "50%", top: "10%" },
-      { letter: "R", left: "70%", top: "25%" },
-      { letter: "E", left: "85%", top: "40%" },
-      { letter: "T", left: "60%", top: "40%" },
-      { letter: "H", left: "40%", top: "30%" },
-      { letter: "E", left: "20%", top: "45%" },
-      { letter: "B", left: "15%", top: "65%" },
-      { letter: "E", left: "35%", top: "70%" },
-      { letter: "S", left: "55%", top: "65%" },
-      { letter: "T", left: "75%", top: "60%" },
-      { letter: "D", left: "80%", top: "75%" },
-      { letter: "A", left: "50%", top: "85%" },
-      { letter: "D", left: "30%", top: "80%" },
-      { letter: "E", left: "10%", top: "85%" },
-      { letter: "V", left: "70%", top: "80%" },
-      { letter: "E", left: "60%", top: "90%" },
-      { letter: "R", left: "40%", top: "90%" }
+    /* 
+      Define interactive objects.
+      – Some objects hide a letter (hasLetter: true) while others are decorative.
+      – Each object has a type (house, tree, rock, or bush), a fixed horizontal (left) position (in px),
+        and a vertical offset from the bottom (in px) so it appears “anchored” to the ground.
+      – The letter (if any) is set to stick out above the object at a specified angle.
+    */
+    const secretLetters = [
+      { letter: "Y", type: "house", left: 100, bottom: 150, rotation: -15 },
+      { letter: "O", type: "rock",  left: 250, bottom: 140, rotation: 5 },
+      { letter: "U", type: "tree",  left: 400, bottom: 120, rotation: -10 },
+      { letter: "R", type: "bush",  left: 550, bottom: 130, rotation: 20 },
+      { letter: "E", type: "house", left: 700, bottom: 150, rotation: -5 },
+      { letter: "T", type: "rock",  left: 850, bottom: 140, rotation: 15 },
+      { letter: "H", type: "tree",  left: 950, bottom: 120, rotation: -20 },
+      { letter: "E", type: "bush",  left: 1100, bottom: 130, rotation: 0 },
+      { letter: "B", type: "house", left: 200, bottom: 180, rotation: 10 },
+      { letter: "E", type: "rock",  left: 350, bottom: 170, rotation: -10 },
+      { letter: "S", type: "tree",  left: 500, bottom: 160, rotation: 5 },
+      { letter: "T", type: "bush",  left: 650, bottom: 180, rotation: -15 },
+      { letter: "D", type: "house", left: 800, bottom: 190, rotation: 10 },
+      { letter: "A", type: "rock",  left: 950, bottom: 200, rotation: -5 },
+      { letter: "D", type: "tree",  left: 1100, bottom: 210, rotation: 20 },
+      { letter: "E", type: "bush",  left: 150, bottom: 120, rotation: -10 },
+      { letter: "V", type: "house", left: 300, bottom: 130, rotation: 5 },
+      { letter: "E", type: "rock",  left: 450, bottom: 140, rotation: -20 },
+      { letter: "R", type: "tree",  left: 600, bottom: 150, rotation: 0 }
     ];
-    // For variety, assign the object type: house for even indexes, tree for odd indexes.
-    letters.forEach((obj, i) => {
-      obj.type = (i % 2 === 0) ? "house" : "tree";
+    // Mark these as containing letters (and assign their order index)
+    secretLetters.forEach((item, index) => {
+      item.hasLetter = true;
+      item.index = index;
     });
     
-    const gameContainer = document.getElementById("game");
-    const solutionContainer = document.getElementById("solution");
+    // Additional decorative objects (no hidden letter) to add variety.
+    const decorativeObjects = [
+      { type: "tree", left: 800, bottom: 180, rotation: 0, hasLetter: false },
+      { type: "bush", left: 1000, bottom: 160, rotation: 10, hasLetter: false },
+      { type: "house", left: 50, bottom: 200, rotation: -5, hasLetter: false }
+    ];
     
-    // Create blank solution slots matching the phrase order.
-    letters.forEach((item, index) => {
+    // Combine both arrays into one list of interactive items.
+    const interactiveItems = secretLetters.concat(decorativeObjects);
+    
+    // Create the solution row – one slot per secret letter.
+    const solutionContainer = document.getElementById("solution");
+    secretLetters.forEach((item, index) => {
       const slot = document.createElement("div");
       slot.className = "slot";
       slot.setAttribute("data-index", index);
       solutionContainer.appendChild(slot);
     });
     
-    // For each letter, create a container with the letter and an interactive scene object.
-    letters.forEach((item, index) => {
+    // Create interactive objects and add them to the game container.
+    const gameContainer = document.getElementById("game");
+    interactiveItems.forEach(item => {
+      // Create a container for this object (holds the object and, if applicable, the letter)
       const container = document.createElement("div");
-      container.className = "letter-object";
-      container.style.left = item.left;
-      container.style.top = item.top;
-      container.setAttribute("data-index", index);
+      container.className = "interactive-container";
+      container.style.left = item.left + "px";
+      container.style.bottom = item.bottom + "px";
       
-      // Create the letter element (initially only a bit visible)
-      const letterElem = document.createElement("div");
-      letterElem.className = "letter hidden-letter";
-      letterElem.innerText = item.letter;
-      container.appendChild(letterElem);
+      // If the item hides a letter, create a letter element.
+      if (item.hasLetter) {
+        const letterElem = document.createElement("div");
+        letterElem.className = "letter hidden";
+        letterElem.innerText = item.letter;
+        // Rotate the letter by the specified angle. (You can adjust further if desired.)
+        letterElem.style.transform = "translateX(-50%) rotate(" + item.rotation + "deg)";
+        container.appendChild(letterElem);
+        item.letterElem = letterElem;
+      }
       
-      // Create the scene object element (either house or tree)
-      const objectElem = document.createElement("div");
-      objectElem.className = "object " + item.type;
-      objectElem.addEventListener("click", function(event) {
-        if (objectElem.classList.contains("removed")) return;
-        objectElem.classList.add("removed");
-        letterElem.classList.remove("hidden-letter");
-        letterElem.classList.add("revealed-letter");
-        const slot = document.querySelector('.slot[data-index="' + index + '"]');
-        slot.innerText = item.letter;
-        setTimeout(checkGameComplete, 600);
-      });
-      container.appendChild(objectElem);
+      // Create the object element.
+      const objElem = document.createElement("div");
+      objElem.className = "object " + item.type;
+      // Rotate the entire object for a natural, varied look.
+      objElem.style.transform = "rotate(" + item.rotation + "deg)";
+      container.appendChild(objElem);
+      item.objElem = objElem;
+      
+      // For items with a hidden letter, add a click event to reveal the letter.
+      if (item.hasLetter) {
+        objElem.addEventListener("click", function(e) {
+          if (objElem.classList.contains("removed")) return;
+          objElem.classList.add("removed");
+          if (item.letterElem) {
+            item.letterElem.classList.remove("hidden");
+            item.letterElem.classList.add("revealed");
+          }
+          // Update the corresponding solution slot.
+          const slot = document.querySelector('.slot[data-index="' + item.index + '"]');
+          if (slot) slot.innerText = item.letter;
+          setTimeout(checkGameComplete, 600);
+          e.stopPropagation();
+        });
+      }
+      
+      // Append the container to the game container.
       gameContainer.appendChild(container);
     });
     
+    // Check if all letters have been revealed.
     function checkGameComplete() {
       const slots = document.querySelectorAll(".slot");
       let count = 0;
       slots.forEach(slot => {
         if (slot.innerText !== "") count++;
       });
-      if (count === letters.length) {
+      if (count === secretLetters.length) {
         setTimeout(() => {
-          alert("Congratulations! You revealed the message!");
+          alert("Congratulations! You revealed the secret message!");
         }, 300);
       }
     }
