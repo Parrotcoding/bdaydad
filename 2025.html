@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Layered Platformer Letter Hunt – Improved</title>
+  <title>Layered Platformer Letter Hunt – Platform Mode</title>
   <style>
     /* Reset and basic styling */
     body {
@@ -24,20 +24,24 @@
     // ---------------------------
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    
+
     // Level dimensions (all modes share same width for simplicity)
     const levelWidth = 6000;
     const levelHeight = 600;
-    
-    // Camera horizontal offset for scrolling (always follows the player on the ground)
+
+    // Camera horizontal offset for scrolling (always follows the player)
     let camX = 0;
-    
-    // Game state: "ground" or "interior" (no separate midground state)
+
+    // Game state: "ground" or "interior"
     let gameState = "ground";
-    
+
+    // A separate variable to choose the collision layer:
+    // "ground" or "midground"
+    let platformMode = "ground"; // default is ground collision layer
+
     // Global time for oscillation of collectibles
     let time = 0;
-    
+
     // Player definition
     const player = {
       x: 100,
@@ -48,17 +52,17 @@
       vy: 0,
       onGround: false
     };
-    
+
     // Keyboard input tracking
     const keys = {};
     document.addEventListener('keydown', e => { keys[e.key] = true; });
     document.addEventListener('keyup', e => { keys[e.key] = false; });
-    
+
     // Physics parameters
     const gravity = 0.5;
     const moveSpeed = 3;
     const jumpForce = -10;
-    
+
     // ---------------------------
     // GROUND MODE DATA
     // ---------------------------
@@ -68,14 +72,13 @@
       { x: 1200, y: 400, width: 200, height: 20 },
       { x: 4500, y: 400, width: 200, height: 20 }
     ];
-    
-    // Midground platforms remain drawn as a faded background layer
+    // Midground platforms: these act as the collision layer when in "midground" mode.
     const midPlatforms = [
       { x: 0,    y: 300, width: levelWidth, height: 50 },
       { x: 2000, y: 250, width: 300, height: 50 },
       { x: 4500, y: 280, width: 200, height: 50 }
     ];
-    
+
     // Foreground decorations – these sit on the ground (their bottoms align near y = 500)
     const fgDecorations = [
       { type: 'bush',  x: 100,  y: 460, width: 80,  height: 40 },
@@ -94,7 +97,7 @@
       { type: 'house', x: 3700, y: 360, width: 120, height: 140 },
       { type: 'house', x: 5000, y: 360, width: 120, height: 140 }
     ];
-    
+
     // Collectible letters for "YOURE THE BEST DAD EVER"
     // They are positioned in mid-air ("floating") and will gently oscillate.
     let collectibles = [
@@ -118,7 +121,7 @@
       { index: 17, letter: 'E', x: 4000, y: 480, width: 20, height: 20, collected: false },
       { index: 18, letter: 'R', x: 4200, y: 465, width: 20, height: 20, collected: false }
     ];
-    
+
     // Background decorations (mountains) for ground mode.
     const bgDecorations = [
       { type: 'mountain', x: 800,  y: 200, width: 200, height: 300 },
@@ -126,25 +129,25 @@
       { type: 'mountain', x: 3200, y: 170, width: 250, height: 350 },
       { type: 'mountain', x: 4800, y: 180, width: 300, height: 340 }
     ];
-    
+
     // ---------------------------
     // PORTALS (TELEPORTATION)
     // ---------------------------
-    // In this version there is no distinct midground mode.
-    // When the player touches one portal, they are teleported to the other portal's location.
-    // The "to-midground" portal will keep the player's x coordinate the same and set the y to a higher value.
-    // The "return-to-ground" portal teleports the player to a fixed ground location.
+    // There is no distinct midground state. Instead, when the player touches one portal,
+    // they are teleported to the other portal's location.
+    // The "to-midground" portal (groundPortal) teleports the player straight up, preserving x.
+    // The "return-to-ground" portal (midPortal) teleports the player to a fixed position on the left.
     const groundPortal = { x: 5500, y: 420, width: 60, height: 80 };
     const midPortal    = { x: 500,  y: 220, width: 60, height: 80 };
-    
+
     // ---------------------------
     // INTERIOR MODE DATA
     // ---------------------------
-    // When the player touches a house door area, they automatically enter interior mode.
+    // When the player touches a house door area they automatically enter interior mode.
     // A fixed exit door is used to return to the ground.
     const exitDoor = { x: 10, y: canvas.height/2 - 40, width: 40, height: 80 };
     let currentHouse = null; // Will hold the current house when inside.
-    
+
     // ---------------------------
     // UTILITY FUNCTIONS
     // ---------------------------
@@ -154,47 +157,27 @@
              a.y < b.y + b.height &&
              a.y + a.height > b.y;
     }
-    
-    // Check if the player is overlapping the climbable (lower trunk) part of any tree.
-    function isPlayerOnTree() {
-      for (let obj of fgDecorations) {
-        if (obj.type === 'tree') {
-          let trunkX = obj.x + obj.width/2 - (obj.width/3)/2;
-          let trunkWidth = obj.width/3;
-          let trunkY = obj.y + obj.height - obj.height/2;
-          let trunkHeight = obj.height/2;
-          let trunkRect = { x: trunkX, y: trunkY, width: trunkWidth, height: trunkHeight };
-          if (rectIntersect(player, trunkRect)) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-    
+
     // ---------------------------
     // MODE: GROUND (Always active outside interior)
     // ---------------------------
+    // We add a new variable, platformMode, to choose the active collision layer.
+    // When platformMode is "ground", collisions occur with groundPlatforms.
+    // When platformMode is "midground", collisions occur with midPlatforms.
+    let platformMode = "ground";  // default is ground platforms
+
     function updateGround() {
       // Horizontal movement.
-      if (keys['ArrowLeft'] || keys['a']) {
-        player.vx = -moveSpeed;
-      } else if (keys['ArrowRight'] || keys['d']) {
-        player.vx = moveSpeed;
-      } else {
-        player.vx = 0;
-      }
+      if (keys['ArrowLeft'] || keys['a']) { player.vx = -moveSpeed; }
+      else if (keys['ArrowRight'] || keys['d']) { player.vx = moveSpeed; }
+      else { player.vx = 0; }
       player.x += player.vx;
       
       // Vertical movement.
       if (isPlayerOnTree() && !keys[' ']) {
-        if (keys['ArrowUp'] || keys['w']) {
-          player.vy = -2;
-        } else if (keys['ArrowDown'] || keys['s']) {
-          player.vy = 2;
-        } else {
-          player.vy = 0;
-        }
+        if (keys['ArrowUp'] || keys['w']) { player.vy = -2; }
+        else if (keys['ArrowDown'] || keys['s']) { player.vy = 2; }
+        else { player.vy = 0; }
       } else {
         if ((keys[' '] || keys['ArrowUp'] || keys['w']) && player.onGround) {
           player.vy = jumpForce;
@@ -204,9 +187,12 @@
       }
       player.y += player.vy;
       
-      // Collision with ground platforms.
+      // Choose active platforms based on platformMode:
+      const activePlatforms = (platformMode === "ground") ? groundPlatforms : midPlatforms;
+      
+      // Collision with active platforms.
       player.onGround = false;
-      for (let plat of groundPlatforms) {
+      for (let plat of activePlatforms) {
         if (rectIntersect(player, plat)) {
           if (player.vy > 0) {
             player.y = plat.y - player.height;
@@ -259,19 +245,20 @@
         }
       }
       
-      // Portal Teleportation:
-      // When the player touches the "to-midground" portal (groundPortal),
-      // teleport the player straight up without changing the x (simulate going up).
-      if (rectIntersect(player, groundPortal)) {
-        // Preserve player.x; set y to a "midground" level.
-        // You can adjust the target y value as needed.
-        player.y = 250; 
+      // Portal teleportation:
+      // When the player touches the ground portal in "ground" mode, switch to midground mode.
+      if (platformMode === "ground" && rectIntersect(player, groundPortal)) {
+        platformMode = "midground";
+        // Teleport the player straight up (preserve x, change y)
+        // Here we use the first midPlatform as the target.
+        player.y = midPlatforms[0].y - player.height;
         player.vx = 0;
         player.vy = 0;
       }
-      // When the player touches the "return-to-ground" portal (midPortal),
-      // teleport the player to a fixed position on the left side of the ground.
-      if (rectIntersect(player, midPortal)) {
+      // When the player touches the mid portal in "midground" mode, switch back to ground mode.
+      if (platformMode === "midground" && rectIntersect(player, midPortal)) {
+        platformMode = "ground";
+        // Teleport the player to a fixed location on the left side of the ground.
         player.x = 50;
         player.y = groundPlatforms[0].y - player.height;
         player.vx = 0;
@@ -293,7 +280,7 @@
       ctx.fillStyle = '#87CEEB';
       ctx.fillRect(0, 0, levelWidth, canvas.height);
       
-      // Draw midground platforms (faded as a background layer).
+      // Draw midground platforms (faded as background) regardless of platformMode.
       ctx.save();
       ctx.globalAlpha = 0.5;
       midPlatforms.forEach(plat => {
@@ -305,9 +292,10 @@
       // Draw background mountains.
       bgDecorations.forEach(obj => { drawMountain(obj); });
       
-      // Draw ground platforms.
-      groundPlatforms.forEach(plat => {
-        ctx.fillStyle = '#654321';
+      // Draw active platforms.
+      const activePlatforms = (platformMode === "ground") ? groundPlatforms : midPlatforms;
+      activePlatforms.forEach(plat => {
+        ctx.fillStyle = (platformMode === "ground") ? '#654321' : '#333333';
         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
       });
       
@@ -327,8 +315,9 @@
         }
       });
       
-      // Draw the ground portal.
+      // Draw the portals.
       drawPortal(groundPortal);
+      drawPortal(midPortal);
       
       // Draw foreground decorations.
       fgDecorations.forEach(obj => {
