@@ -36,8 +36,8 @@
     let gameState = "ground";
 
     // Collision mode:
-    // "ground" uses the brown ground platforms,
-    // "midground" uses hills as platforms.
+    // "ground" uses brown ground platforms,
+    // "midground" uses the hills.
     let platformMode = "ground";
 
     // Global time for oscillation effects
@@ -74,23 +74,20 @@
       { x: 4500, y: 400, width: 200, height: 20 }
     ];
 
-    // Hills as round platforms that span the entire level.
-    // Each hill is defined by:
-    //   x: starting horizontal position,
-    //   width: the hill's width,
-    //   height: the maximum peak height above the ground,
-    //   groundY: the ground level (set to 500),
-    //   color: the hill's fill color.
+    // Hills as round platforms attached to the brown ground.
+    // Each hill is defined by its starting x position, width, peak height (how far above the ground the floor dips),
+    // groundY (the brown ground level, here 500) and a fill color.
     const hills = [
-      { x: 0,    width: 1200, height: 150, groundY: 500, color: "#228B22" },
-      { x: 1200, width: 1500, height: 200, groundY: 500, color: "#2E8B57" },
-      { x: 2700, width: 1800, height: 100, groundY: 500, color: "#006400" },
-      { x: 4500, width: 1500, height: 250, groundY: 500, color: "#228B22" }
+      { x: 0,    width: 1200, height: 300, groundY: 500, color: "#228B22" },
+      { x: 1200, width: 1500, height: 400, groundY: 500, color: "#2E8B57" },
+      { x: 2700, width: 1800, height: 250, groundY: 500, color: "#006400" },
+      { x: 4500, width: 1500, height: 500, groundY: 500, color: "#228B22" }
     ];
 
-    // Function to compute a hill’s surface at a given x.
-    // We use a bell curve: let t = (x - hill.x) / hill.width,
-    // then y = hill.groundY - (4 * hill.height * t * (1 - t))
+    // Compute a hill's surface at a given x using a bell-curve formula.
+    // Let t = (x - hill.x) / hill.width, then:
+    // y = hill.groundY - (4 * hill.height * t * (1 - t))
+    // (At t = 0 or 1, y = hill.groundY; at t = 0.5, y = hill.groundY - hill.height)
     function hillSurface(hill, x) {
       let t = (x - hill.x) / hill.width;
       if (t < 0 || t > 1) return null;
@@ -139,7 +136,7 @@
       { index: 18, letter: 'R', x: 4200, y: 465, width: 20, height: 20, collected: false }
     ];
 
-    // Background decorations (mountains)
+    // Background decorations (mountains) for ground mode.
     const bgDecorations = [
       { type: 'mountain', x: 800,  y: 200, width: 200, height: 300 },
       { type: 'mountain', x: 2200, y: 150, width: 250, height: 350 },
@@ -151,8 +148,9 @@
     // PORTALS (TELEPORTATION)
     // ---------------------------
     // There is no distinct midground state.
-    // The "to‑midground" portal teleports the player straight up (preserving x),
-    // and the "return‑to‑ground" portal teleports the player to a fixed left‑side location.
+    // Touching the "to-midground" portal teleports the player straight up (preserving x)
+    // onto the hill (switching collision mode to "midground").
+    // Touching the "return-to-ground" portal teleports the player to a fixed left-side ground location.
     const groundPortal = { x: 5500, y: 420, width: 60, height: 80 };
     const midPortal    = { x: 500,  y: 220, width: 60, height: 80 };
 
@@ -174,7 +172,7 @@
              a.y + a.height > b.y;
     }
 
-    // Check if the player is overlapping the climbable portion of any tree.
+    // Check if the player is overlapping the climbable part (the trunk) of any tree.
     function isPlayerOnTree() {
       for (let obj of fgDecorations) {
         if (obj.type === 'tree') {
@@ -194,8 +192,8 @@
     // ---------------------------
     // MODE: GROUND (Active outside interior)
     // ---------------------------
-    // platformMode controls the active collision layer:
-    // "ground" uses groundPlatforms; "midground" uses the hills.
+    // platformMode controls which collision platforms are active.
+    // "ground" uses groundPlatforms; "midground" uses hills.
     function updateGround() {
       // Horizontal movement.
       if (keys['ArrowLeft'] || keys['a']) { player.vx = -moveSpeed; }
@@ -229,15 +227,26 @@
           }
         }
       } else if (platformMode === "midground") {
-        let playerCenterX = player.x + player.width / 2;
-        for (let hill of hills) {
-          if (playerCenterX >= hill.x && playerCenterX <= hill.x + hill.width) {
-            let surface = hillSurface(hill, playerCenterX);
-            if (player.y + player.height > surface) {
-              player.y = surface - player.height;
-              player.vy = 0;
-              player.onGround = true;
-            }
+        // Instead of checking only the player's center,
+        // sample three points along the player's bottom (left, center, right)
+        // and take the maximum (the highest floor) as the collision target.
+        let playerLeft = player.x;
+        let playerCenter = player.x + player.width / 2;
+        let playerRight = player.x + player.width;
+        // Assume the player is fully on one hill.
+        let targetHill = hills.find(hill => playerCenter >= hill.x && playerCenter <= hill.x + hill.width);
+        if (targetHill) {
+          let sampleX1 = Math.max(playerLeft, targetHill.x);
+          let sampleX2 = playerCenter;
+          let sampleX3 = Math.min(playerRight, targetHill.x + targetHill.width);
+          let s1 = hillSurface(targetHill, sampleX1);
+          let s2 = hillSurface(targetHill, sampleX2);
+          let s3 = hillSurface(targetHill, sampleX3);
+          let floorY = Math.max(s1, s2, s3); // The highest (least dip) point along the player's foot.
+          if (player.y + player.height > floorY) {
+            player.y = floorY - player.height;
+            player.vy = 0;
+            player.onGround = true;
           }
         }
       }
@@ -256,7 +265,7 @@
         }
       });
 
-      // Reassign collectible layer to interior if touching a house.
+      // If a collectible touches a house, assign its layer to interior.
       fgDecorations.forEach(obj => {
         if (obj.type === 'house') {
           collectibles.forEach(item => {
@@ -269,14 +278,14 @@
         }
       });
 
-      // Automatic Interior Transition: if player touches a house door.
+      // Automatic Interior Transition: if the player touches a house door.
       for (let obj of fgDecorations) {
         if (obj.type === 'house') {
           let door = { x: obj.x + obj.width/2 - 10, y: obj.y + obj.height - 30, width: 20, height: 30 };
           if (rectIntersect(player, door)) {
             gameState = "interior";
             currentHouse = obj;
-            player.x = canvas.width/2 - player.width/2;
+            player.x = canvas.width / 2 - player.width / 2;
             player.y = canvas.height - 100;
             player.vx = 0;
             player.vy = 0;
@@ -286,21 +295,22 @@
       }
 
       // Portal Teleportation:
-      // Touching the "to-midground" portal (groundPortal) switches the collision mode to "midground"
-      // and teleports the player upward onto the hill beneath their center.
+      // When in "ground" collision mode and colliding with the groundPortal,
+      // switch to midground mode and teleport the player upward.
       if (platformMode === "ground" && rectIntersect(player, groundPortal)) {
         platformMode = "midground";
         let playerCenterX = player.x + player.width / 2;
+        // Find the hill covering the player's center. If none, use the first hill.
         let targetHill = hills.find(hill => playerCenterX >= hill.x && playerCenterX <= hill.x + hill.width);
-        if (!targetHill) { targetHill = hills[0]; }
+        if (!targetHill) targetHill = hills[0];
         let surfaceY = hillSurface(targetHill, playerCenterX);
         player.y = surfaceY - player.height;
         player.vx = 0;
         player.vy = 0;
       }
 
-      // Touching the "return-to-ground" portal (midPortal) switches back to "ground" collision mode
-      // and teleports the player to a fixed left-side location.
+      // When in "midground" collision mode and colliding with the midPortal,
+      // switch back to ground mode and teleport the player to a fixed left-side location.
       if (platformMode === "midground" && rectIntersect(player, midPortal)) {
         platformMode = "ground";
         player.x = 50;
@@ -310,7 +320,7 @@
       }
 
       // Update camera.
-      camX = player.x + player.width/2 - canvas.width/2;
+      camX = player.x + player.width / 2 - canvas.width / 2;
       if (camX < 0) camX = 0;
       if (camX > levelWidth - canvas.width) camX = levelWidth - canvas.width;
     }
@@ -330,12 +340,12 @@
         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
       });
 
-      // Draw the hills (as round platforms) on top of the ground.
+      // Draw the hills as round platforms on top of the brown ground.
       hills.forEach(hill => {
         ctx.beginPath();
-        // Start at the left edge at the ground.
+        // Start at the left edge of the hill on the ground.
         ctx.moveTo(hill.x, hill.groundY);
-        // Draw a quadratic curve with the peak in the middle.
+        // Draw a quadratic curve with a peak in the middle.
         ctx.quadraticCurveTo(
           hill.x + hill.width / 2,
           hill.groundY - hill.height,
@@ -353,25 +363,24 @@
       // Draw background mountains.
       bgDecorations.forEach(obj => { drawMountain(obj); });
 
-      // (Optionally, if you're in midground collision mode, you can overlay a semi-transparent layer on the hills.
-      // Here it's left commented out.)
-      // if (platformMode === "midground") {
-      //   hills.forEach(hill => {
-      //     ctx.fillStyle = 'rgba(0,0,0,0.2)';
-      //     ctx.beginPath();
-      //     ctx.moveTo(hill.x, hill.groundY);
-      //     ctx.quadraticCurveTo(
-      //       hill.x + hill.width / 2,
-      //       hill.groundY - hill.height,
-      //       hill.x + hill.width,
-      //       hill.groundY
-      //     );
-      //     ctx.lineTo(hill.x + hill.width, levelHeight);
-      //     ctx.lineTo(hill.x, levelHeight);
-      //     ctx.closePath();
-      //     ctx.fill();
-      //   });
-      // }
+      // (Optionally, you can overlay a semi-transparent effect on the hills if in midground collision mode.)
+      if (platformMode === "midground") {
+        hills.forEach(hill => {
+          ctx.fillStyle = 'rgba(0,0,0,0.2)';
+          ctx.beginPath();
+          ctx.moveTo(hill.x, hill.groundY);
+          ctx.quadraticCurveTo(
+            hill.x + hill.width / 2,
+            hill.groundY - hill.height,
+            hill.x + hill.width,
+            hill.groundY
+          );
+          ctx.lineTo(hill.x + hill.width, levelHeight);
+          ctx.lineTo(hill.x, levelHeight);
+          ctx.closePath();
+          ctx.fill();
+        });
+      }
 
       // Draw floating collectibles.
       collectibles.forEach(item => {
@@ -379,7 +388,7 @@
           let floatOffset = Math.sin(time + item.index) * 5;
           ctx.fillStyle = '#FFD700';
           ctx.beginPath();
-          ctx.arc(item.x + item.width/2, item.y + floatOffset + item.height/2, item.width, 0, Math.PI*2);
+          ctx.arc(item.x + item.width/2, item.y + floatOffset + item.height/2, item.width, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = '#000';
           ctx.font = "16px Arial";
