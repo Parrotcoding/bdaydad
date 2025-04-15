@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hidden Letters Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background-color: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    .instruction {
+      margin: 10px;
+      font-size: 18px;
+    }
+
+    /* Game container with a background image */
+    .game-container {
+      position: relative;
+      width: 100vw;
+      height: 80vh;
+      background: url('https://via.placeholder.com/1200x800') no-repeat center center;
+      background-size: cover;
+      overflow: hidden;
+      border: 3px solid #333;
+    }
+
+    /* Each letter container is absolutely positioned */
+    .letter-container {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #fff;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px #000;
+      pointer-events: none; /* So only the cover captures clicks */
+    }
+
+    /* The letter itself is simply a span inside */
+    .letter {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* The cover “object” hides the letter; it’s styled to look like an object that might naturally be in a scene */
+    .cover {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(50, 50, 50, 0.8);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: opacity 0.5s ease;
+      z-index: 2;
+      pointer-events: auto;
+    }
+
+    /* When the cover is removed, it fades out and no longer interferes with clicks */
+    .cover.removed {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* The solution display at the bottom shows slots for each letter */
+    #solution {
+      width: 100vw;
+      height: 20vh;
+      background-color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 32px;
+      letter-spacing: 10px;
+    }
+
+    .slot {
+      display: inline-block;
+      width: 30px;
+      height: 40px;
+      border-bottom: 2px solid #fff;
+      margin: 0 5px;
+      text-align: center;
+      line-height: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="instruction">Click the objects to reveal the hidden letters.</div>
+  <div class="game-container" id="game">
+    <!-- The letter containers will be added here dynamically -->
+  </div>
+  <div id="solution">
+    <!-- The solution slots for the phrase will show up here -->
+  </div>
+
+  <script>
+    // Define the letters and their fixed positions.
+    // Each object has:
+    //  • letter: the character to reveal
+    //  • left, top: positioning within the game area
+    const letters = [
+      { letter: "Y", left: "10%", top: "20%" },
+      { letter: "O", left: "30%", top: "15%" },
+      { letter: "U", left: "50%", top: "10%" },
+      { letter: "R", left: "70%", top: "25%" },
+      { letter: "E", left: "85%", top: "40%" },
+      { letter: "T", left: "60%", top: "40%" },
+      { letter: "H", left: "40%", top: "30%" },
+      { letter: "E", left: "20%", top: "45%" },
+      { letter: "B", left: "15%", top: "65%" },
+      { letter: "E", left: "35%", top: "70%" },
+      { letter: "S", left: "55%", top: "65%" },
+      { letter: "T", left: "75%", top: "60%" },
+      { letter: "D", left: "80%", top: "75%" },
+      { letter: "A", left: "50%", top: "85%" },
+      { letter: "D", left: "30%", top: "80%" },
+      { letter: "E", left: "10%", top: "85%" },
+      { letter: "V", left: "70%", top: "80%" },
+      { letter: "E", left: "60%", top: "90%" },
+      { letter: "R", left: "40%", top: "90%" }
+    ];
+
+    const gameContainer = document.getElementById("game");
+    const solutionContainer = document.getElementById("solution");
+
+    // Create a blank solution slot for each letter
+    letters.forEach((item, index) => {
+      const slot = document.createElement("div");
+      slot.className = "slot";
+      slot.setAttribute("data-index", index);
+      solutionContainer.appendChild(slot);
+    });
+
+    // Create each letter container with its cover
+    letters.forEach((item, index) => {
+      const container = document.createElement("div");
+      container.className = "letter-container";
+      container.style.left = item.left;
+      container.style.top = item.top;
+      container.setAttribute("data-index", index);
+
+      // Add the letter element (always visible but hidden by cover)
+      const letterElem = document.createElement("span");
+      letterElem.className = "letter";
+      letterElem.innerText = item.letter;
+      container.appendChild(letterElem);
+
+      // Create the cover element that hides the letter.
+      const coverElem = document.createElement("div");
+      coverElem.className = "cover";
+      
+      // Add a random rotation to each cover object for a more natural look.
+      coverElem.style.transform = "rotate(" + (Math.random() * 360) + "deg)";
+
+      // When the cover is clicked, remove it and update the bottom display.
+      coverElem.addEventListener("click", function(event) {
+        // Fade out the cover.
+        coverElem.classList.add("removed");
+        // Fill the corresponding slot with the found letter.
+        const slot = document.querySelector('.slot[data-index="' + index + '"]');
+        slot.innerText = item.letter;
+
+        // Remove the cover after the fade-out completes.
+        setTimeout(function () {
+          coverElem.style.display = "none";
+        }, 500);
+
+        // Optionally check if all letters are found.
+        checkGameComplete();
+      });
+
+      container.appendChild(coverElem);
+      gameContainer.appendChild(container);
+    });
+
+    // Check if all letters have been revealed and notify the player.
+    function checkGameComplete() {
+      const foundSlots = document.querySelectorAll(".slot");
+      let count = 0;
+      foundSlots.forEach(slot => {
+        if (slot.innerText !== "") {
+          count++;
+        }
+      });
+      if (count === letters.length) {
+        setTimeout(function () {
+          alert("Congratulations! You found all the letters!");
+        }, 300);
+      }
+    }
+  </script>
+</body>
+</html>
