@@ -29,7 +29,7 @@
     const levelWidth = 6000;
     const levelHeight = 600;
     
-    // Camera horizontal offset for scrolling (always follows the player on the ground)
+    // Camera horizontal offset (always follows the player on the ground)
     let camX = 0;
     
     // Game state: "ground" or "interior"
@@ -64,14 +64,14 @@
     // ---------------------------
     // Ground platforms (the big ground plus a couple extras)
     const groundPlatforms = [
-      { x: 0,    y: 500, width: levelWidth, height: 100 },
+      { x: 0, y: 500, width: levelWidth, height: 100 },
       { x: 1200, y: 400, width: 200, height: 20 },
       { x: 4500, y: 400, width: 200, height: 20 }
     ];
     
-    // Midground platforms (these remain drawn in ground mode as a faded background)
+    // Midground platforms (drawn in the background as a faded layer)
     const midPlatforms = [
-      { x: 0,    y: 300, width: levelWidth, height: 50 },
+      { x: 0, y: 300, width: levelWidth, height: 50 },
       { x: 2000, y: 250, width: 300, height: 50 },
       { x: 4500, y: 280, width: 200, height: 50 }
     ];
@@ -96,7 +96,7 @@
     ];
     
     // Collectible letters for "YOURE THE BEST DAD EVER"
-    // They are positioned in mid-air (“floating”) and will gently oscillate.
+    // They are positioned in mid-air ("floating") and will gently oscillate.
     let collectibles = [
       { index: 0,  letter: 'Y', x: 600,  y: 480, width: 20, height: 20, collected: false },
       { index: 1,  letter: 'O', x: 800,  y: 460, width: 20, height: 20, collected: false },
@@ -130,15 +130,15 @@
     // ---------------------------
     // PORTALS (TELEPORTATION)
     // ---------------------------
-    // In this version there is no distinct midground mode.
-    // Instead, when the player touches a portal, they are teleported to the other portal's location.
+    // Instead of entering a distinct midground mode,
+    // touching one portal teleports the player to the location of the other portal.
     const groundPortal = { x: 5500, y: 420, width: 60, height: 80 };
     const midPortal    = { x: 500,  y: 220, width: 60, height: 80 };
     
     // ---------------------------
     // INTERIOR MODE DATA
     // ---------------------------
-    // When the player touches a house door area, they automatically enter interior mode.
+    // When the player touches a house door area they automatically enter interior mode.
     // A fixed exit door is used to return to the ground.
     const exitDoor = { x: 10, y: canvas.height/2 - 40, width: 40, height: 80 };
     let currentHouse = null; // Will hold the current house when inside.
@@ -153,8 +153,25 @@
              a.y + a.height > b.y;
     }
     
+    // Check if the player is overlapping the climbable (lower trunk) part of any tree.
+    function isPlayerOnTree() {
+      for (let obj of fgDecorations) {
+        if (obj.type === 'tree') {
+          let trunkX = obj.x + obj.width/2 - (obj.width/3)/2;
+          let trunkWidth = obj.width/3;
+          let trunkY = obj.y + obj.height - obj.height/2;
+          let trunkHeight = obj.height/2;
+          let trunkRect = { x: trunkX, y: trunkY, width: trunkWidth, height: trunkHeight };
+          if (rectIntersect(player, trunkRect)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+    
     // ---------------------------
-    // MODE: GROUND (Always active outside interior)
+    // MODE: GROUND
     // ---------------------------
     function updateGround() {
       // Horizontal movement.
@@ -202,7 +219,7 @@
       if (player.x + player.width > levelWidth) player.x = levelWidth - player.width;
       if (player.y + player.height > levelHeight) player.y = levelHeight - player.height;
       
-      // Floating collectibles.
+      // Check floating collectibles.
       collectibles.forEach(item => {
         let floatOffset = Math.sin(time + item.index) * 5;
         let itemRect = { x: item.x, y: item.y + floatOffset, width: item.width, height: item.height };
@@ -211,7 +228,7 @@
         }
       });
       
-      // If a floating collectible touches a house, reassign it to interior.
+      // If a floating collectible touches a house, reassign its layer to interior.
       fgDecorations.forEach(obj => {
         if (obj.type === 'house') {
           collectibles.forEach(item => {
@@ -224,7 +241,7 @@
         }
       });
       
-      // Automatic transition to interior mode if player touches a house door.
+      // Automatic Interior Transition: if the player touches a house door.
       for (let obj of fgDecorations) {
         if (obj.type === 'house') {
           let door = { x: obj.x + obj.width/2 - 10, y: obj.y + obj.height - 30, width: 20, height: 30 };
@@ -243,13 +260,12 @@
       // Portal teleportation:
       // If the player touches the ground portal, teleport to the mid portal.
       if (rectIntersect(player, groundPortal)) {
-        // Teleport to just to the right of the midPortal.
         player.x = midPortal.x + midPortal.width + 10;
-        // Teleport to a ground-appropriate y (stay on the ground platform).
         player.y = groundPlatforms[0].y - player.height;
         player.vx = 0;
         player.vy = 0;
       }
+      
       // If the player touches the mid portal, teleport to the ground portal.
       if (rectIntersect(player, midPortal)) {
         player.x = groundPortal.x - groundPortal.width - 10;
