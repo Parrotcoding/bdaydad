@@ -25,21 +25,21 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Level dimensions (all modes share same width)
+    // Level dimensions (all modes share same width for simplicity)
     const levelWidth = 6000;
     const levelHeight = 600;
 
-    // Camera horizontal offset (always follows the player)
+    // Camera horizontal offset for scrolling (always follows the player)
     let camX = 0;
 
     // Game state: "ground" or "interior"
     let gameState = "ground";
 
-    // This variable controls which set of platforms is active for collision.
-    // It can be either "ground" (collide with groundPlatforms) or "midground" (collide with midPlatforms).
+    // This variable controls which set of collision platforms is active:
+    // "ground" (for groundPlatforms) or "midground" (for midPlatforms)
     let platformMode = "ground";
 
-    // Global time for oscillation effects
+    // Global time for oscillation of collectibles
     let time = 0;
 
     // Player definition
@@ -66,20 +66,20 @@
     // ---------------------------
     // GROUND MODE DATA
     // ---------------------------
-    // Ground platforms
+    // Ground platforms (the big ground plus a couple extras)
     const groundPlatforms = [
       { x: 0,    y: 500, width: levelWidth, height: 100 },
       { x: 1200, y: 400, width: 200, height: 20 },
       { x: 4500, y: 400, width: 200, height: 20 }
     ];
-    // Midground platforms – these form the “platform” when in midground mode.
+    // Midground platforms (these act as the collision layer when in "midground" mode)
     const midPlatforms = [
       { x: 0,    y: 300, width: levelWidth, height: 50 },
       { x: 2000, y: 250, width: 300, height: 50 },
       { x: 4500, y: 280, width: 200, height: 50 }
     ];
 
-    // Foreground decorations – placed on the ground (their bottoms near y=500)
+    // Foreground decorations – these sit on the ground (their bottoms align near y=500)
     const fgDecorations = [
       { type: 'bush',  x: 100,  y: 460, width: 80,  height: 40 },
       { type: 'tree',  x: 300,  y: 380, width: 60,  height: 120 },
@@ -99,6 +99,7 @@
     ];
 
     // Collectible letters for "YOURE THE BEST DAD EVER"
+    // They are positioned in mid-air ("floating") and will gently oscillate.
     let collectibles = [
       { index: 0,  letter: 'Y', x: 600,  y: 480, width: 20, height: 20, collected: false },
       { index: 1,  letter: 'O', x: 800,  y: 460, width: 20, height: 20, collected: false },
@@ -132,20 +133,19 @@
     // ---------------------------
     // PORTALS (TELEPORTATION)
     // ---------------------------
-    // There is no distinct midground state—when the player touches a portal,
-    // they are teleported to the other portal's location.
-    // The "to-midground" portal teleports the player upward (keeping x the same),
-    // and the "return-to-ground" portal teleports the player to a fixed location on the left.
+    // There is no distinct midground state.
+    // Touching the "to-midground" portal teleports the player straight up (preserving x);
+    // touching the "return-to-ground" portal teleports the player to a fixed left-side location.
     const groundPortal = { x: 5500, y: 420, width: 60, height: 80 };
     const midPortal    = { x: 500,  y: 220, width: 60, height: 80 };
 
     // ---------------------------
     // INTERIOR MODE DATA
     // ---------------------------
-    // When the player touches a house door, they automatically enter interior mode.
+    // When the player touches a house door, they enter interior mode.
     // A fixed exit door is used to return to the ground.
     const exitDoor = { x: 10, y: canvas.height/2 - 40, width: 40, height: 80 };
-    let currentHouse = null;
+    let currentHouse = null; // Will hold the current house when inside.
 
     // ---------------------------
     // UTILITY FUNCTIONS
@@ -157,17 +157,35 @@
              a.y + a.height > b.y;
     }
 
+    // --- Missing function: isPlayerOnTree ---
+    function isPlayerOnTree() {
+      for (let obj of fgDecorations) {
+        if (obj.type === 'tree') {
+          let trunkX = obj.x + obj.width/2 - (obj.width/3)/2;
+          let trunkWidth = obj.width / 3;
+          let trunkY = obj.y + obj.height - obj.height / 2;
+          let trunkHeight = obj.height / 2;
+          let trunkRect = { x: trunkX, y: trunkY, width: trunkWidth, height: trunkHeight };
+          if (rectIntersect(player, trunkRect)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
     // ---------------------------
     // MODE: GROUND (Always active outside interior)
     // ---------------------------
-    // In addition, we use the variable "platformMode" (declared above) to choose which collision platforms to use.
+    // platformMode controls which collision platforms are active.
+    // "ground" uses groundPlatforms; "midground" uses midPlatforms.
     function updateGround() {
       // Horizontal movement.
       if (keys['ArrowLeft'] || keys['a']) { player.vx = -moveSpeed; }
       else if (keys['ArrowRight'] || keys['d']) { player.vx = moveSpeed; }
       else { player.vx = 0; }
       player.x += player.vx;
-
+      
       // Vertical movement.
       if (isPlayerOnTree() && !keys[' ']) {
         if (keys['ArrowUp'] || keys['w']) { player.vy = -2; }
@@ -181,10 +199,10 @@
         player.vy += gravity;
       }
       player.y += player.vy;
-
+      
       // Choose active platforms based on platformMode.
       const activePlatforms = (platformMode === "ground") ? groundPlatforms : midPlatforms;
-
+      
       // Collision with active platforms.
       player.onGround = false;
       for (let plat of activePlatforms) {
@@ -196,12 +214,12 @@
           }
         }
       }
-
+      
       // Constrain within level boundaries.
       if (player.x < 0) player.x = 0;
       if (player.x + player.width > levelWidth) player.x = levelWidth - player.width;
       if (player.y + player.height > levelHeight) player.y = levelHeight - player.height;
-
+      
       // Floating collectibles.
       collectibles.forEach(item => {
         let floatOffset = Math.sin(time + item.index) * 5;
@@ -210,8 +228,8 @@
           item.collected = true;
         }
       });
-
-      // If a collectible touches a house, reassign to interior.
+      
+      // If a collectible touches a house, reassign its layer to interior.
       fgDecorations.forEach(obj => {
         if (obj.type === 'house') {
           collectibles.forEach(item => {
@@ -223,7 +241,7 @@
           });
         }
       });
-
+      
       // Automatic Interior Transition: if player touches a house door.
       for (let obj of fgDecorations) {
         if (obj.type === 'house') {
@@ -239,17 +257,20 @@
           }
         }
       }
-
+      
       // Portal Teleportation:
-      // When in ground mode and colliding with the ground portal, teleport the player straight up (keep x, change y).
+      // When in ground mode (platformMode "ground") and colliding with the ground portal,
+      // switch to midground mode by teleporting the player straight up (keep x, change y).
       if (platformMode === "ground" && rectIntersect(player, groundPortal)) {
         platformMode = "midground";
-        // Teleport player upward: preserve x, set y to the y of the first midPlatform.
+        // Teleport player upward to the first midPlatform level.
         player.y = midPlatforms[0].y - player.height;
         player.vx = 0;
         player.vy = 0;
       }
-      // When in midground mode and colliding with the mid portal, teleport to a fixed ground location on the left.
+      
+      // When in midground mode and colliding with the mid portal,
+      // teleport the player to a fixed ground location on the left.
       if (platformMode === "midground" && rectIntersect(player, midPortal)) {
         platformMode = "ground";
         player.x = 50;
@@ -257,7 +278,7 @@
         player.vx = 0;
         player.vy = 0;
       }
-
+      
       // Update camera.
       camX = player.x + player.width/2 - canvas.width/2;
       if (camX < 0) camX = 0;
@@ -268,12 +289,12 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
       ctx.translate(-camX, 0);
-
+      
       // Draw the sky.
       ctx.fillStyle = '#87CEEB';
       ctx.fillRect(0, 0, levelWidth, canvas.height);
-
-      // Draw midground platforms as a faded background (regardless of platformMode).
+      
+      // Draw midground platforms (faded as a background layer) regardless of platformMode.
       ctx.save();
       ctx.globalAlpha = 0.5;
       midPlatforms.forEach(plat => {
@@ -281,17 +302,17 @@
         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
       });
       ctx.restore();
-
+      
       // Draw background mountains.
       bgDecorations.forEach(obj => { drawMountain(obj); });
-
+      
       // Draw active platforms.
       const activePlatforms = (platformMode === "ground") ? groundPlatforms : midPlatforms;
       activePlatforms.forEach(plat => {
         ctx.fillStyle = (platformMode === "ground") ? '#654321' : '#333333';
         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
       });
-
+      
       // Draw floating collectibles.
       collectibles.forEach(item => {
         if (!item.collected) {
@@ -307,23 +328,23 @@
           ctx.fillText(item.letter, item.x + item.width/2, item.y + floatOffset + item.height/2);
         }
       });
-
+      
       // Draw the portals.
       drawPortal(groundPortal);
       drawPortal(midPortal);
-
+      
       // Draw foreground decorations.
       fgDecorations.forEach(obj => {
         if (obj.type === 'bush') { drawBush(obj); }
         else if (obj.type === 'tree') { drawTree(obj); }
         else if (obj.type === 'house') { drawHouse(obj); }
       });
-
+      
       // Draw the player.
       ctx.fillStyle = '#FF0000';
       ctx.fillRect(player.x, player.y, player.width, player.height);
       ctx.restore();
-
+      
       drawHUD();
     }
 
@@ -336,12 +357,12 @@
       if (keys['ArrowRight'] || keys['d']) { player.x += speed; }
       if (keys['ArrowUp'] || keys['w']) { player.y -= speed; }
       if (keys['ArrowDown'] || keys['s']) { player.y += speed; }
-
+      
       if (player.x < 0) player.x = 0;
       if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
       if (player.y < 0) player.y = 0;
       if (player.y + player.height > canvas.height) player.y = canvas.height - player.height;
-
+      
       if (rectIntersect(player, exitDoor)) {
         gameState = "ground";
         if (currentHouse) {
