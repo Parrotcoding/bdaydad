@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Layered Platformer Letter Hunt – Improved with Hills</title>
+  <title>Layered Platformer Letter Hunt – Midground Hills</title>
   <style>
     /* Reset and basic styling */
     body {
@@ -29,7 +29,7 @@
     const levelWidth = 6000;
     const levelHeight = 600;
     
-    // Camera horizontal offset for scrolling in ground/midground modes
+    // Camera horizontal offset (follows the player)
     let camX = 0;
     
     // Game state: "ground", "midground", or "interior"
@@ -62,16 +62,27 @@
     // ---------------------------
     // GROUND MODE DATA
     // ---------------------------
-    // Ground platforms
     const groundPlatforms = [
       { x: 0, y: 500, width: levelWidth, height: 100 },
       { x: 1200, y: 400, width: 200, height: 20 },
       { x: 4500, y: 400, width: 200, height: 20 }
     ];
     
-    // Instead of mid‑platforms we now use hills (see midHills below) in midground mode.
+    /* --- MIDGROUND HILLS (NEW) ---
+       We replace the old midPlatforms with an array of hills.
+       Each hill object has:
+         x       : starting horizontal coordinate
+         width   : hill's width
+         baseY   : vertical coordinate where the hill meets the sky
+         height  : maximum “dip” of the hill (used with a sine function to compute the surface)
+    */
+    const midHills = [
+      { x: 0,    width: 1000, baseY: 400, height: 100 },
+      { x: 1500, width: 1200, baseY: 350, height: 150 },
+      { x: 3200, width: 1500, baseY: 380, height: 120 }
+    ];
     
-    // Foreground decorations – objects on the ground (their bottoms align near y = 500)
+    // Foreground decorations – objects on the ground
     const fgDecorations = [
       { type: 'bush',  x: 100,  y: 460, width: 80,  height: 40 },
       { type: 'tree',  x: 300,  y: 380, width: 60,  height: 120 },
@@ -90,38 +101,22 @@
       { type: 'house', x: 5000, y: 360, width: 120, height: 140 }
     ];
     
-    // Midground hills – these replace the old mid-platforms.
-    // Each hill has:
-    //   x: the starting horizontal coordinate,
-    //   width: the hill's width,
-    //   baseY: the vertical coordinate where the hill meets the sky,
-    //   height: the maximum vertical dip of the hill.
-    const midHills = [
-      { x: 0,    width: 1000, baseY: 400, height: 100 },
-      { x: 1500, width: 1200, baseY: 350, height: 150 },
-      { x: 3200, width: 1500, baseY: 380, height: 120 }
-    ];
-    
     // Portal on the ground to go to midground.
     const groundPortal = { x: 5500, y: 420, width: 60, height: 80 };
     
-    // In midground mode, a portal will return you to the ground.
-    // Adjusted its y to 300 so it appears on a hill.
+    // In midground mode, a portal returns you to ground.
+    // Set its y to 300 so it sits on the first hill.
     const midPortal = { x: 500, y: 300, width: 60, height: 80 };
     
     // ---------------------------
     // INTERIOR MODE DATA
     // ---------------------------
-    // When the player touches a house door, transition to interior mode.
-    // The fixed exit door returns to ground mode.
     const exitDoor = { x: 10, y: canvas.height/2 - 40, width: 40, height: 80 };
     let currentHouse = null;
     
     // ---------------------------
     // COLLECTIBLES DATA
     // ---------------------------
-    // The secret message "YOURE THE BEST DAD EVER" (indices 0–18)
-    // In this version all collectibles are drawn as floating letters.
     let collectibles = [
       { index: 0,  letter: 'Y', x: 600,  y: 480, width: 20, height: 20, collected: false },
       { index: 1,  letter: 'O', x: 800,  y: 460, width: 20, height: 20, collected: false },
@@ -147,7 +142,6 @@
     // ---------------------------
     // BACKGROUND DECORATIONS
     // ---------------------------
-    // Mountains in the background.
     const bgDecorations = [
       { type: 'mountain', x: 800,  y: 200, width: 200, height: 300 },
       { type: 'mountain', x: 2200, y: 150, width: 250, height: 350 },
@@ -165,14 +159,14 @@
              a.y + a.height > b.y;
     }
     
-    // For a given hill object from midHills and an x coordinate, compute the hill's surface y using a sine curve.
+    // Given a hill object and an x coordinate, compute the hill's surface y (using a sine curve).
     function hillSurface(hill, x) {
       let relative = (x - hill.x) / hill.width;
       if (relative < 0 || relative > 1) return null;
       return hill.baseY - Math.sin(relative * Math.PI) * hill.height;
     }
     
-    // Helper: Given an x coordinate, return the hill surface of the hill covering that x (or a default if none).
+    // Helper: Given an x coordinate, return the hill surface of the hill covering that x (or default 300).
     function getMidgroundStartY(x) {
       for (let hill of midHills) {
         if (x >= hill.x && x <= hill.x + hill.width) {
@@ -183,7 +177,7 @@
       return 300;
     }
     
-    // For midground collectibles, compute an effective y (with oscillation) based on the hill beneath it.
+    // For midground collectibles, compute an effective y (with oscillation) based on the hill beneath.
     function getMidgroundCollectibleY(item) {
       let centerX = item.x + item.width/2;
       for (let hill of midHills) {
@@ -199,24 +193,16 @@
     // ---------------------------
     function updateGround() {
       // Horizontal movement.
-      if (keys['ArrowLeft'] || keys['a']) {
-        player.vx = -moveSpeed;
-      } else if (keys['ArrowRight'] || keys['d']) {
-        player.vx = moveSpeed;
-      } else {
-        player.vx = 0;
-      }
+      if (keys['ArrowLeft'] || keys['a']) { player.vx = -moveSpeed; }
+      else if (keys['ArrowRight'] || keys['d']) { player.vx = moveSpeed; }
+      else { player.vx = 0; }
       player.x += player.vx;
       
       // Vertical movement.
       if (isPlayerOnTree() && !keys[' ']) {
-        if (keys['ArrowUp'] || keys['w']) {
-          player.vy = -2;
-        } else if (keys['ArrowDown'] || keys['s']) {
-          player.vy = 2;
-        } else {
-          player.vy = 0;
-        }
+        if (keys['ArrowUp'] || keys['w']) { player.vy = -2; }
+        else if (keys['ArrowDown'] || keys['s']) { player.vy = 2; }
+        else { player.vy = 0; }
       } else {
         if ((keys[' '] || keys['ArrowUp'] || keys['w']) && player.onGround) {
           player.vy = jumpForce;
@@ -247,29 +233,23 @@
       collectibles.forEach(item => {
         let floatOffset = Math.sin(time + item.index) * 5;
         let itemRect = { x: item.x, y: item.y + floatOffset, width: item.width, height: item.height };
-        if (!item.collected && rectIntersect(player, itemRect)) {
-          item.collected = true;
-        }
+        if (!item.collected && rectIntersect(player, itemRect)) { item.collected = true; }
       });
       
-      // If a collectible touches any house, reassign it to interior.
+      // If a collectible touches a house, reassign it to interior.
       fgDecorations.forEach(obj => {
         if (obj.type === 'house') {
           collectibles.forEach(item => {
-            if (!item.collected) {
-              let floatOffset = Math.sin(time + item.index) * 5;
-              let itemRect = { x: item.x, y: item.y + floatOffset, width: item.width, height: item.height };
-              if (rectIntersect(itemRect, obj)) {
-                // Here you might flag the item as now being only available in the house.
-                // For this version, we simply mark it as if it should be collected in interior.
-                item.layer = "interior";
-              }
+            let floatOffset = Math.sin(time + item.index) * 5;
+            let itemRect = { x: item.x, y: item.y + floatOffset, width: item.width, height: item.height };
+            if (!item.collected && rectIntersect(itemRect, obj)) {
+              item.layer = "interior";
             }
           });
         }
       });
       
-      // Automatic Interior Transition: if player touches a house door.
+      // Automatic interior transition if player touches a house door.
       for (let obj of fgDecorations) {
         if (obj.type === 'house') {
           let door = { x: obj.x + obj.width/2 - 10, y: obj.y + obj.height - 30, width: 20, height: 30 };
@@ -285,10 +265,10 @@
         }
       }
       
-      // Transition to midground: if player touches the ground portal.
+      // Transition to midground if player touches the ground portal.
       if (rectIntersect(player, groundPortal)) {
         gameState = "midground";
-        // Adjust only the y-position based on the hill beneath the player's center.
+        // Keep current horizontal view; adjust y based on the hill beneath the player's center.
         player.y = getMidgroundStartY(player.x + player.width/2) - player.height;
         player.vx = 0;
         player.vy = 0;
@@ -310,7 +290,7 @@
       ctx.fillStyle = '#87CEEB';
       ctx.fillRect(0, 0, levelWidth, canvas.height);
       
-      // Draw midground hills as a faded background layer.
+      // Draw midground hills as a faded background.
       ctx.save();
       ctx.globalAlpha = 0.5;
       midHills.forEach(hill => {
@@ -340,7 +320,7 @@
           let floatOffset = Math.sin(time + item.index) * 5;
           ctx.fillStyle = '#FFD700';
           ctx.beginPath();
-          ctx.arc(item.x + item.width/2, item.y + floatOffset + item.height/2, item.width, 0, Math.PI*2);
+          ctx.arc(item.x + item.width/2, item.y + floatOffset + item.height/2, item.width, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = '#000';
           ctx.font = "16px Arial";
@@ -371,16 +351,11 @@
     // ---------------------------
     // MODE: MIDGROUND – SOLID HILLS
     // ---------------------------
-    // We remove the old midPlatforms and instead use collisions with the hills.
     function updateMidground() {
       // Horizontal movement.
-      if (keys['ArrowLeft'] || keys['a']) {
-        player.vx = -moveSpeed;
-      } else if (keys['ArrowRight'] || keys['d']) {
-        player.vx = moveSpeed;
-      } else {
-        player.vx = 0;
-      }
+      if (keys['ArrowLeft'] || keys['a']) { player.vx = -moveSpeed; }
+      else if (keys['ArrowRight'] || keys['d']) { player.vx = moveSpeed; }
+      else { player.vx = 0; }
       player.x += player.vx;
       
       // Jumping.
@@ -391,7 +366,7 @@
       player.vy += gravity;
       player.y += player.vy;
       
-      // Collision with the hills.
+      // Collision with hills (using midHills).
       let centerX = player.x + player.width/2;
       let landed = false;
       for (let hill of midHills) {
@@ -436,7 +411,7 @@
       ctx.fillStyle = '#87BFFF';
       ctx.fillRect(0, 0, levelWidth, canvas.height);
       
-      // Draw solid hills (full opacity).
+      // Draw solid hills (full opacity) from midHills.
       midHills.forEach(hill => {
         ctx.beginPath();
         ctx.moveTo(hill.x, canvas.height);
@@ -448,7 +423,7 @@
         ctx.fill();
       });
       
-      // Draw midground collectibles (indices 6-13 only).
+      // Draw midground collectibles (indices 6–13 only).
       collectibles.forEach(item => {
         if (!item.collected && item.index >= 6 && item.index <= 13) {
           let effectiveY = getMidgroundCollectibleY(item);
@@ -479,11 +454,11 @@
     // MODE: INTERIOR
     // ---------------------------
     function updateInterior() {
-      const interiorSpeed = 3;
-      if (keys['ArrowLeft'] || keys['a']) { player.x -= interiorSpeed; }
-      if (keys['ArrowRight'] || keys['d']) { player.x += interiorSpeed; }
-      if (keys['ArrowUp'] || keys['w']) { player.y -= interiorSpeed; }
-      if (keys['ArrowDown'] || keys['s']) { player.y += interiorSpeed; }
+      const speed = 3;
+      if (keys['ArrowLeft'] || keys['a']) { player.x -= speed; }
+      if (keys['ArrowRight'] || keys['d']) { player.x += speed; }
+      if (keys['ArrowUp'] || keys['w']) { player.y -= speed; }
+      if (keys['ArrowDown'] || keys['s']) { player.y += speed; }
       
       if (player.x < 0) player.x = 0;
       if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
