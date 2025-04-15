@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Platformer Letter Hunt Game</title>
+  <title>Platformer Letter Hunt – Expanded Map & Interiors</title>
   <style>
-    /* Remove default spacing and prevent scrollbars */
     body {
       margin: 0;
       overflow: hidden;
@@ -19,22 +18,22 @@
 <body>
   <canvas id="gameCanvas" width="800" height="600"></canvas>
   <script>
-    // ---------------------------
-    // SETUP & GLOBAL VARIABLES
-    // ---------------------------
+    // Global Setup and Variables
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Level dimensions
-    const levelWidth = 4000;  // The level spans 4000 pixels wide
-    const levelHeight = 600;  // Same height as canvas
+    // Game state flags
+    let inHouse = false;
+    let currentHouse = null; // The house we are inside
 
-    // Camera offset (for side‑scrolling)
+    // Level dimensions – a bigger map!
+    const levelWidth = 6000;
+    const levelHeight = 600; // same as canvas height
+
+    // Camera horizontal offset for side‑scrolling
     let camX = 0;
 
-    // ---------------------------
-    // PLAYER DEFINITION & CONTROLS
-    // ---------------------------
+    // Player object
     const player = {
       x: 100,
       y: 450,
@@ -45,39 +44,36 @@
       onGround: false
     };
 
+    // Keyboard input tracking
     const keys = {};
     document.addEventListener('keydown', e => { keys[e.key] = true; });
     document.addEventListener('keyup', e => { keys[e.key] = false; });
 
-    // ---------------------------
-    // PHYSICS PARAMETERS
-    // ---------------------------
+    // Physics parameters for exterior movement
     const gravity = 0.5;
     const moveSpeed = 3;
     const jumpForce = -10;
 
-    // ---------------------------
-    // LEVEL DATA
-    // ---------------------------
-    // Platforms (collidable surfaces)
+    // Platforms – including the ground and extra platforms
     const platforms = [
       { x: 0, y: 500, width: levelWidth, height: 100 },
-      { x: 1200, y: 400, width: 200, height: 20 } // A floating platform for variety
+      { x: 1200, y: 400, width: 200, height: 20 },
+      { x: 4500, y: 400, width: 200, height: 20 }
     ];
 
-    // Collectible letters (each corresponds to one letter in the secret message).
-    // Each has an index so the HUD shows them in the correct order.
+    // Collectible letters (secret message: "YOURE THE BEST DAD EVER")
+    // The letters are spread throughout the bigger map.
     const collectibles = [
-      { index: 0, letter: 'Y', x: 150,  y: 450, width: 20, height: 20, collected: false },
-      { index: 1, letter: 'O', x: 350,  y: 400, width: 20, height: 20, collected: false },
-      { index: 2, letter: 'U', x: 550,  y: 450, width: 20, height: 20, collected: false },
-      { index: 3, letter: 'R', x: 750,  y: 430, width: 20, height: 20, collected: false },
-      { index: 4, letter: 'E', x: 950,  y: 370, width: 20, height: 20, collected: false },
-      { index: 5, letter: 'T', x: 1150, y: 420, width: 20, height: 20, collected: false },
-      { index: 6, letter: 'H', x: 1350, y: 430, width: 20, height: 20, collected: false },
-      { index: 7, letter: 'E', x: 1550, y: 350, width: 20, height: 20, collected: false },
-      { index: 8, letter: 'B', x: 1750, y: 410, width: 20, height: 20, collected: false },
-      { index: 9, letter: 'E', x: 1950, y: 330, width: 20, height: 20, collected: false },
+      { index: 0,  letter: 'Y', x: 150,  y: 450, width: 20, height: 20, collected: false },
+      { index: 1,  letter: 'O', x: 350,  y: 400, width: 20, height: 20, collected: false },
+      { index: 2,  letter: 'U', x: 550,  y: 450, width: 20, height: 20, collected: false },
+      { index: 3,  letter: 'R', x: 750,  y: 430, width: 20, height: 20, collected: false },
+      { index: 4,  letter: 'E', x: 950,  y: 370, width: 20, height: 20, collected: false },
+      { index: 5,  letter: 'T', x: 1150, y: 420, width: 20, height: 20, collected: false },
+      { index: 6,  letter: 'H', x: 1350, y: 430, width: 20, height: 20, collected: false },
+      { index: 7,  letter: 'E', x: 1550, y: 350, width: 20, height: 20, collected: false },
+      { index: 8,  letter: 'B', x: 1750, y: 410, width: 20, height: 20, collected: false },
+      { index: 9,  letter: 'E', x: 1950, y: 330, width: 20, height: 20, collected: false },
       { index: 10, letter: 'S', x: 2150, y: 300, width: 20, height: 20, collected: false },
       { index: 11, letter: 'T', x: 2350, y: 340, width: 20, height: 20, collected: false },
       { index: 12, letter: 'D', x: 2550, y: 390, width: 20, height: 20, collected: false },
@@ -86,19 +82,19 @@
       { index: 15, letter: 'E', x: 3150, y: 320, width: 20, height: 20, collected: false },
       { index: 16, letter: 'V', x: 3350, y: 380, width: 20, height: 20, collected: false },
       { index: 17, letter: 'E', x: 3550, y: 330, width: 20, height: 20, collected: false },
-      { index: 18, letter: 'R', x: 3750, y: 370, width: 20, height: 20, collected: false }
+      { index: 18, letter: 'R', x: 5800, y: 370, width: 20, height: 20, collected: false }
     ];
 
-    // Background decorations – these are drawn behind the platforms & collectibles.
-    // In this game, mountains serve as a scenic backdrop.
+    // Background decorations (mountains)
     const bgDecorations = [
       { type: 'mountain', x: 800,  y: 200, width: 200, height: 300 },
       { type: 'mountain', x: 2200, y: 150, width: 250, height: 350 },
-      { type: 'mountain', x: 3200, y: 170, width: 250, height: 350 }
+      { type: 'mountain', x: 3200, y: 170, width: 250, height: 350 },
+      { type: 'mountain', x: 4800, y: 180, width: 300, height: 340 }
     ];
 
-    // Foreground decorations – these are drawn after the collectibles so they can obscure (hide) them.
-    // They represent bushes, trees, and houses that you might run behind or even enter.
+    // Foreground decorations – obstacles that hide collectibles.
+    // They now include bushes, climbable trees, and houses (some with interiors).
     const fgDecorations = [
       { type: 'bush',  x: 100,  y: 460, width: 80,  height: 40 },
       { type: 'tree',  x: 300,  y: 360, width: 60,  height: 120 },
@@ -113,63 +109,11 @@
       { type: 'tree',  x: 2930, y: 400, width: 60,  height: 120 },
       { type: 'house', x: 3360, y: 340, width: 120, height: 140 },
       { type: 'bush',  x: 3550, y: 320, width: 80,  height: 40 },
-      { type: 'house', x: 3700, y: 360, width: 120, height: 140 }
+      { type: 'house', x: 3700, y: 360, width: 120, height: 140 },
+      { type: 'house', x: 5000, y: 360, width: 120, height: 140 } // Additional house for interior exploration
     ];
 
-    // ---------------------------
-    // GAME UPDATE FUNCTION
-    // ---------------------------
-    function update() {
-      // --- Player Movement ---
-      if (keys['ArrowLeft'] || keys['a']) {
-        player.vx = -moveSpeed;
-      } else if (keys['ArrowRight'] || keys['d']) {
-        player.vx = moveSpeed;
-      } else {
-        player.vx = 0;
-      }
-      if ((keys['ArrowUp'] || keys['w'] || keys[' ']) && player.onGround) {
-        player.vy = jumpForce;
-        player.onGround = false;
-      }
-      // Apply gravity
-      player.vy += gravity;
-      // Update position
-      player.x += player.vx;
-      player.y += player.vy;
-
-      // --- Platform Collision ---
-      player.onGround = false;
-      platforms.forEach(platform => {
-        if (rectIntersect(player, platform)) {
-          // If falling, clamp player on top of the platform
-          if (player.vy > 0) {
-            player.y = platform.y - player.height;
-            player.vy = 0;
-            player.onGround = true;
-          }
-        }
-      });
-
-      // Keep player within level boundaries
-      if (player.x < 0) player.x = 0;
-      if (player.x + player.width > levelWidth) player.x = levelWidth - player.width;
-
-      // --- Collectible Collision ---
-      collectibles.forEach(item => {
-        if (!item.collected && rectIntersect(player, item)) {
-          item.collected = true;
-          // (You could add sound effects or particle effects here.)
-        }
-      });
-
-      // --- Camera Update ---
-      camX = player.x + player.width / 2 - canvas.width / 2;
-      if (camX < 0) camX = 0;
-      if (camX > levelWidth - canvas.width) camX = levelWidth - canvas.width;
-    }
-
-    // Rectangle collision detection utility
+    // Utility function for rectangle collision detection
     function rectIntersect(a, b) {
       return a.x < b.x + b.width &&
              a.x + a.width > b.x &&
@@ -177,38 +121,127 @@
              a.y + a.height > b.y;
     }
 
-    // ---------------------------
-    // RENDERING FUNCTIONS
-    // ---------------------------
-    function draw() {
+    // Determine if the player is in the climbable portion of any tree
+    function isPlayerOnTree() {
+      for (let obj of fgDecorations) {
+        if (obj.type === 'tree') {
+          // Define the trunk area of the tree (lower half)
+          let trunkX = obj.x + obj.width/2 - (obj.width/3)/2;
+          let trunkWidth = obj.width/3;
+          let trunkY = obj.y + obj.height - obj.height/2;
+          let trunkHeight = obj.height/2;
+          let trunkRect = { x: trunkX, y: trunkY, width: trunkWidth, height: trunkHeight };
+          if (rectIntersect(player, trunkRect)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    // ------------------ Exterior (World) Mode ------------------
+    function updateExterior() {
+      // Horizontal movement (arrow keys or A/D)
+      if (keys['ArrowLeft'] || keys['a']) {
+        player.vx = -moveSpeed;
+      } else if (keys['ArrowRight'] || keys['d']) {
+        player.vx = moveSpeed;
+      } else {
+        player.vx = 0;
+      }
+      player.x += player.vx;
+
+      // Vertical movement:
+      // If the player is on a tree, allow climbing (up/down keys)
+      if (isPlayerOnTree()) {
+        if (keys['ArrowUp'] || keys['w']) {
+          player.vy = -2;
+        } else if (keys['ArrowDown'] || keys['s']) {
+          player.vy = 2;
+        } else {
+          player.vy = 0;
+        }
+      } else {
+        // Apply gravity normally
+        player.vy += gravity;
+      }
+      player.y += player.vy;
+
+      // Platform collision detection
+      player.onGround = false;
+      for (let plat of platforms) {
+        if (rectIntersect(player, plat)) {
+          if (player.vy > 0) { // falling
+            player.y = plat.y - player.height;
+            player.vy = 0;
+            player.onGround = true;
+          }
+        }
+      }
+
+      // Keep player within level boundaries
+      if (player.x < 0) player.x = 0;
+      if (player.x + player.width > levelWidth) player.x = levelWidth - player.width;
+      if (player.y + player.height > levelHeight) player.y = levelHeight - player.height;
+
+      // Collectibles: mark as collected if touched
+      collectibles.forEach(item => {
+        if (!item.collected && rectIntersect(player, item)) {
+          item.collected = true;
+        }
+      });
+
+      // Check for entering a house:
+      // For each house in fgDecorations, if the player touches its door and presses "e"
+      for (let house of fgDecorations) {
+        if (house.type === 'house') {
+          let door = { x: house.x + house.width/2 - 10, y: house.y + house.height - 30, width: 20, height: 30 };
+          if (rectIntersect(player, door) && keys['e']) {
+            inHouse = true;
+            currentHouse = house;
+            // Place the player at the center of the interior scene.
+            player.x = canvas.width/2 - player.width/2;
+            player.y = canvas.height - 100;
+            player.vx = 0;
+            player.vy = 0;
+            break;
+          }
+        }
+      }
+
+      // Update camera to follow the player horizontally
+      camX = player.x + player.width/2 - canvas.width/2;
+      if (camX < 0) camX = 0;
+      if (camX > levelWidth - canvas.width) camX = levelWidth - canvas.width;
+    }
+
+    function drawExterior() {
+      // Clear the canvas and apply the camera offset.
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Save the context and apply the camera horizontal offset
       ctx.save();
       ctx.translate(-camX, 0);
-      
-      // Draw the sky (background for the whole level)
+
+      // Draw the sky.
       ctx.fillStyle = '#87CEEB';
       ctx.fillRect(0, 0, levelWidth, canvas.height);
-      
-      // --- Background Decorations (Mountains) ---
+
+      // Draw background mountains.
       bgDecorations.forEach(obj => {
         drawMountain(obj);
       });
-      
-      // --- Platforms ---
-      platforms.forEach(platform => {
+
+      // Draw platforms.
+      platforms.forEach(plat => {
         ctx.fillStyle = '#654321';
-        ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+        ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
       });
-      
-      // --- Collectible Letters ---
+
+      // Draw collectibles.
       collectibles.forEach(item => {
         if (!item.collected) {
-          // Draw the collectible as a gold circle with the letter centered inside
           ctx.fillStyle = '#FFD700';
           ctx.beginPath();
-          ctx.arc(item.x + item.width/2, item.y + item.height/2, item.width, 0, Math.PI * 2);
+          ctx.arc(item.x + item.width/2, item.y + item.height/2, item.width, 0, Math.PI*2);
           ctx.fill();
           ctx.fillStyle = '#000';
           ctx.font = "16px Arial";
@@ -217,8 +250,8 @@
           ctx.fillText(item.letter, item.x + item.width/2, item.y + item.height/2);
         }
       });
-      
-      // --- Foreground Decorations (Bushes, Trees, Houses) ---
+
+      // Draw foreground obstacles.
       fgDecorations.forEach(obj => {
         if (obj.type === 'bush') {
           drawBush(obj);
@@ -228,18 +261,17 @@
           drawHouse(obj);
         }
       });
-      
-      // --- Draw the Player ---
+
+      // Draw the player.
       ctx.fillStyle = '#FF0000';
       ctx.fillRect(player.x, player.y, player.width, player.height);
-      
+
       ctx.restore();
-      
-      // --- HUD: Display Collected Letters ---
+
+      // Draw HUD (collected letters)
       drawHUD();
     }
 
-    // Draw a mountain as a simple triangle
     function drawMountain(m) {
       ctx.fillStyle = '#A9A9A9';
       ctx.beginPath();
@@ -250,30 +282,36 @@
       ctx.fill();
     }
 
-    // Draw a bush as an ellipse
     function drawBush(b) {
+      ctx.save();
+      // Fade bush if player overlaps
+      if (rectIntersect(player, b)) { ctx.globalAlpha = 0.5; }
       ctx.fillStyle = '#228B22';
       ctx.beginPath();
-      ctx.ellipse(b.x + b.width/2, b.y + b.height/2, b.width/2, b.height/2, 0, 0, Math.PI * 2);
+      ctx.ellipse(b.x + b.width/2, b.y + b.height/2, b.width/2, b.height/2, 0, 0, Math.PI*2);
       ctx.fill();
+      ctx.restore();
     }
 
-    // Draw a tree: a brown trunk with a green canopy
     function drawTree(t) {
-      // Trunk
+      ctx.save();
+      if (rectIntersect(player, t)) { ctx.globalAlpha = 0.5; }
+      // Draw trunk
       ctx.fillStyle = '#8B4513';
       const trunkWidth = t.width / 3;
       const trunkHeight = t.height / 2;
       ctx.fillRect(t.x + t.width/2 - trunkWidth/2, t.y + t.height - trunkHeight, trunkWidth, trunkHeight);
-      // Canopy (circle)
+      // Draw canopy
       ctx.fillStyle = '#006400';
       ctx.beginPath();
-      ctx.arc(t.x + t.width/2, t.y + t.height/2, t.width/2, 0, Math.PI * 2);
+      ctx.arc(t.x + t.width/2, t.y + t.height/2, t.width/2, 0, Math.PI*2);
       ctx.fill();
+      ctx.restore();
     }
 
-    // Draw a house: a rectangle with a triangular roof and a door
     function drawHouse(h) {
+      ctx.save();
+      if (rectIntersect(player, h)) { ctx.globalAlpha = 0.5; }
       // House body
       ctx.fillStyle = '#FFDAB9';
       ctx.fillRect(h.x, h.y, h.width, h.height);
@@ -288,17 +326,19 @@
       // Door
       ctx.fillStyle = '#654321';
       ctx.fillRect(h.x + h.width/2 - 10, h.y + h.height - 30, 20, 30);
+      ctx.restore();
     }
 
-    // Draw the Heads-Up Display showing your secret message progress
+    // Draw the Heads-Up Display showing collected letters progress.
     function drawHUD() {
       let collectedLetters = [];
-      // Sort collectibles by the secret message order (index)
-      collectibles.sort((a, b) => a.index - b.index).forEach(item => {
-        collectedLetters.push(item.collected ? item.letter : '_');
-      });
+      collectibles
+        .slice()
+        .sort((a, b) => a.index - b.index)
+        .forEach(item => {
+          collectedLetters.push(item.collected ? item.letter : '_');
+        });
       const message = collectedLetters.join(' ');
-      
       ctx.save();
       ctx.fillStyle = 'rgba(0,0,0,0.5)';
       ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
@@ -309,12 +349,70 @@
       ctx.restore();
     }
 
-    // ---------------------------
-    // GAME LOOP
-    // ---------------------------
+    // ------------------ Interior (House) Mode ------------------
+    // Define an exit door in the interior (left wall).
+    const exitDoor = { x: 10, y: canvas.height/2 - 40, width: 40, height: 80 };
+
+    function updateInterior() {
+      // Allow free movement inside the house using arrow keys.
+      const interiorSpeed = 3;
+      if (keys['ArrowLeft'] || keys['a']) {
+        player.x -= interiorSpeed;
+      }
+      if (keys['ArrowRight'] || keys['d']) {
+        player.x += interiorSpeed;
+      }
+      if (keys['ArrowUp'] || keys['w']) {
+        player.y -= interiorSpeed;
+      }
+      if (keys['ArrowDown'] || keys['s']) {
+        player.y += interiorSpeed;
+      }
+      // Constrain player within the interior (canvas dimensions)
+      if (player.x < 0) player.x = 0;
+      if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+      if (player.y < 0) player.y = 0;
+      if (player.y + player.height > canvas.height) player.y = canvas.height - player.height;
+
+      // If the player touches the exit door and presses "e", exit the house.
+      if (rectIntersect(player, exitDoor) && keys['e']) {
+        inHouse = false;
+        // Place player just outside the house door (to the right)
+        player.x = currentHouse.x + currentHouse.width + 10;
+        player.y = currentHouse.y + currentHouse.height - player.height;
+        currentHouse = null;
+      }
+    }
+
+    function drawInterior() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Draw a simple interior background.
+      ctx.fillStyle = '#F5F5DC'; // beige
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Draw a piece of furniture (a table).
+      ctx.fillStyle = '#8B4513';
+      ctx.fillRect(canvas.width/2 - 50, canvas.height/2, 100, 20);
+      // Draw the exit door.
+      ctx.fillStyle = '#654321';
+      ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.width, exitDoor.height);
+      ctx.fillStyle = '#FFF';
+      ctx.font = "16px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("Exit", exitDoor.x + exitDoor.width/2, exitDoor.y + exitDoor.height/2);
+      // Draw the player.
+      ctx.fillStyle = '#FF0000';
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    // ------------------ Main Game Loop ------------------
     function gameLoop() {
-      update();
-      draw();
+      if (inHouse) {
+        updateInterior();
+        drawInterior();
+      } else {
+        updateExterior();
+        drawExterior();
+      }
       requestAnimationFrame(gameLoop);
     }
     gameLoop();
