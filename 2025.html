@@ -3,121 +3,138 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hidden Letters – Scene Version</title>
+  <title>Hidden Letters – Complex Scene</title>
   <style>
     body {
       margin: 0;
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       background-color: #333;
       display: flex;
       flex-direction: column;
       align-items: center;
       overflow: hidden;
     }
+
     .instruction {
       margin: 10px;
       font-size: 20px;
       color: #fff;
     }
-    /* Game container holds the canvas and the scene objects */
+
     .game-container {
       position: relative;
       width: 1200px;
       height: 800px;
       border: 2px solid #444;
       box-shadow: 0 0 10px rgba(0,0,0,0.5);
-      background-color: #87CEEB; /* fallback sky blue */
       overflow: hidden;
+      background-color: #87CEEB; /* fallback */
     }
-    /* The canvas (background scene) is drawn behind everything */
+
+    /* Canvas is in the back */
     #background {
       position: absolute;
       top: 0;
       left: 0;
       z-index: 0;
     }
-    /* Each scene object that hides a letter */
+
+    /* Container for each letter object (positioned over the canvas) */
     .letter-object {
       position: absolute;
       width: 120px;
       height: 120px;
-      /* no overflow so the letter can “stick out” */
       z-index: 2;
-      cursor: pointer;
+      pointer-events: none; /* The clickable object inside will handle events */
     }
-    /* The letter itself (initially partially clipped) */
+
+    /* The letter element (only its top portion initially visible) */
     .letter {
       position: absolute;
+      bottom: 70px; /* so it “sticks out” above the object */
       left: 50%;
       transform: translateX(-50%);
       font-size: 48px;
       font-weight: bold;
       color: #fff;
-      transition: clip-path 0.5s;
-      /* adjust line-height so the letter renders nicely */
-      line-height: 1;
       z-index: 1;
+      pointer-events: none;
+      transition: clip-path 0.5s;
     }
-    /* Initially, only a small top slice of the letter is visible */
+
+    /* Initially clip off most of the letter—only the top edge shows */
     .hidden-letter {
-      /* Show only about the top 20px of the letter (adjust as needed) */
       clip-path: inset(0 0 35px 0);
     }
-    /* When removed, the letter’s clipping is removed (revealing its full height) */
+
+    /* When revealed, the full letter is visible */
     .revealed-letter {
       clip-path: none;
     }
-    /* Object “cover” styles for a house */
+
+    /* A more detailed house object */
     .object.house {
       position: absolute;
-      width: 100px;
-      height: 80px;
-      background-color: #8B4513;
       bottom: 0;
-      left: 10px;
-      z-index: 3;
+      left: calc(50% - 40px);
+      width: 80px;
+      height: 60px;
+      background: #D2691E;
+      border: 2px solid #8B4513;
+      border-radius: 4px;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+      cursor: pointer;
+      pointer-events: auto;
       transition: transform 0.6s ease, opacity 0.6s ease;
     }
     .object.house::before {
       content: "";
       position: absolute;
-      bottom: 80px;
+      bottom: 60px;
       left: 0;
-      border-left: 50px solid transparent;
-      border-right: 50px solid transparent;
-      border-bottom: 30px solid #A52A2A;
+      width: 0;
+      height: 0;
+      border-left: 40px solid transparent;
+      border-right: 40px solid transparent;
+      border-bottom: 30px solid #B22222;
     }
-    /* Object “cover” styles for a tree */
+
+    /* A more detailed tree object */
     .object.tree {
       position: absolute;
-      width: 40px;
-      height: 80px;
-      background-color: #8B4513;
       bottom: 0;
-      left: 40px;
-      z-index: 3;
+      left: calc(50% - 20px);
+      width: 40px;
+      height: 60px;
+      background: #8B4513;
+      border-radius: 2px;
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+      cursor: pointer;
+      pointer-events: auto;
       transition: transform 0.6s ease, opacity 0.6s ease;
     }
     .object.tree::after {
       content: "";
       position: absolute;
-      bottom: 70px;
+      bottom: 50px;
       left: -20px;
       width: 80px;
       height: 50px;
-      background-color: #228B22;
+      background: #228B22;
       border-radius: 50%;
     }
-    /* When an object is clicked, add a class that slides & fades it out */
+
+    /* When an object is clicked, it animates away */
     .removed {
       transform: translateX(150px);
       opacity: 0;
     }
+
     /* The solution row at the bottom */
     #solution {
       width: 1200px;
       min-height: 80px;
-      background-color: #222;
+      background: #222;
       color: #fff;
       font-size: 36px;
       display: flex;
@@ -139,61 +156,133 @@
 </head>
 <body>
   <div class="instruction">
-    Find the hidden letters in the scene! Click on an object (house or tree) to reveal the full letter.
+    Click on an object (house or tree) to reveal the hidden letter.
   </div>
   <div class="game-container" id="game">
-    <!-- Canvas for the drawn background -->
+    <!-- The canvas will render the complex scene -->
     <canvas id="background" width="1200" height="800"></canvas>
-    <!-- The letter–object pairs will be created by JavaScript -->
+    <!-- Letter objects are created dynamically -->
   </div>
   <div id="solution">
-    <!-- Each letter slot will fill as letters are found -->
+    <!-- As letters are revealed, they populate these slots -->
   </div>
 
   <script>
-    // Draw a simple scenic background (village/mountain scene) on the canvas
-    (function drawScene() {
+    // Draw a complex, realistic scene on the canvas.
+    function drawScene() {
       const canvas = document.getElementById('background');
       const ctx = canvas.getContext('2d');
       const width = canvas.width;
       const height = canvas.height;
       
-      // Sky gradient
+      // Sky gradient (top: blue, bottom: soft almond)
       const skyGradient = ctx.createLinearGradient(0, 0, 0, height);
       skyGradient.addColorStop(0, '#87CEEB');
-      skyGradient.addColorStop(1, '#FFFACD');
+      skyGradient.addColorStop(1, '#FFEBCD');
       ctx.fillStyle = skyGradient;
       ctx.fillRect(0, 0, width, height);
       
-      // Mountains
-      ctx.fillStyle = '#A9A9A9';
+      // Sun with radial gradient
+      const sunX = width * 0.8, sunY = height * 0.2, sunRadius = 50;
+      const sunGradient = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, sunRadius);
+      sunGradient.addColorStop(0, '#FFD700');
+      sunGradient.addColorStop(1, 'rgba(255,215,0,0)');
+      ctx.fillStyle = sunGradient;
       ctx.beginPath();
-      ctx.moveTo(0, height * 0.6);
-      ctx.lineTo(width * 0.3, height * 0.3);
-      ctx.lineTo(width * 0.6, height * 0.6);
-      ctx.closePath();
+      ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
       ctx.fill();
       
-      ctx.fillStyle = '#808080';
-      ctx.beginPath();
-      ctx.moveTo(width * 0.4, height * 0.6);
-      ctx.lineTo(width * 0.65, height * 0.35);
-      ctx.lineTo(width * 0.9, height * 0.6);
-      ctx.closePath();
-      ctx.fill();
-      
-      // A row of distant village houses
-      ctx.fillStyle = '#654321';
-      for (let i = 0; i < 5; i++) {
-        let houseWidth = 40;
-        let houseHeight = 30;
-        let x = i * 60 + 100;
-        let y = height * 0.6 - houseHeight;
-        ctx.fillRect(x, y, houseWidth, houseHeight);
+      // Draw some fluffy clouds
+      function drawCloud(x, y, scale) {
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        ctx.beginPath();
+        ctx.arc(x, y, 20 * scale, Math.PI * 0.5, Math.PI * 1.5);
+        ctx.arc(x + 25 * scale, y - 20 * scale, 20 * scale, Math.PI * 1, Math.PI * 1.85);
+        ctx.arc(x + 55 * scale, y - 10 * scale, 25 * scale, Math.PI * 1.37, Math.PI * 1.91);
+        ctx.arc(x + 70 * scale, y, 20 * scale, Math.PI * 1.5, Math.PI * 0.5);
+        ctx.closePath();
+        ctx.fill();
       }
-    })();
-
-    // Define the letters with positions (as percentages) and assign a type: "house" or "tree"
+      drawCloud(150, 100, 1);
+      drawCloud(400, 80, 1.2);
+      drawCloud(700, 120, 1);
+      drawCloud(1000, 80, 0.8);
+      
+      // Draw mountains with snow caps
+      function drawMountain(x, y, widthFactor, heightFactor, color, snowCap) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + 150 * widthFactor, y - 200 * heightFactor);
+        ctx.lineTo(x + 300 * widthFactor, y);
+        ctx.closePath();
+        ctx.fill();
+        if (snowCap) {
+          ctx.fillStyle = "#FFF";
+          ctx.beginPath();
+          ctx.moveTo(x + 150 * widthFactor, y - 200 * heightFactor);
+          ctx.lineTo(x + 130 * widthFactor, y - 150 * heightFactor);
+          ctx.lineTo(x + 170 * widthFactor, y - 150 * heightFactor);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+      drawMountain(50, height * 0.8, 1, 1, "#696969", true);
+      drawMountain(300, height * 0.8, 1, 1, "#808080", true);
+      drawMountain(600, height * 0.8, 1, 1.2, "#505050", true);
+      drawMountain(900, height * 0.8, 1, 1, "#7F7F7F", true);
+      
+      // Rolling green valley/hills at the bottom
+      ctx.fillStyle = "#228B22";
+      ctx.beginPath();
+      ctx.moveTo(0, height * 0.8);
+      ctx.quadraticCurveTo(width * 0.5, height * 0.7, width, height * 0.8);
+      ctx.lineTo(width, height);
+      ctx.lineTo(0, height);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Draw a small village of houses in the valley
+      function drawHouse(x, y, scale) {
+        ctx.fillStyle = "#8B4513";
+        ctx.fillRect(x, y - 40 * scale, 50 * scale, 40 * scale);
+        ctx.fillStyle = "#A52A2A";
+        ctx.beginPath();
+        ctx.moveTo(x, y - 40 * scale);
+        ctx.lineTo(x + 25 * scale, y - 70 * scale);
+        ctx.lineTo(x + 50 * scale, y - 40 * scale);
+        ctx.closePath();
+        ctx.fill();
+      }
+      drawHouse(200, height * 0.8, 1);
+      drawHouse(280, height * 0.8, 1);
+      drawHouse(360, height * 0.8, 1);
+      drawHouse(450, height * 0.8, 1);
+      drawHouse(550, height * 0.8, 1);
+      
+      // Draw a few trees along the valley
+      function drawTree(x, y, scale) {
+        ctx.fillStyle = "#8B4513";
+        ctx.fillRect(x, y - 30 * scale, 10 * scale, 30 * scale);
+        ctx.fillStyle = "#006400";
+        ctx.beginPath();
+        ctx.arc(x + 5 * scale, y - 40 * scale, 15 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x - 5 * scale, y - 30 * scale, 15 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + 15 * scale, y - 30 * scale, 15 * scale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      drawTree(800, height * 0.8, 1);
+      drawTree(850, height * 0.8, 1);
+      drawTree(900, height * 0.8, 1);
+    }
+    drawScene();
+    
+    // Define the secret phrase letters and their fixed positions.
+    // (Each object holds a letter and is placed using percentage values.)
     const letters = [
       { letter: "Y", left: "10%", top: "20%" },
       { letter: "O", left: "30%", top: "15%" },
@@ -215,63 +304,52 @@
       { letter: "E", left: "60%", top: "90%" },
       { letter: "R", left: "40%", top: "90%" }
     ];
-    // For variety, assign object type: even indices become "house", odd become "tree"
+    // For variety, assign the object type: house for even indexes, tree for odd indexes.
     letters.forEach((obj, i) => {
       obj.type = (i % 2 === 0) ? "house" : "tree";
     });
-
+    
     const gameContainer = document.getElementById("game");
     const solutionContainer = document.getElementById("solution");
-
-    // Create the blank solution slots in order of the phrase
+    
+    // Create blank solution slots matching the phrase order.
     letters.forEach((item, index) => {
       const slot = document.createElement("div");
       slot.className = "slot";
       slot.setAttribute("data-index", index);
       solutionContainer.appendChild(slot);
     });
-
-    // For each letter, create a container with the letter and a scene object that covers it
+    
+    // For each letter, create a container with the letter and an interactive scene object.
     letters.forEach((item, index) => {
       const container = document.createElement("div");
       container.className = "letter-object";
       container.style.left = item.left;
       container.style.top = item.top;
       container.setAttribute("data-index", index);
-
-      // Create the letter element.
+      
+      // Create the letter element (initially only a bit visible)
       const letterElem = document.createElement("div");
       letterElem.className = "letter hidden-letter";
-      // Position the letter so that it “sticks out” at the top of the object.
-      // Here we assume the object (house/tree) sits at the bottom of the 120x120 container.
-      letterElem.style.bottom = "80px";
-      letterElem.style.position = "absolute";
       letterElem.innerText = item.letter;
       container.appendChild(letterElem);
-
-      // Create the scene object element (either a house or a tree).
+      
+      // Create the scene object element (either house or tree)
       const objectElem = document.createElement("div");
       objectElem.className = "object " + item.type;
-      // When the object is clicked, animate it away and reveal the full letter.
       objectElem.addEventListener("click", function(event) {
-        // Prevent multiple clicks
         if (objectElem.classList.contains("removed")) return;
         objectElem.classList.add("removed");
-        // Remove the masking on the letter (reveal it fully)
         letterElem.classList.remove("hidden-letter");
         letterElem.classList.add("revealed-letter");
-        // Update the corresponding solution slot
         const slot = document.querySelector('.slot[data-index="' + index + '"]');
         slot.innerText = item.letter;
-
-        // Check if all letters are revealed; if so, congratulate the player.
         setTimeout(checkGameComplete, 600);
       });
       container.appendChild(objectElem);
-
       gameContainer.appendChild(container);
     });
-
+    
     function checkGameComplete() {
       const slots = document.querySelectorAll(".slot");
       let count = 0;
@@ -280,7 +358,7 @@
       });
       if (count === letters.length) {
         setTimeout(() => {
-          alert("Congratulations! You revealed the entire message!");
+          alert("Congratulations! You revealed the message!");
         }, 300);
       }
     }
