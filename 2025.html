@@ -3,114 +3,197 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hidden Letters Game</title>
+  <title>Hidden Letters – Scene Version</title>
   <style>
     body {
       margin: 0;
       font-family: sans-serif;
-      background-color: #f0f0f0;
+      background-color: #333;
       display: flex;
       flex-direction: column;
       align-items: center;
-      overflow-x: hidden;
+      overflow: hidden;
     }
-
     .instruction {
       margin: 10px;
-      font-size: 18px;
+      font-size: 20px;
+      color: #fff;
     }
-
-    /* Game container with a background image */
+    /* Game container holds the canvas and the scene objects */
     .game-container {
       position: relative;
-      width: 100vw;
-      height: 80vh;
-      background: url('https://via.placeholder.com/1200x800') no-repeat center center;
-      background-size: cover;
+      width: 1200px;
+      height: 800px;
+      border: 2px solid #444;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      background-color: #87CEEB; /* fallback sky blue */
       overflow: hidden;
-      border: 3px solid #333;
     }
-
-    /* Each letter container is absolutely positioned */
-    .letter-container {
-      position: absolute;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      color: #fff;
-      font-weight: bold;
-      text-shadow: 1px 1px 2px #000;
-      pointer-events: none; /* So only the cover captures clicks */
-    }
-
-    /* The letter itself is simply a span inside */
-    .letter {
-      position: relative;
-      z-index: 1;
-    }
-
-    /* The cover “object” hides the letter; it’s styled to look like an object that might naturally be in a scene */
-    .cover {
+    /* The canvas (background scene) is drawn behind everything */
+    #background {
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(50, 50, 50, 0.8);
-      border-radius: 50%;
-      cursor: pointer;
-      transition: opacity 0.5s ease;
+      z-index: 0;
+    }
+    /* Each scene object that hides a letter */
+    .letter-object {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      /* no overflow so the letter can “stick out” */
       z-index: 2;
-      pointer-events: auto;
+      cursor: pointer;
     }
-
-    /* When the cover is removed, it fades out and no longer interferes with clicks */
-    .cover.removed {
+    /* The letter itself (initially partially clipped) */
+    .letter {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 48px;
+      font-weight: bold;
+      color: #fff;
+      transition: clip-path 0.5s;
+      /* adjust line-height so the letter renders nicely */
+      line-height: 1;
+      z-index: 1;
+    }
+    /* Initially, only a small top slice of the letter is visible */
+    .hidden-letter {
+      /* Show only about the top 20px of the letter (adjust as needed) */
+      clip-path: inset(0 0 35px 0);
+    }
+    /* When removed, the letter’s clipping is removed (revealing its full height) */
+    .revealed-letter {
+      clip-path: none;
+    }
+    /* Object “cover” styles for a house */
+    .object.house {
+      position: absolute;
+      width: 100px;
+      height: 80px;
+      background-color: #8B4513;
+      bottom: 0;
+      left: 10px;
+      z-index: 3;
+      transition: transform 0.6s ease, opacity 0.6s ease;
+    }
+    .object.house::before {
+      content: "";
+      position: absolute;
+      bottom: 80px;
+      left: 0;
+      border-left: 50px solid transparent;
+      border-right: 50px solid transparent;
+      border-bottom: 30px solid #A52A2A;
+    }
+    /* Object “cover” styles for a tree */
+    .object.tree {
+      position: absolute;
+      width: 40px;
+      height: 80px;
+      background-color: #8B4513;
+      bottom: 0;
+      left: 40px;
+      z-index: 3;
+      transition: transform 0.6s ease, opacity 0.6s ease;
+    }
+    .object.tree::after {
+      content: "";
+      position: absolute;
+      bottom: 70px;
+      left: -20px;
+      width: 80px;
+      height: 50px;
+      background-color: #228B22;
+      border-radius: 50%;
+    }
+    /* When an object is clicked, add a class that slides & fades it out */
+    .removed {
+      transform: translateX(150px);
       opacity: 0;
-      pointer-events: none;
     }
-
-    /* The solution display at the bottom shows slots for each letter */
+    /* The solution row at the bottom */
     #solution {
-      width: 100vw;
-      height: 20vh;
-      background-color: #333;
+      width: 1200px;
+      min-height: 80px;
+      background-color: #222;
+      color: #fff;
+      font-size: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
-      font-size: 32px;
-      letter-spacing: 10px;
+      letter-spacing: 8px;
+      margin-top: 10px;
     }
-
     .slot {
       display: inline-block;
-      width: 30px;
-      height: 40px;
+      width: 40px;
+      height: 60px;
       border-bottom: 2px solid #fff;
       margin: 0 5px;
       text-align: center;
-      line-height: 40px;
+      line-height: 60px;
     }
   </style>
 </head>
 <body>
-  <div class="instruction">Click the objects to reveal the hidden letters.</div>
+  <div class="instruction">
+    Find the hidden letters in the scene! Click on an object (house or tree) to reveal the full letter.
+  </div>
   <div class="game-container" id="game">
-    <!-- The letter containers will be added here dynamically -->
+    <!-- Canvas for the drawn background -->
+    <canvas id="background" width="1200" height="800"></canvas>
+    <!-- The letter–object pairs will be created by JavaScript -->
   </div>
   <div id="solution">
-    <!-- The solution slots for the phrase will show up here -->
+    <!-- Each letter slot will fill as letters are found -->
   </div>
 
   <script>
-    // Define the letters and their fixed positions.
-    // Each object has:
-    //  • letter: the character to reveal
-    //  • left, top: positioning within the game area
+    // Draw a simple scenic background (village/mountain scene) on the canvas
+    (function drawScene() {
+      const canvas = document.getElementById('background');
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+      
+      // Sky gradient
+      const skyGradient = ctx.createLinearGradient(0, 0, 0, height);
+      skyGradient.addColorStop(0, '#87CEEB');
+      skyGradient.addColorStop(1, '#FFFACD');
+      ctx.fillStyle = skyGradient;
+      ctx.fillRect(0, 0, width, height);
+      
+      // Mountains
+      ctx.fillStyle = '#A9A9A9';
+      ctx.beginPath();
+      ctx.moveTo(0, height * 0.6);
+      ctx.lineTo(width * 0.3, height * 0.3);
+      ctx.lineTo(width * 0.6, height * 0.6);
+      ctx.closePath();
+      ctx.fill();
+      
+      ctx.fillStyle = '#808080';
+      ctx.beginPath();
+      ctx.moveTo(width * 0.4, height * 0.6);
+      ctx.lineTo(width * 0.65, height * 0.35);
+      ctx.lineTo(width * 0.9, height * 0.6);
+      ctx.closePath();
+      ctx.fill();
+      
+      // A row of distant village houses
+      ctx.fillStyle = '#654321';
+      for (let i = 0; i < 5; i++) {
+        let houseWidth = 40;
+        let houseHeight = 30;
+        let x = i * 60 + 100;
+        let y = height * 0.6 - houseHeight;
+        ctx.fillRect(x, y, houseWidth, houseHeight);
+      }
+    })();
+
+    // Define the letters with positions (as percentages) and assign a type: "house" or "tree"
     const letters = [
       { letter: "Y", left: "10%", top: "20%" },
       { letter: "O", left: "30%", top: "15%" },
@@ -132,11 +215,15 @@
       { letter: "E", left: "60%", top: "90%" },
       { letter: "R", left: "40%", top: "90%" }
     ];
+    // For variety, assign object type: even indices become "house", odd become "tree"
+    letters.forEach((obj, i) => {
+      obj.type = (i % 2 === 0) ? "house" : "tree";
+    });
 
     const gameContainer = document.getElementById("game");
     const solutionContainer = document.getElementById("solution");
 
-    // Create a blank solution slot for each letter
+    // Create the blank solution slots in order of the phrase
     letters.forEach((item, index) => {
       const slot = document.createElement("div");
       slot.className = "slot";
@@ -144,60 +231,56 @@
       solutionContainer.appendChild(slot);
     });
 
-    // Create each letter container with its cover
+    // For each letter, create a container with the letter and a scene object that covers it
     letters.forEach((item, index) => {
       const container = document.createElement("div");
-      container.className = "letter-container";
+      container.className = "letter-object";
       container.style.left = item.left;
       container.style.top = item.top;
       container.setAttribute("data-index", index);
 
-      // Add the letter element (always visible but hidden by cover)
-      const letterElem = document.createElement("span");
-      letterElem.className = "letter";
+      // Create the letter element.
+      const letterElem = document.createElement("div");
+      letterElem.className = "letter hidden-letter";
+      // Position the letter so that it “sticks out” at the top of the object.
+      // Here we assume the object (house/tree) sits at the bottom of the 120x120 container.
+      letterElem.style.bottom = "80px";
+      letterElem.style.position = "absolute";
       letterElem.innerText = item.letter;
       container.appendChild(letterElem);
 
-      // Create the cover element that hides the letter.
-      const coverElem = document.createElement("div");
-      coverElem.className = "cover";
-      
-      // Add a random rotation to each cover object for a more natural look.
-      coverElem.style.transform = "rotate(" + (Math.random() * 360) + "deg)";
-
-      // When the cover is clicked, remove it and update the bottom display.
-      coverElem.addEventListener("click", function(event) {
-        // Fade out the cover.
-        coverElem.classList.add("removed");
-        // Fill the corresponding slot with the found letter.
+      // Create the scene object element (either a house or a tree).
+      const objectElem = document.createElement("div");
+      objectElem.className = "object " + item.type;
+      // When the object is clicked, animate it away and reveal the full letter.
+      objectElem.addEventListener("click", function(event) {
+        // Prevent multiple clicks
+        if (objectElem.classList.contains("removed")) return;
+        objectElem.classList.add("removed");
+        // Remove the masking on the letter (reveal it fully)
+        letterElem.classList.remove("hidden-letter");
+        letterElem.classList.add("revealed-letter");
+        // Update the corresponding solution slot
         const slot = document.querySelector('.slot[data-index="' + index + '"]');
         slot.innerText = item.letter;
 
-        // Remove the cover after the fade-out completes.
-        setTimeout(function () {
-          coverElem.style.display = "none";
-        }, 500);
-
-        // Optionally check if all letters are found.
-        checkGameComplete();
+        // Check if all letters are revealed; if so, congratulate the player.
+        setTimeout(checkGameComplete, 600);
       });
+      container.appendChild(objectElem);
 
-      container.appendChild(coverElem);
       gameContainer.appendChild(container);
     });
 
-    // Check if all letters have been revealed and notify the player.
     function checkGameComplete() {
-      const foundSlots = document.querySelectorAll(".slot");
+      const slots = document.querySelectorAll(".slot");
       let count = 0;
-      foundSlots.forEach(slot => {
-        if (slot.innerText !== "") {
-          count++;
-        }
+      slots.forEach(slot => {
+        if (slot.innerText !== "") count++;
       });
       if (count === letters.length) {
-        setTimeout(function () {
-          alert("Congratulations! You found all the letters!");
+        setTimeout(() => {
+          alert("Congratulations! You revealed the entire message!");
         }, 300);
       }
     }
