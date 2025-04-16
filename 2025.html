@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <title>Layered Platformer Letter Hunt – Final Version</title>
+  <!-- Import Poppins from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
       overflow: hidden;
       background: #87CEEB;
-      font-family: Arial, sans-serif;
+      font-family: 'Poppins', sans-serif;
     }
     /* Canvas uses internal 800×600, CSS‐scaled via JS */
     canvas {
@@ -29,13 +31,28 @@
       text-align: center;
       padding: 20px;
     }
-    #helpOverlay h1 { font-size: 2.5em; margin: .2em; }
-    #helpOverlay p { font-size: 1.2em; max-width: 600px; }
-    #helpOverlay button {
-      margin-top: 20px; padding: 10px 20px;
-      font-size: 1.2em; cursor: pointer;
+    #helpOverlay h1 {
+      font-size: 2.5em;
+      margin: .2em;
+      font-family: 'Poppins', sans-serif;
     }
-    .controls { margin-top: 1em; font-size: 2em; }
+    #helpOverlay p {
+      font-size: 1.2em;
+      max-width: 600px;
+      font-family: 'Poppins', sans-serif;
+    }
+    #helpOverlay button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1.2em;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+    }
+    .controls {
+      margin-top: 1em;
+      font-size: 2em;
+      font-family: 'Poppins', sans-serif;
+    }
   </style>
 </head>
 <body>
@@ -105,17 +122,15 @@
              a.y < b.y + b.height &&
              a.y + a.height > b.y;
     }
-
-    // **FIX**: define isPlayerOnTree *before* updateGame() uses it
     function isPlayerOnTree() {
       for (let obj of fgDecorations) {
-        if (obj.type === 'tree') {
+        if (obj.type==='tree') {
           const trunkX = obj.x + obj.width/2 - (obj.width/3)/2;
           const trunkW = obj.width/3;
           const trunkY = obj.y + obj.height - obj.height/2;
           const trunkH = obj.height/2;
-          const trunkRect = { x: trunkX, y: trunkY, width: trunkW, height: trunkH };
-          if (rectIntersect(player, trunkRect)) return true;
+          const rect = { x:trunkX, y:trunkY, width:trunkW, height:trunkH };
+          if (rectIntersect(player,rect)) return true;
         }
       }
       return false;
@@ -139,11 +154,10 @@
       ctx.fillStyle='#228B22';
       ctx.beginPath();
       ctx.ellipse(
-        b.x + b.width/2,
-        b.y + b.height/2,
+        b.x+b.width/2,
+        b.y+b.height/2,
         b.width/2,
-        b.height/2,
-        0,0,Math.PI*2
+        b.height/2, 0,0,Math.PI*2
       );
       ctx.fill();
       ctx.restore();
@@ -154,13 +168,14 @@
       ctx.fillStyle='#8B4513';
       const tw=t.width/3, th=t.height/2;
       ctx.fillRect(
-        t.x + t.width/2 - tw/2,
-        t.y + t.height - th,
-        tw, th
+        t.x+t.width/2-tw/2,
+        t.y+t.height-th,
+        tw,th
       );
       ctx.fillStyle='#006400';
       ctx.beginPath();
-      ctx.arc(t.x+t.width/2, t.y+t.height/2, t.width/2, 0, Math.PI*2);
+      ctx.arc(t.x+t.width/2, t.y+t.height/2,
+              t.width/2,0,Math.PI*2);
       ctx.fill();
       ctx.restore();
     }
@@ -172,7 +187,7 @@
       ctx.fillStyle='#B22222';
       ctx.beginPath();
       ctx.moveTo(h.x,h.y);
-      ctx.lineTo(h.x+h.width/2,h.y-h.height/2);
+      ctx.lineTo(h.x+h.width/2, h.y-h.height/2);
       ctx.lineTo(h.x+h.width,h.y);
       ctx.closePath();
       ctx.fill();
@@ -186,8 +201,9 @@
       ctx.restore();
     }
     function drawStickFigure(){
-      ctx.strokeStyle='#FF0000'; ctx.lineWidth=2;
-      const cx=player.x + player.width/2,
+      ctx.strokeStyle='#FF0000';
+      ctx.lineWidth=2;
+      const cx=player.x+player.width/2,
             ty=player.y,
             hr=player.width/2;
       ctx.beginPath();
@@ -215,15 +231,15 @@
     function drawHUD(){
       const msg = collectibles
         .slice().sort((a,b)=>a.index-b.index)
-        .map(i=>i.collected?i.letter:'_')
-        .join(' ');
+        .map(i=>i.collected?i.letter:'_').join(' ');
       ctx.save();
       ctx.fillStyle='rgba(0,0,0,0.5)';
       ctx.fillRect(0,canvas.height-40,canvas.width,40);
       ctx.fillStyle='#FFF';
-      ctx.font="20px Arial";
+      ctx.font="20px Poppins";
       ctx.textAlign="center";
-      ctx.fillText("Secret Message: "+msg, canvas.width/2, canvas.height-10);
+      ctx.fillText("Secret Message: "+msg,
+                   canvas.width/2, canvas.height-10);
       ctx.restore();
     }
 
@@ -232,40 +248,26 @@
     // ----------------------------
     const canvas = document.getElementById("gameCanvas"),
           ctx    = canvas.getContext("2d");
-    const levelWidth = 6000, levelHeight = 600;
+    const levelWidth=6000, levelHeight=600;
 
     let camX=0,
         platformMode="ground",
         victory=false,
-        messageY=canvas.height+20,
+        messageY=canvas.height+50,
         longMessage=(
-          "-Joon & Sean-" +
-          "" +
-          "우리 사랑하는 여보 46번째 생일 축하해요!" +
-          "우리가 부부로 함께 한 세월이 벌써" +
-          "15년이네요. 우리 가족을 위해 고생하는" +
-          "당신을 보면 당신은 더 일찍 만났다면 내가" +
-          "더 빨리 철도 들고 더 나은 사람이 되서" +
-          "당신을 지금보다 더 행복하게, 덜 힘들게 " +
-          "해줄 수도 있었을텐데 생각이 들곤 해요. " +
-          "앞으로 더 성숙하고 멋진 사람이 되어 우리 " +
-          "여보 행복하게 해줄게요. 어디를 가든 무슨 " +
-          "상황이든 나는 당신만 있으면 어떠한 어려움도 " +
-          "이겨낼 수 있는 힘이 생기는 것 같아요. 당신은" +
-          " 나의 인생을 완성해주는 크리스마스 선물, " +
-          "사과 반쪽, 영원한 반려자에요. 나의 사랑 " +
-          "멋진 우리 여보 태어나줘서 고마워요. 사랑해요~" +
-          "-썽-"
+          "And now, Dear Dad, let me tell you just how much you " +
+          "mean to all of us—your kindness, your laugh, your " +
+          "shoulder to lean on. Thank you for everything!"
         ),
-        longY=canvas.height+50,
+        longY=canvas.height+100,
         showingLong=false,
         confettiParticles=[];
 
-    const player = { x:100,y:450,width:30,height:50,
-                     vx:0,vy:0,onGround:false };
+    const player = {x:100,y:450,width:30,height:50,
+                    vx:0,vy:0,onGround:false};
     const keys = {};
-    document.addEventListener("keydown", e=>keys[e.key]=true);
-    document.addEventListener("keyup",   e=>keys[e.key]=false);
+    document.addEventListener("keydown",e=>keys[e.key]=true);
+    document.addEventListener("keyup",e=>keys[e.key]=false);
 
     const gravity=0.5, moveSpeed=3, jumpForce=-10;
 
@@ -312,29 +314,29 @@
     ];
 
     let collectibles = [
-      {index:0, letter:'Y', x:600,y:480,width:20,height:20,collected:false},
-      {index:1, letter:'O', x:800,y:460,width:20,height:20,collected:false},
-      {index:2, letter:'U', x:1000,y:470,width:20,height:20,collected:false},
-      {index:3, letter:'R', x:1200,y:480,width:20,height:20,collected:false},
-      {index:4, letter:'E', x:1400,y:465,width:20,height:20,collected:false},
-      {index:5, letter:'T', x:1600,y:475,width:20,height:20,collected:false},
-      {index:6, letter:'H', x:1800,y:480,width:20,height:20,collected:false},
-      {index:7, letter:'E', x:2000,y:470,width:20,height:20,collected:false},
-      {index:8, letter:'B', x:2800,y:360,width:20,height:20,collected:false, layer:"midground"},
-      {index:9, letter:'E', x:3000,y:480,width:20,height:20,collected:false},
-      {index:10,letter:'S', x:3200,y:360,width:20,height:20,collected:false, layer:"midground"},
-      {index:11,letter:'T', x:3400,y:480,width:20,height:20,collected:false},
-      {index:12,letter:'D', x:3600,y:480,width:20,height:20,collected:false},
-      {index:13,letter:'A', x:3800,y:480,width:20,height:20,collected:false},
-      {index:14,letter:'D', x:4000,y:360,width:20,height:20,collected:false, layer:"midground"},
-      {index:15,letter:'E', x:4200,y:480,width:20,height:20,collected:false},
-      {index:16,letter:'V', x:4400,y:360,width:20,height:20,collected:false, layer:"midground"},
-      {index:17,letter:'E', x:4600,y:480,width:20,height:20,collected:false},
-      {index:18,letter:'R', x:4800,y:480,width:20,height:20,collected:false}
+      {index:0,letter:'Y',x:600,y:480,width:20,height:20,collected:false},
+      {index:1,letter:'O',x:800,y:460,width:20,height:20,collected:false},
+      {index:2,letter:'U',x:1000,y:470,width:20,height:20,collected:false},
+      {index:3,letter:'R',x:1200,y:480,width:20,height:20,collected:false},
+      {index:4,letter:'E',x:1400,y:465,width:20,height:20,collected:false},
+      {index:5,letter:'T',x:1600,y:475,width:20,height:20,collected:false},
+      {index:6,letter:'H',x:1800,y:480,width:20,height:20,collected:false},
+      {index:7,letter:'E',x:2000,y:470,width:20,height:20,collected:false},
+      {index:8,letter:'B',x:2800,y:360,width:20,height:20,collected:false,layer:"midground"},
+      {index:9,letter:'E',x:3000,y:480,width:20,height:20,collected:false},
+      {index:10,letter:'S',x:3200,y:360,width:20,height:20,collected:false,layer:"midground"},
+      {index:11,letter:'T',x:3400,y:480,width:20,height:20,collected:false},
+      {index:12,letter:'D',x:3600,y:480,width:20,height:20,collected:false},
+      {index:13,letter:'A',x:3800,y:480,width:20,height:20,collected:false},
+      {index:14,letter:'D',x:4000,y:360,width:20,height:20,collected:false,layer:"midground"},
+      {index:15,letter:'E',x:4200,y:480,width:20,height:20,collected:false},
+      {index:16,letter:'V',x:4400,y:360,width:20,height:20,collected:false,layer:"midground"},
+      {index:17,letter:'E',x:4600,y:480,width:20,height:20,collected:false},
+      {index:18,letter:'R',x:4800,y:480,width:20,height:20,collected:false}
     ];
 
     const bgDecorations = [
-      {type:'mountain',x:800, y:200,width:200,height:300},
+      {type:'mountain',x:800,y:200,width:200,height:300},
       {type:'mountain',x:2200,y:150,width:250,height:350},
       {type:'mountain',x:3200,y:170,width:250,height:350},
       {type:'mountain',x:4800,y:180,width:300,height:340}
@@ -347,8 +349,8 @@
       {x:4400,y:470,width:80,height:80}
     ];
 
-    const groundPortal = {x:5500,y:420,width:60,height:80},
-          midPortal    = {x:500, y:220,width:60,height:80};
+    const groundPortal={x:5500,y:420,width:60,height:80},
+          midPortal   ={x:500, y:220,width:60,height:80};
 
     // ----------------------------
     // GAME UPDATE / DRAW
@@ -360,12 +362,12 @@
         else player.vx=0;
         player.x+=player.vx;
 
-        if(isPlayerOnTree() && !keys[' ']){
+        if(isPlayerOnTree()&&!keys[' ']){
           if(keys['ArrowUp']||keys['w']) player.vy=-2;
           else if(keys['ArrowDown']||keys['s']) player.vy=2;
           else player.vy=0;
         } else {
-          if((keys[' ']||keys['ArrowUp']||keys['w']) && player.onGround){
+          if((keys[' ']||keys['ArrowUp']||keys['w'])&&player.onGround){
             player.vy=jumpForce; player.onGround=false;
           }
           player.vy+=gravity;
@@ -455,10 +457,10 @@
         ctx.moveTo(h.x,h.groundY);
         ctx.quadraticCurveTo(
           h.x+h.width/2, h.groundY-h.height,
-          h.x+h.width, h.groundY
+          h.x+h.width,h.groundY
         );
-        ctx.lineTo(h.x+h.width, levelHeight);
-        ctx.lineTo(h.x, levelHeight);
+        ctx.lineTo(h.x+h.width,levelHeight);
+        ctx.lineTo(h.x,levelHeight);
         ctx.closePath();
         ctx.fillStyle=h.color;
         ctx.fill();
@@ -472,10 +474,10 @@
         if(!c.collected){
           ctx.fillStyle='#FFD700';
           ctx.beginPath();
-          ctx.arc(c.x+c.width/2, c.y+c.height/2, c.width, 0, Math.PI*2);
+          ctx.arc(c.x+c.width/2,c.y+c.height/2,c.width,0,Math.PI*2);
           ctx.fill();
           ctx.fillStyle='#000';
-          ctx.font="16px Arial";
+          ctx.font="16px Poppins";
           ctx.textAlign="center";
           ctx.textBaseline="middle";
           ctx.fillText(c.letter, c.x+c.width/2, c.y+c.height/2);
@@ -518,10 +520,10 @@
     // VICTORY + CONFETTI
     // ----------------------------
     function initConfetti(){
-      confettiParticles=[]
-      messageY=canvas.height+50
-      longY=canvas.height+100
-      showingLong=false
+      confettiParticles=[];
+      messageY=canvas.height+50;
+      longY=canvas.height+100;
+      showingLong=false;
       for(let i=0;i<100;i++){
         confettiParticles.push({
           x: Math.random()*canvas.width,
@@ -547,25 +549,27 @@
         ctx.fillRect(p.x,p.y,p.size,p.size);
       });
 
+      // short message
       const finalMsg = collectibles
         .slice().sort((a,b)=>a.index-b.index)
         .map(i=>i.letter).join("");
       ctx.save();
       ctx.fillStyle="#FFF";
-      ctx.font="60px Arial";
+      ctx.font="60px Poppins";
       ctx.textAlign="center";
       ctx.textBaseline="middle";
       ctx.fillText(finalMsg, canvas.width/2, messageY);
       ctx.restore();
-      messageY-=2;
+      messageY -= 2;
 
-      if(messageY< -100 && !showingLong){
-        showingLong=true;
+      // once that’s offscreen, scroll the long one
+      if(messageY < -100 && !showingLong){
+        showingLong = true;
       }
       if(showingLong){
         ctx.save();
         ctx.fillStyle="#FFF";
-        ctx.font="28px Arial";
+        ctx.font="28px Poppins";
         ctx.textAlign="center";
         ctx.textBaseline="top";
         ctx.fillText(longMessage, canvas.width/2, longY);
