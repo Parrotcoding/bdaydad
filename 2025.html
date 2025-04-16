@@ -255,10 +255,25 @@
         victory=false,
         messageY=canvas.height+50,
         longMessage=(
-          "And now, Dear Dad, let me tell you just how much you " +
-          "mean to all of us—your kindness, your laugh, your " +
-          "shoulder to lean on. Thank you for everything!"
+          "-Joon & Sean-" +
+          " " +
+          "우리 사랑하는 여보 46번째 생일 축하해요!" +
+          "우리가 부부로 함께 한 세월이 벌써" +
+          "15년이네요. 우리 가족을 위해 고생하는" +
+          "당신을 보면 당신은 더 일찍 만났다면 내가" +
+          "더 빨리 철도 들고 더 나은 사람이 되서" +
+          "당신을 지금보다 더 행복하게, 덜 힘들게 " +
+          "해줄 수도 있었을텐데 생각이 들곤 해요. " +
+          "앞으로 더 성숙하고 멋진 사람이 되어 우리 " +
+          "여보 행복하게 해줄게요. 어디를 가든 무슨 " +
+          "상황이든 나는 당신만 있으면 어떠한 어려움도 " +
+          "이겨낼 수 있는 힘이 생기는 것 같아요. 당신은" +
+          " 나의 인생을 완성해주는 크리스마스 선물, " +
+          "사과 반쪽, 영원한 반려자에요. 나의 사랑 " +
+          "멋진 우리 여보 태어나줘서 고마워요. 사랑해요~" +
+          "-썽-"
         ),
+
         longY=canvas.height+100,
         showingLong=false,
         confettiParticles=[];
@@ -569,7 +584,7 @@
       if(showingLong){
         ctx.save();
         ctx.fillStyle="#FFF";
-        ctx.font="28px Poppins";
+        ctx.font="20px Poppins";
         ctx.textAlign="center";
         ctx.textBaseline="top";
         ctx.fillText(longMessage, canvas.width/2, longY);
