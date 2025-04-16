@@ -12,12 +12,10 @@
       background: #87CEEB;
       font-family: 'Poppins', sans-serif;
     }
-    /* Canvas uses internal 800×600, CSS‐scaled via JS */
     canvas {
       display: block;
       background: #87CEEB;
     }
-    /* Help Overlay */
     #helpOverlay {
       position: absolute;
       top: 0; left: 0;
@@ -31,32 +29,16 @@
       text-align: center;
       padding: 20px;
     }
-    #helpOverlay h1 {
-      font-size: 2.5em;
-      margin: .2em;
-      font-family: 'Poppins', sans-serif;
-    }
-    #helpOverlay p {
-      font-size: 1.2em;
-      max-width: 600px;
-      font-family: 'Poppins', sans-serif;
-    }
+    #helpOverlay h1 { font-size: 2.5em; margin: .2em; }
+    #helpOverlay p { font-size: 1.2em; max-width: 600px; }
     #helpOverlay button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 1.2em;
-      cursor: pointer;
-      font-family: 'Poppins', sans-serif;
+      margin-top: 20px; padding: 10px 20px;
+      font-size: 1.2em; cursor: pointer;
     }
-    .controls {
-      margin-top: 1em;
-      font-size: 2em;
-      font-family: 'Poppins', sans-serif;
-    }
+    .controls { margin-top: 1em; font-size: 2em; }
   </style>
 </head>
 <body>
-  <!-- Help Overlay -->
   <div id="helpOverlay">
     <h1>Welcome to Letter Hunt!</h1>
     <p>
@@ -70,18 +52,16 @@
       [Space] Jump
     </div>
     <p>Example Stick Figure:</p>
-    <canvas id="stickExample" width="100" height="150"
-      style="background: transparent; margin-top:10px;"></canvas>
+    <canvas id="stickExample" width="100" height="150" style="background: transparent; margin-top:10px;"></canvas>
     <br>
     <button id="startButton">Start Game</button>
   </div>
 
-  <!-- Main Canvas (800×600 internal) -->
   <canvas id="gameCanvas" width="800" height="600"></canvas>
 
   <script>
     // ----------------------------
-    // CANVAS SCALING (maintain 4:3)
+    // CANVAS SCALING
     // ----------------------------
     function resizeCanvas() {
       const canvas = document.getElementById("gameCanvas");
@@ -129,8 +109,9 @@
           const trunkW = obj.width/3;
           const trunkY = obj.y + obj.height - obj.height/2;
           const trunkH = obj.height/2;
-          const rect = { x:trunkX, y:trunkY, width:trunkW, height:trunkH };
-          if (rectIntersect(player,rect)) return true;
+          if (rectIntersect(player, { x:trunkX, y:trunkY, width:trunkW, height:trunkH })) {
+            return true;
+          }
         }
       }
       return false;
@@ -153,12 +134,7 @@
       if(rectIntersect(player,b)) ctx.globalAlpha=0.5;
       ctx.fillStyle='#228B22';
       ctx.beginPath();
-      ctx.ellipse(
-        b.x+b.width/2,
-        b.y+b.height/2,
-        b.width/2,
-        b.height/2, 0,0,Math.PI*2
-      );
+      ctx.ellipse(b.x+b.width/2, b.y+b.height/2, b.width/2, b.height/2, 0,0,Math.PI*2);
       ctx.fill();
       ctx.restore();
     }
@@ -167,15 +143,10 @@
       if(rectIntersect(player,t)) ctx.globalAlpha=0.5;
       ctx.fillStyle='#8B4513';
       const tw=t.width/3, th=t.height/2;
-      ctx.fillRect(
-        t.x+t.width/2-tw/2,
-        t.y+t.height-th,
-        tw,th
-      );
+      ctx.fillRect(t.x+t.width/2-tw/2, t.y+t.height-th, tw, th);
       ctx.fillStyle='#006400';
       ctx.beginPath();
-      ctx.arc(t.x+t.width/2, t.y+t.height/2,
-              t.width/2,0,Math.PI*2);
+      ctx.arc(t.x+t.width/2, t.y+t.height/2, t.width/2, 0, Math.PI*2);
       ctx.fill();
       ctx.restore();
     }
@@ -201,32 +172,15 @@
       ctx.restore();
     }
     function drawStickFigure(){
-      ctx.strokeStyle='#FF0000';
-      ctx.lineWidth=2;
-      const cx=player.x+player.width/2,
-            ty=player.y,
-            hr=player.width/2;
-      ctx.beginPath();
-      ctx.arc(cx,ty+hr,hr,0,2*Math.PI);
-      ctx.stroke();
+      ctx.strokeStyle='#FF0000'; ctx.lineWidth=2;
+      const cx=player.x+player.width/2, ty=player.y, hr=player.width/2;
+      ctx.beginPath(); ctx.arc(cx,ty+hr,hr,0,2*Math.PI); ctx.stroke();
       const bs=ty+2*hr, be=player.y+player.height;
-      ctx.beginPath();
-      ctx.moveTo(cx,bs);
-      ctx.lineTo(cx,be);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx,bs); ctx.lineTo(cx,be); ctx.stroke();
       const ay=bs+(be-bs)/3, al=player.width;
-      ctx.beginPath();
-      ctx.moveTo(cx-al/2,ay);
-      ctx.lineTo(cx+al/2,ay);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cx,be);
-      ctx.lineTo(cx-player.width/2,be+20);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cx,be);
-      ctx.lineTo(cx+player.width/2,be+20);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx-al/2,ay); ctx.lineTo(cx+al/2,ay); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx,be); ctx.lineTo(cx-player.width/2,be+20); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx,be); ctx.lineTo(cx+player.width/2,be+20); ctx.stroke();
     }
     function drawHUD(){
       const msg = collectibles
@@ -238,8 +192,7 @@
       ctx.fillStyle='#FFF';
       ctx.font="20px Poppins";
       ctx.textAlign="center";
-      ctx.fillText("Secret Message: "+msg,
-                   canvas.width/2, canvas.height-10);
+      ctx.fillText("Secret Message: "+msg, canvas.width/2, canvas.height-10);
       ctx.restore();
     }
 
@@ -248,39 +201,38 @@
     // ----------------------------
     const canvas = document.getElementById("gameCanvas"),
           ctx    = canvas.getContext("2d");
-    const levelWidth=6000, levelHeight=600;
+    const levelWidth = 6000, levelHeight = 600;
+    let camX = 0,
+        platformMode = "ground",
+        victory = false,
+        messageY = canvas.height + 50,
+        // split into 16 lines:
+        longLines = [
+          "And now, Dear Dad,",
+          "let me tell you just how",
+          "much you mean to all of us—",
+          "your kindness, your laugh,",
+          "your shoulder to lean on.",
+          "Thank you for everything!",
+          "You’ve always been there",
+          "with wisdom and humor,",
+          "guiding my steps,",
+          "lifting my spirits,",
+          "and showing me strength",
+          "through every challenge.",
+          "Today we celebrate",
+          "the amazing father",
+          "you’ve always been,",
+          "and all the love you give."
+        ],
+        longY = canvas.height + 100,
+        showingLong = false,
+        confettiParticles = [];
 
-    let camX=0,
-        platformMode="ground",
-        victory=false,
-        messageY=canvas.height+50,
-        longMessage=(
-          "우리 사랑하는 여보 46번째 생일 축하해요!" +
-          "우리가 부부로 함께 한 세월이 벌써" +
-          "15년이네요. 우리 가족을 위해 고생하는" +
-          "당신을 보면 당신은 더 일찍 만났다면 내가" +
-          "더 빨리 철도 들고 더 나은 사람이 되서" +
-          "당신을 지금보다 더 행복하게, 덜 힘들게 " +
-          "해줄 수도 있었을텐데 생각이 들곤 해요. " +
-          "앞으로 더 성숙하고 멋진 사람이 되어 우리 " +
-          "여보 행복하게 해줄게요. 어디를 가든 무슨 " +
-          "상황이든 나는 당신만 있으면 어떠한 어려움도 " +
-          "이겨낼 수 있는 힘이 생기는 것 같아요. 당신은" +
-          " 나의 인생을 완성해주는 크리스마스 선물, " +
-          "사과 반쪽, 영원한 반려자에요. 나의 사랑 " +
-          "멋진 우리 여보 태어나줘서 고마워요. 사랑해요~" +
-          "-썽-"
-        ),
-
-        longY=canvas.height+100,
-        showingLong=false,
-        confettiParticles=[];
-
-    const player = {x:100,y:450,width:30,height:50,
-                    vx:0,vy:0,onGround:false};
+    const player = { x:100,y:450,width:30,height:50, vx:0,vy:0,onGround:false };
     const keys = {};
-    document.addEventListener("keydown",e=>keys[e.key]=true);
-    document.addEventListener("keyup",e=>keys[e.key]=false);
+    document.addEventListener("keydown", e=>keys[e.key]=true);
+    document.addEventListener("keyup",   e=>keys[e.key]=false);
 
     const gravity=0.5, moveSpeed=3, jumpForce=-10;
 
@@ -297,7 +249,7 @@
       {x:3700,y:340,width:60,height:10}
     ];
     const hills = [
-      {x:0,   width:1200,height:300,groundY:500,color:"#228B22"},
+      {x:0,width:1200,height:300,groundY:500,color:"#228B22"},
       {x:1200,width:1500,height:400,groundY:500,color:"#2E8B57"},
       {x:2700,width:1800,height:250,groundY:500,color:"#006400"},
       {x:4500,width:1500,height:500,groundY:500,color:"#228B22"}
@@ -370,6 +322,7 @@
     // ----------------------------
     function updateGame(){
       if(!victory){
+        // movement & physics...
         if(keys['ArrowLeft']||keys['a']) player.vx=-moveSpeed;
         else if(keys['ArrowRight']||keys['d']) player.vx=moveSpeed;
         else player.vx=0;
@@ -387,6 +340,7 @@
         }
         player.y+=player.vy;
 
+        // collision...
         if(platformMode==="ground"){
           [...groundPlatforms,...furniturePlatforms].forEach(plat=>{
             if(rectIntersect(player,plat)&&player.vy>0){
@@ -420,6 +374,7 @@
           if(!c.collected&&rectIntersect(player,c)) c.collected=true;
         });
 
+        // portals
         if(platformMode==="ground"&&rectIntersect(player,groundPortal)){
           platformMode="midground";
           const cx=player.x+player.width/2;
@@ -443,6 +398,7 @@
         if(!victory&&collectibles.every(i=>i.collected)){
           victory=true; initConfetti();
         }
+
       } else {
         runVictoryAnimation();
       }
@@ -479,7 +435,7 @@
         ctx.fill();
       });
 
-      // bg mountains
+      // background mountains
       bgDecorations.forEach(drawMountain);
 
       // letters
@@ -530,7 +486,7 @@
     gameLoop();
 
     // ----------------------------
-    // VICTORY + CONFETTI
+    // VICTORY + CONFETTI + SCROLLING LINES
     // ----------------------------
     function initConfetti(){
       confettiParticles=[];
@@ -539,12 +495,12 @@
       showingLong=false;
       for(let i=0;i<100;i++){
         confettiParticles.push({
-          x: Math.random()*canvas.width,
-          y: Math.random()*canvas.height - canvas.height,
-          vx: (Math.random()-0.5)*4,
-          vy: Math.random()*4+2,
-          size: Math.random()*4+2,
-          color: `hsl(${Math.floor(Math.random()*360)},70%,60%)`
+          x:Math.random()*canvas.width,
+          y:Math.random()*canvas.height - canvas.height,
+          vx:(Math.random()-0.5)*4,
+          vy:Math.random()*4+2,
+          size:Math.random()*4+2,
+          color:`hsl(${Math.floor(Math.random()*360)},70%,60%)`
         });
       }
     }
@@ -562,7 +518,7 @@
         ctx.fillRect(p.x,p.y,p.size,p.size);
       });
 
-      // short message
+      // short headline
       const finalMsg = collectibles
         .slice().sort((a,b)=>a.index-b.index)
         .map(i=>i.letter).join("");
@@ -575,17 +531,17 @@
       ctx.restore();
       messageY -= 2;
 
-      // once that’s offscreen, scroll the long one
-      if(messageY < -100 && !showingLong){
-        showingLong = true;
-      }
+      // once that scrolls off, show the 16 lines
+      if(messageY < -100) showingLong = true;
       if(showingLong){
         ctx.save();
         ctx.fillStyle="#FFF";
-        ctx.font="20px Poppins";
+        ctx.font="28px Poppins";
         ctx.textAlign="center";
         ctx.textBaseline="top";
-        ctx.fillText(longMessage, canvas.width/2, longY);
+        longLines.forEach((line,i)=>{
+          ctx.fillText(line, canvas.width/2, longY + i * 32);
+        });
         ctx.restore();
         longY -= 0.5;
       }
