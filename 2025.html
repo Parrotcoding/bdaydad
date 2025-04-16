@@ -39,6 +39,7 @@
   </style>
 </head>
 <body>
+  <!-- Help Overlay -->
   <div id="helpOverlay">
     <h1>Welcome to Letter Hunt!</h1>
     <p>
@@ -57,11 +58,12 @@
     <button id="startButton">Start Game</button>
   </div>
 
+  <!-- Main Canvas (800×600 internal) -->
   <canvas id="gameCanvas" width="800" height="600"></canvas>
 
   <script>
     // ----------------------------
-    // CANVAS SCALING
+    // CANVAS SCALING (maintain 4:3)
     // ----------------------------
     function resizeCanvas() {
       const canvas = document.getElementById("gameCanvas");
@@ -79,8 +81,7 @@
     // HELP DRAW (stick example)
     // ----------------------------
     function drawStickExample() {
-      const c = document.getElementById("stickExample"),
-            s = c.getContext("2d");
+      const c = document.getElementById("stickExample"), s = c.getContext("2d");
       s.clearRect(0,0,c.width,c.height);
       s.strokeStyle="#FF0000"; s.lineWidth=2;
       const cx = c.width/2, ty = 10, hr = 10;
@@ -202,31 +203,11 @@
     const canvas = document.getElementById("gameCanvas"),
           ctx    = canvas.getContext("2d");
     const levelWidth = 6000, levelHeight = 600;
+
     let camX = 0,
         platformMode = "ground",
         victory = false,
         messageY = canvas.height + 50,
-        // split into 16 lines:
-        longLines = [
-          "And now, Dear Dad,",
-          "let me tell you just how",
-          "much you mean to all of us—",
-          "your kindness, your laugh,",
-          "your shoulder to lean on.",
-          "Thank you for everything!",
-          "You’ve always been there",
-          "with wisdom and humor,",
-          "guiding my steps,",
-          "lifting my spirits,",
-          "and showing me strength",
-          "through every challenge.",
-          "Today we celebrate",
-          "the amazing father",
-          "you’ve always been,",
-          "and all the love you give."
-        ],
-        longY = canvas.height + 100,
-        showingLong = false,
         confettiParticles = [];
 
     const player = { x:100,y:450,width:30,height:50, vx:0,vy:0,onGround:false };
@@ -322,7 +303,7 @@
     // ----------------------------
     function updateGame(){
       if(!victory){
-        // movement & physics...
+        // movement & physics…
         if(keys['ArrowLeft']||keys['a']) player.vx=-moveSpeed;
         else if(keys['ArrowRight']||keys['d']) player.vx=moveSpeed;
         else player.vx=0;
@@ -340,7 +321,7 @@
         }
         player.y+=player.vy;
 
-        // collision...
+        // collision…
         if(platformMode==="ground"){
           [...groundPlatforms,...furniturePlatforms].forEach(plat=>{
             if(rectIntersect(player,plat)&&player.vy>0){
@@ -380,8 +361,6 @@
           const cx=player.x+player.width/2;
           let h=hills.find(h=>cx>=h.x&&cx<=h.x+h.width)||hills[0];
           messageY=canvas.height+50;
-          longY=canvas.height+100;
-          showingLong=false;
           player.y=h.groundY-0.8*h.height-player.height;
           player.vx=player.vy=0;
         }
@@ -486,13 +465,11 @@
     gameLoop();
 
     // ----------------------------
-    // VICTORY + CONFETTI + SCROLLING LINES
+    // VICTORY + CONFETTI + REDIRECT
     // ----------------------------
     function initConfetti(){
       confettiParticles=[];
       messageY=canvas.height+50;
-      longY=canvas.height+100;
-      showingLong=false;
       for(let i=0;i<100;i++){
         confettiParticles.push({
           x:Math.random()*canvas.width,
@@ -518,7 +495,7 @@
         ctx.fillRect(p.x,p.y,p.size,p.size);
       });
 
-      // short headline
+      // draw secret message scrolling up
       const finalMsg = collectibles
         .slice().sort((a,b)=>a.index-b.index)
         .map(i=>i.letter).join("");
@@ -531,19 +508,9 @@
       ctx.restore();
       messageY -= 2;
 
-      // once that scrolls off, show the 16 lines
-      if(messageY < -100) showingLong = true;
-      if(showingLong){
-        ctx.save();
-        ctx.fillStyle="#FFF";
-        ctx.font="28px Poppins";
-        ctx.textAlign="center";
-        ctx.textBaseline="top";
-        longLines.forEach((line,i)=>{
-          ctx.fillText(line, canvas.width/2, longY + i * 32);
-        });
-        ctx.restore();
-        longY -= 0.5;
+      // once it scrolls off, redirect
+      if (messageY < -100) {
+        window.location.href = '2025seong.html';
       }
     };
 
