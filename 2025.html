@@ -240,7 +240,10 @@
       ctxStick.stroke();
     }
     
-    // Victory animation using a single arrow function.
+    // ===============================
+    // VICTORY ANIMATION (Declared only once)
+    // ===============================
+    
     const runVictoryAnimation = () => {
       victoryTime += 0.05;
       confettiParticles.forEach(p => {
@@ -273,41 +276,8 @@
       ctx.restore();
     };
 
-    function initConfetti() {
-      confettiParticles = [];
-      for (let i = 0; i < 100; i++) {
-        confettiParticles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height - canvas.height,
-          vx: (Math.random() - 0.5) * 4,
-          vy: Math.random() * 4 + 2,
-          size: Math.random() * 4 + 2,
-          color: "hsl(" + Math.floor(Math.random() * 360) + ", 70%, 60%)"
-        });
-      }
-    }
-
-    function updateConfetti() {
-      confettiParticles.forEach(p => {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.y > canvas.height) {
-          p.y = -10;
-          p.x = Math.random() * canvas.width;
-        }
-      });
-    }
-
-    function drawConfetti() {
-      confettiParticles.forEach(p => {
-        ctx.fillStyle = p.color;
-        ctx.fillRect(p.x, p.y, p.size, p.size);
-      });
-    }
-    
     // ===============================
     // GLOBAL GAME VARIABLES & DATA
-    // (Declared only once in this script block)
     // ===============================
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -505,7 +475,8 @@
           initConfetti();
         }
       } else {
-        updateVictoryAnimation();
+        // Update the victory animation.
+        runVictoryAnimation();
       }
     }
     
@@ -592,38 +563,8 @@
     gameLoop();
     
     // ===============================
-    // VICTORY ANIMATION (Arrow Function)
+    // CONFETTI FUNCTIONS
     // ===============================
-    
-    const runVictoryAnimation = () => {
-      victoryTime += 0.05;
-      confettiParticles.forEach(p => {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.y > canvas.height) {
-          p.y = -10;
-          p.x = Math.random() * canvas.width;
-        }
-      });
-      ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      confettiParticles.forEach(p => {
-        ctx.fillStyle = p.color;
-        ctx.fillRect(p.x, p.y, p.size, p.size);
-      });
-      const finalMessage = collectibles.slice().sort((a, b) => a.index - b.index)
-                               .map(x => x.letter).join(" ");
-      const scale = 1 + victoryTime * 0.5;
-      const offsetY = -victoryTime * 10;
-      ctx.save();
-      ctx.fillStyle = "#FFF";
-      ctx.font = `${40 * scale}px Arial`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(finalMessage, canvas.width / 2, canvas.height / 2 + offsetY);
-      ctx.restore();
-    };
-    
     function initConfetti() {
       confettiParticles = [];
       for (let i = 0; i < 100; i++) {
@@ -636,24 +577,6 @@
           color: "hsl(" + Math.floor(Math.random() * 360) + ", 70%, 60%)"
         });
       }
-    }
-    
-    function updateConfetti() {
-      confettiParticles.forEach(p => {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.y > canvas.height) {
-          p.y = -10;
-          p.x = Math.random() * canvas.width;
-        }
-      });
-    }
-    
-    function drawConfetti() {
-      confettiParticles.forEach(p => {
-        ctx.fillStyle = p.color;
-        ctx.fillRect(p.x, p.y, p.size, p.size);
-      });
     }
     
     // ===============================
