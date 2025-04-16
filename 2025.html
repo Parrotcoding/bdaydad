@@ -106,7 +106,7 @@
              a.y + a.height > b.y;
     }
 
-    // **Re-inserted** isPlayerOnTree so updateGame can call it
+    // **FIX**: define isPlayerOnTree *before* updateGame() uses it
     function isPlayerOnTree() {
       for (let obj of fgDecorations) {
         if (obj.type === 'tree') {
@@ -114,8 +114,8 @@
           const trunkW = obj.width/3;
           const trunkY = obj.y + obj.height - obj.height/2;
           const trunkH = obj.height/2;
-          const rect = { x: trunkX, y: trunkY, width: trunkW, height: trunkH };
-          if (rectIntersect(player, rect)) return true;
+          const trunkRect = { x: trunkX, y: trunkY, width: trunkW, height: trunkH };
+          if (rectIntersect(player, trunkRect)) return true;
         }
       }
       return false;
@@ -139,8 +139,8 @@
       ctx.fillStyle='#228B22';
       ctx.beginPath();
       ctx.ellipse(
-        b.x+b.width/2,
-        b.y+b.height/2,
+        b.x + b.width/2,
+        b.y + b.height/2,
         b.width/2,
         b.height/2,
         0,0,Math.PI*2
@@ -152,7 +152,7 @@
       ctx.save();
       if(rectIntersect(player,t)) ctx.globalAlpha=0.5;
       ctx.fillStyle='#8B4513';
-      const tw = t.width/3, th = t.height/2;
+      const tw=t.width/3, th=t.height/2;
       ctx.fillRect(
         t.x + t.width/2 - tw/2,
         t.y + t.height - th,
@@ -160,7 +160,7 @@
       );
       ctx.fillStyle='#006400';
       ctx.beginPath();
-      ctx.arc(t.x+t.width/2, t.y+t.height/2, t.width/2,0,Math.PI*2);
+      ctx.arc(t.x+t.width/2, t.y+t.height/2, t.width/2, 0, Math.PI*2);
       ctx.fill();
       ctx.restore();
     }
@@ -172,7 +172,7 @@
       ctx.fillStyle='#B22222';
       ctx.beginPath();
       ctx.moveTo(h.x,h.y);
-      ctx.lineTo(h.x+h.width/2, h.y-h.height/2);
+      ctx.lineTo(h.x+h.width/2,h.y-h.height/2);
       ctx.lineTo(h.x+h.width,h.y);
       ctx.closePath();
       ctx.fill();
@@ -187,19 +187,18 @@
     }
     function drawStickFigure(){
       ctx.strokeStyle='#FF0000'; ctx.lineWidth=2;
-      const cx = player.x + player.width/2,
-            ty = player.y,
-            hr = player.width/2;
+      const cx=player.x + player.width/2,
+            ty=player.y,
+            hr=player.width/2;
       ctx.beginPath();
       ctx.arc(cx,ty+hr,hr,0,2*Math.PI);
       ctx.stroke();
-      const bs = ty+2*hr, be = player.y+player.height;
+      const bs=ty+2*hr, be=player.y+player.height;
       ctx.beginPath();
       ctx.moveTo(cx,bs);
       ctx.lineTo(cx,be);
       ctx.stroke();
-      const ay = bs + (be-bs)/3,
-            al = player.width;
+      const ay=bs+(be-bs)/3, al=player.width;
       ctx.beginPath();
       ctx.moveTo(cx-al/2,ay);
       ctx.lineTo(cx+al/2,ay);
@@ -233,7 +232,7 @@
     // ----------------------------
     const canvas = document.getElementById("gameCanvas"),
           ctx    = canvas.getContext("2d");
-    const levelWidth = 6000, levelHeight=600;
+    const levelWidth = 6000, levelHeight = 600;
 
     let camX=0,
         platformMode="ground",
@@ -275,7 +274,7 @@
       {x:4500,width:1500,height:500,groundY:500,color:"#228B22"}
     ];
     function hillSurface(h,x){
-      let t=(x-h.x)/h.width;
+      const t=(x-h.x)/h.width;
       if(t<0||t>1) return null;
       return h.groundY - 2*h.height*t*(1-t);
     }
@@ -361,7 +360,7 @@
 
         if(platformMode==="ground"){
           [...groundPlatforms,...furniturePlatforms].forEach(plat=>{
-            if(rectIntersect(player,plat) && player.vy>0){
+            if(rectIntersect(player,plat)&&player.vy>0){
               player.y=plat.y-player.height;
               player.vy=0; player.onGround=true;
             }
@@ -378,7 +377,7 @@
               }
             }
           });
-          if(surf>-Infinity && player.y+player.height>surf){
+          if(surf>-Infinity&&player.y+player.height>surf){
             player.y=surf-player.height;
             player.vy=0; player.onGround=true;
           }
@@ -423,8 +422,73 @@
     function drawGame(){
       ctx.clearRect(0,0,canvas.width,canvas.height);
       ctx.save(); ctx.translate(-camX,0);
-      /* ... rest of drawGame unchanged ... */
+
+      // sky
+      ctx.fillStyle='#87CEEB';
+      ctx.fillRect(0,0,levelWidth,canvas.height);
+
+      // ground & furniture
+      groundPlatforms.forEach(p=>{
+        ctx.fillStyle='#654321'; ctx.fillRect(p.x,p.y,p.width,p.height);
+      });
+      furniturePlatforms.forEach(p=>{
+        ctx.fillStyle='#8B4513'; ctx.fillRect(p.x,p.y,p.width,p.height);
+      });
+
+      // hills
+      hills.forEach(h=>{
+        ctx.beginPath();
+        ctx.moveTo(h.x,h.groundY);
+        ctx.quadraticCurveTo(
+          h.x+h.width/2, h.groundY-h.height,
+          h.x+h.width, h.groundY
+        );
+        ctx.lineTo(h.x+h.width, levelHeight);
+        ctx.lineTo(h.x, levelHeight);
+        ctx.closePath();
+        ctx.fillStyle=h.color;
+        ctx.fill();
+      });
+
+      // bg mountains
+      bgDecorations.forEach(drawMountain);
+
+      // letters
+      collectibles.forEach(c=>{
+        if(!c.collected){
+          ctx.fillStyle='#FFD700';
+          ctx.beginPath();
+          ctx.arc(c.x+c.width/2, c.y+c.height/2, c.width, 0, Math.PI*2);
+          ctx.fill();
+          ctx.fillStyle='#000';
+          ctx.font="16px Arial";
+          ctx.textAlign="center";
+          ctx.textBaseline="middle";
+          ctx.fillText(c.letter, c.x+c.width/2, c.y+c.height/2);
+        }
+      });
+
+      // obstacles
+      obstacles.forEach(o=>{
+        ctx.fillStyle='#555'; ctx.fillRect(o.x,o.y,o.width,o.height);
+      });
+
+      // portals
+      drawPortal(groundPortal);
+      drawPortal(midPortal);
+
+      // foreground
+      fgDecorations.forEach(o=>{
+        if(o.type==='bush') drawBush(o);
+        else if(o.type==='tree') drawTree(o);
+        else if(o.type==='house') drawHouse(o);
+      });
+
+      // player
+      drawStickFigure();
+
       ctx.restore();
+
       if(victory) runVictoryAnimation();
       else drawHUD();
     }
@@ -440,10 +504,10 @@
     // VICTORY + CONFETTI
     // ----------------------------
     function initConfetti(){
-      confettiParticles=[];
-      messageY=canvas.height+50;
-      longY=canvas.height+100;
-      showingLong=false;
+      confettiParticles=[]
+      messageY=canvas.height+50
+      longY=canvas.height+100
+      showingLong=false
       for(let i=0;i<100;i++){
         confettiParticles.push({
           x: Math.random()*canvas.width,
@@ -457,7 +521,43 @@
     }
 
     const runVictoryAnimation = ()=>{
-      /* ... unchanged ... */
+      confettiParticles.forEach(p=>{
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.y>canvas.height){ p.y=-10; p.x=Math.random()*canvas.width }
+      });
+      ctx.fillStyle="rgba(0,0,0,0.8)";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      confettiParticles.forEach(p=>{
+        ctx.fillStyle=p.color;
+        ctx.fillRect(p.x,p.y,p.size,p.size);
+      });
+
+      const finalMsg = collectibles
+        .slice().sort((a,b)=>a.index-b.index)
+        .map(i=>i.letter).join("");
+      ctx.save();
+      ctx.fillStyle="#FFF";
+      ctx.font="60px Arial";
+      ctx.textAlign="center";
+      ctx.textBaseline="middle";
+      ctx.fillText(finalMsg, canvas.width/2, messageY);
+      ctx.restore();
+      messageY-=2;
+
+      if(messageY< -100 && !showingLong){
+        showingLong=true;
+      }
+      if(showingLong){
+        ctx.save();
+        ctx.fillStyle="#FFF";
+        ctx.font="28px Arial";
+        ctx.textAlign="center";
+        ctx.textBaseline="top";
+        ctx.fillText(longMessage, canvas.width/2, longY);
+        ctx.restore();
+        longY -= 0.5;
+      }
     };
 
     // ----------------------------
