@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Layered Platformer Letter Hunt – Victory Animation</title>
+  <title>Layered Platformer Letter Hunt – Final Version</title>
   <style>
     body {
       margin: 0;
@@ -55,10 +55,11 @@
   <!-- Help Overlay -->
   <div id="helpOverlay">
     <h1>Welcome to Letter Hunt!</h1>
-    <p>Help: Use the arrow keys or WASD to move. Press Space to jump.<br>
-       Collect the letters to reveal the secret message.<br>
-       Some letters are hidden on the hills (midground) and can only be collected when you teleport up using the purple portal.<br>
-       Avoid obstacles that hide the letters. Your character is a stick figure!
+    <p>
+      Use the arrow keys or WASD to move. Press Space to jump.<br>
+      Collect the letters to reveal the secret message.<br>
+      Some letters are hidden on the hills (midground) and are only collectible when you teleport up via the purple portal.<br>
+      Obstacles hide the letters – explore and find them all! Your character is a stick figure.
     </p>
     <div class="controls">
       ←  →  ↑  ↓<br>
@@ -77,7 +78,6 @@
     // ========================================================
     // HELPER FUNCTIONS (Drawing Helpers)
     // ========================================================
-    
     function rectIntersect(a, b) {
       return a.x < b.x + b.width &&
              a.x + a.width > b.x &&
@@ -116,7 +116,7 @@
       if (rectIntersect(player, b)) ctx.globalAlpha = 0.5;
       ctx.fillStyle = '#228B22';
       ctx.beginPath();
-      ctx.ellipse(b.x + b.width/2, b.y + b.height/2, b.width/2, b.height/2, 0, 0, Math.PI * 2);
+      ctx.ellipse(b.x + b.width / 2, b.y + b.height / 2, b.width / 2, b.height / 2, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -127,10 +127,10 @@
       ctx.fillStyle = '#8B4513';
       const trunkWidth = t.width / 3;
       const trunkHeight = t.height / 2;
-      ctx.fillRect(t.x + t.width/2 - trunkWidth/2, t.y + t.height - trunkHeight, trunkWidth, trunkHeight);
+      ctx.fillRect(t.x + t.width / 2 - trunkWidth / 2, t.y + t.height - trunkHeight, trunkWidth, trunkHeight);
       ctx.fillStyle = '#006400';
       ctx.beginPath();
-      ctx.arc(t.x + t.width/2, t.y + t.height/2, t.width/2, 0, Math.PI*2);
+      ctx.arc(t.x + t.width / 2, t.y + t.height / 2, t.width / 2, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -143,7 +143,7 @@
       ctx.fillStyle = '#B22222';
       ctx.beginPath();
       ctx.moveTo(h.x, h.y);
-      ctx.lineTo(h.x + h.width/2, h.y - h.height/2);
+      ctx.lineTo(h.x + h.width / 2, h.y - h.height / 2);
       ctx.lineTo(h.x + h.width, h.y);
       ctx.closePath();
       ctx.fill();
@@ -162,66 +162,62 @@
     function drawStickFigure() {
       ctx.strokeStyle = '#FF0000';
       ctx.lineWidth = 2;
-      let centerX = player.x + player.width/2;
+      let centerX = player.x + player.width / 2;
       let topY = player.y;
-      let headRadius = player.width/2;
-      // Head.
+      let headRadius = player.width / 2;
+      // Draw head.
       ctx.beginPath();
-      ctx.arc(centerX, topY + headRadius, headRadius, 0, 2*Math.PI);
+      ctx.arc(centerX, topY + headRadius, headRadius, 0, 2 * Math.PI);
       ctx.stroke();
-      // Body.
-      let bodyStartY = topY + 2*headRadius;
+      // Draw body.
+      let bodyStartY = topY + 2 * headRadius;
       let bodyEndY = player.y + player.height;
       ctx.beginPath();
       ctx.moveTo(centerX, bodyStartY);
       ctx.lineTo(centerX, bodyEndY);
       ctx.stroke();
-      // Arms.
-      let armY = bodyStartY + (bodyEndY - bodyStartY)/3;
+      // Draw arms.
+      let armY = bodyStartY + (bodyEndY - bodyStartY) / 3;
       let armLength = player.width;
       ctx.beginPath();
-      ctx.moveTo(centerX - armLength/2, armY);
-      ctx.lineTo(centerX + armLength/2, armY);
+      ctx.moveTo(centerX - armLength / 2, armY);
+      ctx.lineTo(centerX + armLength / 2, armY);
       ctx.stroke();
-      // Legs.
+      // Draw legs.
       ctx.beginPath();
       ctx.moveTo(centerX, bodyEndY);
-      ctx.lineTo(centerX - player.width/2, bodyEndY + 20);
+      ctx.lineTo(centerX - player.width / 2, bodyEndY + 20);
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(centerX, bodyEndY);
-      ctx.lineTo(centerX + player.width/2, bodyEndY + 20);
+      ctx.lineTo(centerX + player.width / 2, bodyEndY + 20);
       ctx.stroke();
     }
     
-    // Draw a small stick figure example for the help overlay.
+    // Draw a small stick figure example in the help overlay.
     function drawStickExample() {
       const stickExample = document.getElementById("stickExample");
       const ctxStick = stickExample.getContext("2d");
       ctxStick.clearRect(0, 0, stickExample.width, stickExample.height);
       ctxStick.strokeStyle = "#FF0000";
       ctxStick.lineWidth = 2;
-      let centerX = stickExample.width/2;
+      let centerX = stickExample.width / 2;
       let topY = 10;
       let headRadius = 10;
-      // Head.
       ctxStick.beginPath();
-      ctxStick.arc(centerX, topY + headRadius, headRadius, 0, 2*Math.PI);
+      ctxStick.arc(centerX, topY + headRadius, headRadius, 0, 2 * Math.PI);
       ctxStick.stroke();
-      // Body.
-      let bodyStart = topY + 2*headRadius;
+      let bodyStart = topY + 2 * headRadius;
       let bodyEnd = stickExample.height - 20;
       ctxStick.beginPath();
       ctxStick.moveTo(centerX, bodyStart);
       ctxStick.lineTo(centerX, bodyEnd);
       ctxStick.stroke();
-      // Arms.
-      let armY = bodyStart + (bodyEnd - bodyStart)/3;
+      let armY = bodyStart + (bodyEnd - bodyStart) / 3;
       ctxStick.beginPath();
       ctxStick.moveTo(centerX - 10, armY);
       ctxStick.lineTo(centerX + 10, armY);
       ctxStick.stroke();
-      // Legs.
       ctxStick.beginPath();
       ctxStick.moveTo(centerX, bodyEnd);
       ctxStick.lineTo(centerX - 10, bodyEnd + 15);
@@ -232,131 +228,7 @@
       ctxStick.stroke();
     }
     
-    // ========================================================
-    // GLOBAL VARIABLES & DATA DEFINITIONS
-    // ========================================================
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const levelWidth = 6000, levelHeight = 600;
-    let camX = 0;
-    let gameState = "ground";  // Only ground mode.
-    let platformMode = "ground"; // "ground" uses brown ground (+furniture), "midground" uses hills.
-    let time = 0;
-    const player = {
-      x: 100,
-      y: 450,
-      width: 30,
-      height: 50,
-      vx: 0,
-      vy: 0,
-      onGround: false
-    };
-    const keys = {};
-    document.addEventListener("keydown", e => { keys[e.key] = true; });
-    document.addEventListener("keyup", e => { keys[e.key] = false; });
-    const gravity = 0.5, moveSpeed = 3, jumpForce = -10;
-    
-    // Brown ground platforms.
-    const groundPlatforms = [
-      { x: 0, y: 500, width: levelWidth, height: 100 },
-      { x: 1200, y: 400, width: 200, height: 20 },
-      { x: 4500, y: 400, width: 200, height: 20 }
-    ];
-    
-    // Furniture platforms.
-    const furniturePlatforms = [
-      { x: 520, y: 420, width: 60, height: 10 },
-      { x: 730, y: 430, width: 50, height: 10 },
-      { x: 1330, y: 400, width: 50, height: 10 },
-      { x: 1550, y: 430, width: 70, height: 10 },
-      { x: 3700, y: 340, width: 60, height: 10 }
-    ];
-    
-    // Hills used in midground mode.
-    const hills = [
-      { x: 0,    width: 1200, height: 300, groundY: 500, color: "#228B22" },
-      { x: 1200, width: 1500, height: 400, groundY: 500, color: "#2E8B57" },
-      { x: 2700, width: 1800, height: 250, groundY: 500, color: "#006400" },
-      { x: 4500, width: 1500, height: 500, groundY: 500, color: "#228B22" }
-    ];
-    
-    // Hill surface function using factor 2 (to match drawn quadratic).
-    function hillSurface(hill, x) {
-      let t = (x - hill.x) / hill.width;
-      if (t < 0 || t > 1) return null;
-      return hill.groundY - (2 * hill.height * t * (1 - t));
-    }
-    
-    // Foreground decorations.
-    const fgDecorations = [
-      { type: 'bush', x: 100, y: 460, width: 80, height: 40 },
-      { type: 'tree', x: 300, y: 380, width: 60, height: 120 },
-      { type: 'house', x: 500, y: 360, width: 120, height: 140 },
-      { type: 'bush', x: 700, y: 460, width: 80, height: 40 },
-      { type: 'tree', x: 1120, y: 380, width: 60, height: 120 },
-      { type: 'house', x: 1320, y: 360, width: 120, height: 140 },
-      { type: 'bush', x: 1520, y: 450, width: 100, height: 50 },
-      { type: 'tree', x: 1800, y: 380, width: 60, height: 120 },
-      { type: 'house', x: 2000, y: 320, width: 150, height: 180 },
-      { type: 'bush', x: 2700, y: 460, width: 80, height: 40 },
-      { type: 'tree', x: 2930, y: 380, width: 60, height: 120 },
-      { type: 'house', x: 3360, y: 360, width: 120, height: 140 },
-      { type: 'bush', x: 3550, y: 460, width: 80, height: 40 },
-      { type: 'house', x: 3700, y: 360, width: 120, height: 140 },
-      { type: 'house', x: 5000, y: 360, width: 120, height: 140 }
-    ];
-    
-    // Collectibles.
-    let collectibles = [
-      { index: 0, letter: 'Y', x: 600,  y: 480, width: 20, height: 20, collected: false },
-      { index: 1, letter: 'O', x: 800,  y: 460, width: 20, height: 20, collected: false },
-      { index: 2, letter: 'U', x: 1000, y: 470, width: 20, height: 20, collected: false },
-      { index: 3, letter: 'R', x: 1200, y: 480, width: 20, height: 20, collected: false },
-      { index: 4, letter: 'E', x: 1400, y: 465, width: 20, height: 20, collected: false },
-      { index: 5, letter: 'T', x: 1600, y: 475, width: 20, height: 20, collected: false },
-      { index: 6, letter: 'H', x: 1800, y: 480, width: 20, height: 20, collected: false },
-      { index: 7, letter: 'E', x: 2000, y: 470, width: 20, height: 20, collected: false },
-      // Letters designated as midground only:
-      { index: 8, letter: 'B', x: 2800, y: 360, width: 20, height: 20, collected: false, layer: "midground" },
-      { index: 9, letter: 'E', x: 3000, y: 480, width: 20, height: 20, collected: false },
-      { index: 10, letter: 'S', x: 3200, y: 360, width: 20, height: 20, collected: false, layer: "midground" },
-      { index: 11, letter: 'T', x: 3400, y: 480, width: 20, height: 20, collected: false },
-      { index: 12, letter: 'D', x: 3600, y: 480, width: 20, height: 20, collected: false },
-      { index: 13, letter: 'A', x: 3800, y: 480, width: 20, height: 20, collected: false },
-      { index: 14, letter: 'D', x: 4000, y: 360, width: 20, height: 20, collected: false, layer: "midground" },
-      { index: 15, letter: 'E', x: 4200, y: 480, width: 20, height: 20, collected: false },
-      { index: 16, letter: 'V', x: 4400, y: 360, width: 20, height: 20, collected: false, layer: "midground" },
-      { index: 17, letter: 'E', x: 4600, y: 480, width: 20, height: 20, collected: false },
-      { index: 18, letter: 'R', x: 4800, y: 480, width: 20, height: 20, collected: false }
-    ];
-    
-    // Background decorations (mountains).
-    const bgDecorations = [
-      { type: 'mountain', x: 800,  y: 200, width: 200, height: 300 },
-      { type: 'mountain', x: 2200, y: 150, width: 250, height: 350 },
-      { type: 'mountain', x: 3200, y: 170, width: 250, height: 350 },
-      { type: 'mountain', x: 4800, y: 180, width: 300, height: 340 }
-    ];
-    
-    // Obstacles (to hide letters).
-    const obstacles = [
-      { x: 750, y: 450, width: 50, height: 50 },
-      { x: 2250, y: 420, width: 60, height: 60 },
-      { x: 3500, y: 450, width: 40, height: 40 },
-      { x: 4400, y: 470, width: 80, height: 80 }
-    ];
-    
-    // Portals.
-    const groundPortal = { x: 5500, y: 420, width: 60, height: 80 };
-    const midPortal = { x: 500, y: 220, width: 60, height: 80 };
-    
-    // ========================================================
-    // VICTORY VARIABLES & FUNCTIONS
-    // ========================================================
-    let victory = false;
-    let victoryTime = 0;
-    let confettiParticles = [];
-    
+    // Victory confetti functions.
     function initConfetti() {
       confettiParticles = [];
       for (let i = 0; i < 100; i++) {
@@ -366,7 +238,7 @@
           vx: (Math.random() - 0.5) * 4,
           vy: Math.random() * 4 + 2,
           size: Math.random() * 4 + 2,
-          color: "hsl(" + Math.floor(Math.random()*360) + ", 70%, 60%)"
+          color: "hsl(" + Math.floor(Math.random() * 360) + ", 70%, 60%)"
         });
       }
     }
@@ -395,17 +267,13 @@
     }
     
     function drawVictoryAnimation() {
-      // Darken the screen.
+      // Darken screen.
       ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      // Draw confetti.
       drawConfetti();
-      // Draw final message letters (they float upward and grow).
-      // We'll assemble the final message from the collectibles, sorted by index.
       let finalMessage = collectibles.sort((a, b) => a.index - b.index).map(x => x.letter).join(" ");
-      // Calculate a scale factor and vertical offset.
-      let scale = 1 + victoryTime * 0.5;  // Letters gradually grow.
-      let offsetY = -victoryTime * 10;      // Letters float upward.
+      let scale = 1 + victoryTime * 0.5;
+      let offsetY = -victoryTime * 10;
       ctx.save();
       ctx.fillStyle = "#FFF";
       ctx.font = (40 * scale) + "px Arial";
@@ -416,13 +284,13 @@
     }
     
     // ========================================================
-    // GAME VARIABLES & DATA (Re-declared for clarity)
+    // GLOBAL VARIABLES & GAME DATA (Declared Once)
     // ========================================================
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const levelWidth = 6000, levelHeight = 600;
     let camX = 0;
-    let gameState = "ground";  // Only ground mode.
+    let gameState = "ground";
     let platformMode = "ground";
     let time = 0;
     let victory = false;
@@ -491,8 +359,8 @@
     ];
     
     let collectibles = [
-      { index: 0, letter: 'Y', x: 600,  y: 480, width: 20, height: 20, collected: false },
-      { index: 1, letter: 'O', x: 800,  y: 460, width: 20, height: 20, collected: false },
+      { index: 0, letter: 'Y', x: 600, y: 480, width: 20, height: 20, collected: false },
+      { index: 1, letter: 'O', x: 800, y: 460, width: 20, height: 20, collected: false },
       { index: 2, letter: 'U', x: 1000, y: 470, width: 20, height: 20, collected: false },
       { index: 3, letter: 'R', x: 1200, y: 480, width: 20, height: 20, collected: false },
       { index: 4, letter: 'E', x: 1400, y: 465, width: 20, height: 20, collected: false },
@@ -530,11 +398,218 @@
     const midPortal = { x: 500, y: 220, width: 60, height: 80 };
     
     // ========================================================
-    // VICTORY VARIABLES & FUNCTIONS
+    // UPDATE FUNCTION (Ground Mode)
     // ========================================================
-    let victory = false;
-    let victoryTime = 0;
-    let confettiParticles = [];
+    function updateGround() {
+      if (!victory) {
+        if (keys['ArrowLeft'] || keys['a']) { player.vx = -moveSpeed; }
+        else if (keys['ArrowRight'] || keys['d']) { player.vx = moveSpeed; }
+        else { player.vx = 0; }
+        player.x += player.vx;
+        
+        if (isPlayerOnTree() && !keys[' ']) {
+          if (keys['ArrowUp'] || keys['w']) { player.vy = -2; }
+          else if (keys['ArrowDown'] || keys['s']) { player.vy = 2; }
+          else { player.vy = 0; }
+        } else {
+          if ((keys[' '] || keys['ArrowUp'] || keys['w']) && player.onGround) {
+            player.vy = jumpForce;
+            player.onGround = false;
+          }
+          player.vy += gravity;
+        }
+        player.y += player.vy;
+        
+        if (platformMode === "ground") {
+          let activePlatforms = groundPlatforms.concat(furniturePlatforms);
+          for (let plat of activePlatforms) {
+            if (rectIntersect(player, plat)) {
+              if (player.vy > 0) {
+                player.y = plat.y - player.height;
+                player.vy = 0;
+                player.onGround = true;
+              }
+            }
+          }
+        } else if (platformMode === "midground") {
+          let candidateSurface = -Infinity;
+          hills.forEach(hill => {
+            let overlapStart = Math.max(player.x, hill.x);
+            let overlapEnd = Math.min(player.x + player.width, hill.x + hill.width);
+            if (overlapStart < overlapEnd) {
+              for (let x = overlapStart; x <= overlapEnd; x += 5) {
+                let surf = hillSurface(hill, x);
+                if (surf !== null && surf > candidateSurface) {
+                  candidateSurface = surf;
+                }
+              }
+            }
+          });
+          if (candidateSurface !== -Infinity && player.y + player.height > candidateSurface) {
+            player.y = candidateSurface - player.height;
+            player.vy = 0;
+            player.onGround = true;
+          }
+        }
+        
+        if (player.x < 0) player.x = 0;
+        if (player.x + player.width > levelWidth) player.x = levelWidth - player.width;
+        if (player.y + player.height > levelHeight) player.y = levelHeight - player.height;
+        
+        collectibles.forEach(item => {
+          let floatOffset = 0;
+          let itemRect = { x: item.x, y: item.y + floatOffset, width: item.width, height: item.height };
+          if (item.layer === "midground" && platformMode === "ground") return;
+          if (!item.collected && rectIntersect(player, itemRect)) {
+            item.collected = true;
+          }
+        });
+        
+        if (platformMode === "ground" && rectIntersect(player, groundPortal)) {
+          platformMode = "midground";
+          let playerCenterX = player.x + player.width / 2;
+          let targetHill = hills.find(hill => playerCenterX >= hill.x && playerCenterX <= hill.x + hill.width);
+          if (!targetHill) targetHill = hills[0];
+          let desiredFactor = 0.8;
+          let targetSurface = targetHill.groundY - (targetHill.height * desiredFactor);
+          player.y = targetSurface - player.height;
+          player.vx = 0;
+          player.vy = 0;
+        }
+        
+        if (platformMode === "midground" && rectIntersect(player, midPortal)) {
+          platformMode = "ground";
+          player.x = 50;
+          player.y = groundPlatforms[0].y - player.height;
+          player.vx = 0;
+          player.vy = 0;
+        }
+        
+        camX = player.x + player.width / 2 - canvas.width / 2;
+        if (camX < 0) camX = 0;
+        if (camX > levelWidth - canvas.width) camX = levelWidth - canvas.width;
+        
+        if (!victory && collectibles.every(item => item.collected)) {
+          victory = true;
+          initConfetti();
+        }
+      } else {
+        updateVictoryAnimation();
+      }
+    }
+    
+    // ========================================================
+    // DRAWING FUNCTION (Ground Mode)
+    // ========================================================
+    function drawGround() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(-camX, 0);
+      
+      ctx.fillStyle = '#87CEEB';
+      ctx.fillRect(0, 0, levelWidth, canvas.height);
+      
+      groundPlatforms.forEach(plat => {
+        ctx.fillStyle = '#654321';
+        ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+      });
+      
+      furniturePlatforms.forEach(plat => {
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+      });
+      
+      hills.forEach(hill => {
+        ctx.beginPath();
+        ctx.moveTo(hill.x, hill.groundY);
+        ctx.quadraticCurveTo(
+          hill.x + hill.width/2,
+          hill.groundY - hill.height,
+          hill.x + hill.width,
+          hill.groundY
+        );
+        ctx.lineTo(hill.x + hill.width, levelHeight);
+        ctx.lineTo(hill.x, levelHeight);
+        ctx.closePath();
+        ctx.fillStyle = hill.color;
+        ctx.fill();
+      });
+      
+      bgDecorations.forEach(obj => { drawMountain(obj); });
+      
+      collectibles.forEach(item => {
+        if (!item.collected) {
+          let floatOffset = 0;
+          ctx.fillStyle = '#FFD700';
+          ctx.beginPath();
+          ctx.arc(item.x + item.width/2, item.y + floatOffset + item.height/2, item.width, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#000';
+          ctx.font = "16px Arial";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(item.letter, item.x + item.width/2, item.y + floatOffset + item.height/2);
+        }
+      });
+      
+      obstacles.forEach(obs => {
+        ctx.fillStyle = '#555555';
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+      });
+      
+      drawPortal(groundPortal);
+      drawPortal(midPortal);
+      
+      fgDecorations.forEach(obj => {
+        if (obj.type === 'bush') { drawBush(obj); }
+        else if (obj.type === 'tree') { drawTree(obj); }
+        else if (obj.type === 'house') { drawHouse(obj); }
+      });
+      
+      drawStickFigure();
+      
+      ctx.restore();
+      
+      if (victory) {
+        drawVictoryAnimation();
+      } else {
+        drawHUD();
+      }
+    }
+    
+    // ========================================================
+    // MAIN GAME LOOP
+    // ========================================================
+    function gameLoop() {
+      updateGround();
+      drawGround();
+      requestAnimationFrame(gameLoop);
+    }
+    gameLoop();
+    
+    // ========================================================
+    // VICTORY ANIMATION FUNCTIONS
+    // ========================================================
+    function updateVictoryAnimation() {
+      victoryTime += 0.05;
+      updateConfetti();
+    }
+    
+    function drawVictoryAnimation() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawConfetti();
+      let finalMessage = collectibles.sort((a, b) => a.index - b.index).map(x => x.letter).join(" ");
+      let scale = 1 + victoryTime * 0.5;
+      let offsetY = -victoryTime * 10;
+      ctx.save();
+      ctx.fillStyle = "#FFF";
+      ctx.font = (40 * scale) + "px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(finalMessage, canvas.width / 2, canvas.height / 2 + offsetY);
+      ctx.restore();
+    }
     
     function initConfetti() {
       confettiParticles = [];
@@ -568,265 +643,6 @@
       });
     }
     
-    function updateVictoryAnimation() {
-      victoryTime += 0.05;
-      updateConfetti();
-    }
-    
-    function drawVictoryAnimation() {
-      // Darken the screen.
-      ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      // Draw confetti.
-      drawConfetti();
-      // Draw final message letters.
-      let finalMessage = collectibles.sort((a, b) => a.index - b.index)
-                                    .map(x => x.letter)
-                                    .join(" ");
-      let scale = 1 + victoryTime * 0.5;
-      let offsetY = -victoryTime * 10;
-      ctx.save();
-      ctx.fillStyle = "#FFF";
-      ctx.font = (40 * scale) + "px Arial";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(finalMessage, canvas.width / 2, canvas.height / 2 + offsetY);
-      ctx.restore();
-    }
-    
-    // ========================================================
-    // UPDATE FUNCTION (Ground Mode)
-    // ========================================================
-    function updateGround() {
-      // Horizontal movement.
-      if (keys['ArrowLeft'] || keys['a']) { player.vx = -moveSpeed; }
-      else if (keys['ArrowRight'] || keys['d']) { player.vx = moveSpeed; }
-      else { player.vx = 0; }
-      player.x += player.vx;
-      
-      // Vertical movement.
-      if (isPlayerOnTree() && !keys[' ']) {
-        if (keys['ArrowUp'] || keys['w']) { player.vy = -2; }
-        else if (keys['ArrowDown'] || keys['s']) { player.vy = 2; }
-        else { player.vy = 0; }
-      } else {
-        if ((keys[' '] || keys['ArrowUp'] || keys['w']) && player.onGround) {
-          player.vy = jumpForce;
-          player.onGround = false;
-        }
-        player.vy += gravity;
-      }
-      player.y += player.vy;
-      
-      // Collision with platforms.
-      if (platformMode === "ground") {
-        let activePlatforms = groundPlatforms.concat(furniturePlatforms);
-        for (let plat of activePlatforms) {
-          if (rectIntersect(player, plat)) {
-            if (player.vy > 0) {
-              player.y = plat.y - player.height;
-              player.vy = 0;
-              player.onGround = true;
-            }
-          }
-        }
-      } else if (platformMode === "midground") {
-        let candidateSurface = -Infinity;
-        hills.forEach(hill => {
-          let overlapStart = Math.max(player.x, hill.x);
-          let overlapEnd = Math.min(player.x + player.width, hill.x + hill.width);
-          if (overlapStart < overlapEnd) {
-            for (let x = overlapStart; x <= overlapEnd; x += 5) {
-              let surf = hillSurface(hill, x);
-              if (surf !== null && surf > candidateSurface) {
-                candidateSurface = surf;
-              }
-            }
-          }
-        });
-        if (candidateSurface !== -Infinity && player.y + player.height > candidateSurface) {
-          player.y = candidateSurface - player.height;
-          player.vy = 0;
-          player.onGround = true;
-        }
-      }
-      
-      // Constrain player.
-      if (player.x < 0) player.x = 0;
-      if (player.x + player.width > levelWidth) player.x = levelWidth - player.width;
-      if (player.y + player.height > levelHeight) player.y = levelHeight - player.height;
-      
-      // Collectibles (no oscillation).
-      collectibles.forEach(item => {
-        let floatOffset = 0;
-        let itemRect = { x: item.x, y: item.y + floatOffset, width: item.width, height: item.height };
-        if (item.layer === "midground" && platformMode === "ground") return;
-        if (!item.collected && rectIntersect(player, itemRect)) {
-          item.collected = true;
-        }
-      });
-      
-      // Portal Teleportation.
-      if (platformMode === "ground" && rectIntersect(player, groundPortal)) {
-        platformMode = "midground";
-        let playerCenterX = player.x + player.width / 2;
-        let targetHill = hills.find(hill => playerCenterX >= hill.x && playerCenterX <= hill.x + hill.width);
-        if (!targetHill) targetHill = hills[0];
-        let desiredFactor = 0.8; // Adjust as needed.
-        let targetSurface = targetHill.groundY - (targetHill.height * desiredFactor);
-        player.y = targetSurface - player.height;
-        player.vx = 0;
-        player.vy = 0;
-      }
-      
-      if (platformMode === "midground" && rectIntersect(player, midPortal)) {
-        platformMode = "ground";
-        player.x = 50;
-        player.y = groundPlatforms[0].y - player.height;
-        player.vx = 0;
-        player.vy = 0;
-      }
-      
-      // Update camera.
-      camX = player.x + player.width/2 - canvas.width/2;
-      if (camX < 0) camX = 0;
-      if (camX > levelWidth - canvas.width) camX = levelWidth - canvas.width;
-      
-      // Check victory condition.
-      if (!victory && collectibles.every(item => item.collected)) {
-        victory = true;
-        initConfetti();
-      }
-    }
-    
-    // ========================================================
-    // DRAWING FUNCTION (Ground Mode)
-    // ========================================================
-    function drawGround() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.save();
-      ctx.translate(-camX, 0);
-      
-      // Draw sky.
-      ctx.fillStyle = '#87CEEB';
-      ctx.fillRect(0, 0, levelWidth, canvas.height);
-      
-      // Draw brown ground.
-      groundPlatforms.forEach(plat => {
-        ctx.fillStyle = '#654321';
-        ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-      });
-      
-      // Draw furniture platforms.
-      furniturePlatforms.forEach(plat => {
-        ctx.fillStyle = '#8B4513';
-        ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-      });
-      
-      // Draw hills.
-      hills.forEach(hill => {
-        ctx.beginPath();
-        ctx.moveTo(hill.x, hill.groundY);
-        ctx.quadraticCurveTo(
-          hill.x + hill.width/2,
-          hill.groundY - hill.height,
-          hill.x + hill.width,
-          hill.groundY
-        );
-        ctx.lineTo(hill.x + hill.width, levelHeight);
-        ctx.lineTo(hill.x, levelHeight);
-        ctx.closePath();
-        ctx.fillStyle = hill.color;
-        ctx.fill();
-      });
-      
-      // Draw background mountains.
-      bgDecorations.forEach(obj => { drawMountain(obj); });
-      
-      // Draw collectibles.
-      collectibles.forEach(item => {
-        if (!item.collected) {
-          let floatOffset = 0;
-          ctx.fillStyle = '#FFD700';
-          ctx.beginPath();
-          ctx.arc(item.x + item.width/2, item.y + floatOffset + item.height/2, item.width, 0, Math.PI*2);
-          ctx.fill();
-          ctx.fillStyle = '#000';
-          ctx.font = "16px Arial";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(item.letter, item.x + item.width/2, item.y + floatOffset + item.height/2);
-        }
-      });
-      
-      // Draw obstacles.
-      obstacles.forEach(obs => {
-        ctx.fillStyle = '#555555';
-        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-      });
-      
-      // Draw portals.
-      drawPortal(groundPortal);
-      drawPortal(midPortal);
-      
-      // Draw foreground decorations.
-      fgDecorations.forEach(obj => {
-        if (obj.type === 'bush') { drawBush(obj); }
-        else if (obj.type === 'tree') { drawTree(obj); }
-        else if (obj.type === 'house') { drawHouse(obj); }
-      });
-      
-      // Draw player (as stick figure).
-      drawStickFigure();
-      
-      ctx.restore();
-      
-      drawHUD();
-    }
-    
-    // ========================================================
-    // MAIN GAME LOOP
-    // ========================================================
-    function gameLoop() {
-      if (!victory) {
-        time += 0.05;
-        updateGround();
-        drawGround();
-      } else {
-        updateVictoryAnimation();
-        drawVictoryAnimation();
-      }
-      requestAnimationFrame(gameLoop);
-    }
-    gameLoop();
-    
-    // ========================================================
-    // VICTORY ANIMATION FUNCTIONS
-    // ========================================================
-    function updateVictoryAnimation() {
-      victoryTime += 0.05;
-      updateConfetti();
-    }
-    
-    function drawVictoryAnimation() {
-      // Darken the screen.
-      ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      // Draw confetti.
-      drawConfetti();
-      // Draw final message.
-      let finalMessage = collectibles.sort((a, b) => a.index - b.index).map(x => x.letter).join(" ");
-      let scale = 1 + victoryTime * 0.5;
-      let offsetY = -victoryTime * 10;
-      ctx.save();
-      ctx.fillStyle = "#FFF";
-      ctx.font = (40 * scale) + "px Arial";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(finalMessage, canvas.width/2, canvas.height/2 + offsetY);
-      ctx.restore();
-    }
-    
     // ========================================================
     // HELP OVERLAY HANDLING
     // ========================================================
@@ -836,7 +652,6 @@
       helpOverlay.style.display = "none";
     });
     drawStickExample();
-    
   </script>
 </body>
 </html>
