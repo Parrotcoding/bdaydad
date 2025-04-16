@@ -58,7 +58,7 @@
     <p>
       Use the arrow keys or WASD to move. Press Space to jump.<br>
       Collect the letters to reveal the secret message.<br>
-      Some letters are hidden on the hills (midground) and can only be collected when you teleport up using the purple portal.<br>
+      Some letters are hidden on the hills (midground) and can only be collected when you teleport up via the purple portal.<br>
       Obstacles hide the letters – explore and find them all! Your character is a stick figure.
     </p>
     <div class="controls">
@@ -117,7 +117,7 @@
       if (rectIntersect(player, b)) ctx.globalAlpha = 0.5;
       ctx.fillStyle = '#228B22';
       ctx.beginPath();
-      ctx.ellipse(b.x + b.width/2, b.y + b.height/2, b.width/2, b.height/2, 0, 0, Math.PI * 2);
+      ctx.ellipse(b.x + b.width / 2, b.y + b.height / 2, b.width / 2, b.height / 2, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -128,10 +128,10 @@
       ctx.fillStyle = '#8B4513';
       const trunkWidth = t.width / 3;
       const trunkHeight = t.height / 2;
-      ctx.fillRect(t.x + t.width/2 - trunkWidth/2, t.y + t.height - trunkHeight, trunkWidth, trunkHeight);
+      ctx.fillRect(t.x + t.width / 2 - trunkWidth / 2, t.y + t.height - trunkHeight, trunkWidth, trunkHeight);
       ctx.fillStyle = '#006400';
       ctx.beginPath();
-      ctx.arc(t.x + t.width/2, t.y + t.height/2, t.width/2, 0, Math.PI*2);
+      ctx.arc(t.x + t.width / 2, t.y + t.height / 2, t.width / 2, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -144,7 +144,7 @@
       ctx.fillStyle = '#B22222';
       ctx.beginPath();
       ctx.moveTo(h.x, h.y);
-      ctx.lineTo(h.x + h.width/2, h.y - h.height/2);
+      ctx.lineTo(h.x + h.width / 2, h.y - h.height / 2);
       ctx.lineTo(h.x + h.width, h.y);
       ctx.closePath();
       ctx.fill();
@@ -163,39 +163,52 @@
     function drawStickFigure() {
       ctx.strokeStyle = '#FF0000';
       ctx.lineWidth = 2;
-      let centerX = player.x + player.width/2;
+      let centerX = player.x + player.width / 2;
       let topY = player.y;
-      let headRadius = player.width/2;
-      // Head.
+      let headRadius = player.width / 2;
       ctx.beginPath();
-      ctx.arc(centerX, topY + headRadius, headRadius, 0, 2*Math.PI);
+      ctx.arc(centerX, topY + headRadius, headRadius, 0, 2 * Math.PI);
       ctx.stroke();
-      // Body.
-      let bodyStartY = topY + 2*headRadius;
+      let bodyStartY = topY + 2 * headRadius;
       let bodyEndY = player.y + player.height;
       ctx.beginPath();
       ctx.moveTo(centerX, bodyStartY);
       ctx.lineTo(centerX, bodyEndY);
       ctx.stroke();
-      // Arms.
       let armY = bodyStartY + (bodyEndY - bodyStartY) / 3;
       let armLength = player.width;
       ctx.beginPath();
-      ctx.moveTo(centerX - armLength/2, armY);
-      ctx.lineTo(centerX + armLength/2, armY);
-      ctx.stroke();
-      // Legs.
-      ctx.beginPath();
-      ctx.moveTo(centerX, bodyEndY);
-      ctx.lineTo(centerX - player.width/2, bodyEndY + 20);
+      ctx.moveTo(centerX - armLength / 2, armY);
+      ctx.lineTo(centerX + armLength / 2, armY);
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(centerX, bodyEndY);
-      ctx.lineTo(centerX + player.width/2, bodyEndY + 20);
+      ctx.lineTo(centerX - player.width / 2, bodyEndY + 20);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(centerX, bodyEndY);
+      ctx.lineTo(centerX + player.width / 2, bodyEndY + 20);
       ctx.stroke();
     }
     
-    // Draw a small stick figure example for the help overlay.
+    // Draw the HUD.
+    function drawHUD() {
+      let collectedLetters = [];
+      collectibles.slice().sort((a, b) => a.index - b.index).forEach(item => {
+        collectedLetters.push(item.collected ? item.letter : '_');
+      });
+      const message = collectedLetters.join(' ');
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+      ctx.fillStyle = '#FFF';
+      ctx.font = "20px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("Secret Message: " + message, canvas.width / 2, canvas.height - 10);
+      ctx.restore();
+    }
+    
+    // Draw a small stick figure for the help overlay.
     function drawStickExample() {
       const stickExample = document.getElementById("stickExample");
       const ctxStick = stickExample.getContext("2d");
@@ -206,15 +219,15 @@
       let topY = 10;
       let headRadius = 10;
       ctxStick.beginPath();
-      ctxStick.arc(centerX, topY + headRadius, headRadius, 0, 2*Math.PI);
+      ctxStick.arc(centerX, topY + headRadius, headRadius, 0, 2 * Math.PI);
       ctxStick.stroke();
-      let bodyStart = topY + 2*headRadius;
+      let bodyStart = topY + 2 * headRadius;
       let bodyEnd = stickExample.height - 20;
       ctxStick.beginPath();
       ctxStick.moveTo(centerX, bodyStart);
       ctxStick.lineTo(centerX, bodyEnd);
       ctxStick.stroke();
-      let armY = bodyStart + (bodyEnd - bodyStart)/3;
+      let armY = bodyStart + (bodyEnd - bodyStart) / 3;
       ctxStick.beginPath();
       ctxStick.moveTo(centerX - 10, armY);
       ctxStick.lineTo(centerX + 10, armY);
@@ -229,7 +242,7 @@
       ctxStick.stroke();
     }
     
-    // Victory confetti functions.
+    // Victory animation: Confetti and final message.
     function initConfetti() {
       confettiParticles = [];
       for (let i = 0; i < 100; i++) {
@@ -286,7 +299,7 @@
     }
     
     // ========================================================
-    // GLOBAL VARIABLES & GAME DATA (Single Declaration)
+    // GLOBAL GAME VARIABLES & DATA (Single Declaration)
     // ========================================================
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -473,7 +486,7 @@
         
         if (platformMode === "ground" && rectIntersect(player, groundPortal)) {
           platformMode = "midground";
-          let playerCenterX = player.x + player.width/2;
+          let playerCenterX = player.x + player.width / 2;
           let targetHill = hills.find(hill => playerCenterX >= hill.x && playerCenterX <= hill.x + hill.width);
           if (!targetHill) targetHill = hills[0];
           let desiredFactor = 0.8;
