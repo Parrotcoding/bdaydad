@@ -264,7 +264,8 @@
     }
     
     // ===============================
-    // VICTORY ANIMATION (Single Arrow Function)
+    // VICTORY ANIMATION FUNCTIONS
+    // (Using a single arrow function)
     // ===============================
     const runVictoryAnimation = () => {
       victoryTime += 0.05;
@@ -529,7 +530,7 @@
           player.vy = 0;
         }
         
-        camX = player.x + player.width/2 - canvas.width/2;
+        camX = player.x + player.width / 2 - canvas.width / 2;
         if (camX < 0) camX = 0;
         if (camX > levelWidth - canvas.width) camX = levelWidth - canvas.width;
         
@@ -538,7 +539,8 @@
           initConfetti();
         }
       } else {
-        updateVictoryAnimation();
+        // Replace the call to updateVictoryAnimation() with runVictoryAnimation()
+        runVictoryAnimation();
       }
     }
     
@@ -564,7 +566,7 @@
         ctx.beginPath();
         ctx.moveTo(hill.x, hill.groundY);
         ctx.quadraticCurveTo(
-          hill.x + hill.width/2,
+          hill.x + hill.width / 2,
           hill.groundY - hill.height,
           hill.x + hill.width,
           hill.groundY
@@ -582,13 +584,13 @@
         if (!item.collected) {
           ctx.fillStyle = '#FFD700';
           ctx.beginPath();
-          ctx.arc(item.x + item.width/2, item.y + item.height/2, item.width, 0, Math.PI*2);
+          ctx.arc(item.x + item.width / 2, item.y + item.height / 2, item.width, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = '#000';
           ctx.font = "16px Arial";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.fillText(item.letter, item.x + item.width/2, item.y + item.height/2);
+          ctx.fillText(item.letter, item.x + item.width / 2, item.y + item.height / 2);
         }
       });
       
@@ -610,8 +612,12 @@
       
       ctx.restore();
       
-      if (victory) { runVictoryAnimation(); }
-      else { drawHUD(); }
+      if (victory) { 
+        runVictoryAnimation(); 
+      }
+      else { 
+        drawHUD(); 
+      }
     }
     
     function gameLoop() {
@@ -622,37 +628,8 @@
     gameLoop();
     
     // ===============================
-    // VICTORY ANIMATION FUNCTIONS
-    // (Using the single arrow function defined above)
+    // (Victory Animation Functions already declared above)
     // ===============================
-    const runVictoryAnimation = () => {
-      victoryTime += 0.05;
-      confettiParticles.forEach(p => {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.y > canvas.height) {
-          p.y = -10;
-          p.x = Math.random() * canvas.width;
-        }
-      });
-      ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      confettiParticles.forEach(p => {
-        ctx.fillStyle = p.color;
-        ctx.fillRect(p.x, p.y, p.size, p.size);
-      });
-      const finalMessage = collectibles.slice().sort((a, b) => a.index - b.index)
-                               .map(x => x.letter).join(" ");
-      const scale = 1 + victoryTime * 0.5;
-      const offsetY = -victoryTime * 10;
-      ctx.save();
-      ctx.fillStyle = "#FFF";
-      ctx.font = `${40 * scale}px Arial`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(finalMessage, canvas.width / 2, canvas.height / 2 + offsetY);
-      ctx.restore();
-    };
     
     function initConfetti() {
       confettiParticles = [];
