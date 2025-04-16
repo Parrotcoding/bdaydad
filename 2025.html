@@ -10,7 +10,7 @@
       background: #87CEEB;
       font-family: Arial, sans-serif;
     }
-    /* The canvas will use its internal resolution of 800x600,
+    /* The canvas will use its internal resolution of 800×600,
        but its CSS size is scaled via JavaScript to maintain aspect ratio */
     canvas {
       display: block;
@@ -152,13 +152,13 @@
       ctx.fillStyle = '#8B4513';
       const tw = t.width / 3, th = t.height / 2;
       ctx.fillRect(
-        t.x + t.width/2 - tw/2,
+        t.x + t.width / 2 - tw / 2,
         t.y + t.height - th,
         tw, th
       );
       ctx.fillStyle = '#006400';
       ctx.beginPath();
-      ctx.arc(t.x + t.width/2, t.y + t.height/2, t.width/2, 0, Math.PI*2);
+      ctx.arc(t.x + t.width / 2, t.y + t.height / 2, t.width / 2, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -171,7 +171,7 @@
       ctx.fillStyle = '#B22222';
       ctx.beginPath();
       ctx.moveTo(h.x, h.y);
-      ctx.lineTo(h.x + h.width/2, h.y - h.height/2);
+      ctx.lineTo(h.x + h.width / 2, h.y - h.height / 2);
       ctx.lineTo(h.x + h.width, h.y);
       ctx.closePath();
       ctx.fill();
@@ -189,32 +189,32 @@
     function drawStickFigure() {
       ctx.strokeStyle = '#FF0000';
       ctx.lineWidth = 2;
-      const cx = player.x + player.width/2;
+      const cx = player.x + player.width / 2;
       const ty = player.y;
-      const hr = player.width/2;
+      const hr = player.width / 2;
       ctx.beginPath();
-      ctx.arc(cx, ty + hr, hr, 0, 2*Math.PI);
+      ctx.arc(cx, ty + hr, hr, 0, 2 * Math.PI);
       ctx.stroke();
 
-      const bs = ty + 2*hr, be = player.y + player.height;
+      const bs = ty + 2 * hr, be = player.y + player.height;
       ctx.beginPath();
       ctx.moveTo(cx, bs);
       ctx.lineTo(cx, be);
       ctx.stroke();
 
-      const ay = bs + (be - bs)/3, al = player.width;
+      const ay = bs + (be - bs) / 3, al = player.width;
       ctx.beginPath();
-      ctx.moveTo(cx - al/2, ay);
-      ctx.lineTo(cx + al/2, ay);
+      ctx.moveTo(cx - al / 2, ay);
+      ctx.lineTo(cx + al / 2, ay);
       ctx.stroke();
 
       ctx.beginPath();
       ctx.moveTo(cx, be);
-      ctx.lineTo(cx - player.width/2, be + 20);
+      ctx.lineTo(cx - player.width / 2, be + 20);
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(cx, be);
-      ctx.lineTo(cx + player.width/2, be + 20);
+      ctx.lineTo(cx + player.width / 2, be + 20);
       ctx.stroke();
     }
 
@@ -226,27 +226,27 @@
                     .join(' ');
       ctx.save();
       ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(0, canvas.height-40, canvas.width, 40);
+      ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
       ctx.fillStyle = '#FFF';
       ctx.font = "20px Arial";
       ctx.textAlign = "center";
-      ctx.fillText("Secret Message: " + msg, canvas.width/2, canvas.height-10);
+      ctx.fillText("Secret Message: " + msg, canvas.width / 2, canvas.height - 10);
       ctx.restore();
     }
 
     function drawStickExample() {
       const c = document.getElementById("stickExample");
       const s = c.getContext("2d");
-      s.clearRect(0,0,c.width,c.height);
-      s.strokeStyle="#FF0000"; s.lineWidth=2;
-      const cx=c.width/2, ty=10, hr=10;
-      s.beginPath(); s.arc(cx,ty+hr,hr,0,2*Math.PI); s.stroke();
-      const bs=ty+2*hr, be=c.height-20;
-      s.beginPath(); s.moveTo(cx,bs); s.lineTo(cx,be); s.stroke();
-      const ay=bs+(be-bs)/3;
-      s.beginPath(); s.moveTo(cx-10,ay); s.lineTo(cx+10,ay); s.stroke();
-      s.beginPath(); s.moveTo(cx,be); s.lineTo(cx-10,be+15); s.stroke();
-      s.beginPath(); s.moveTo(cx,be); s.lineTo(cx+10,be+15); s.stroke();
+      s.clearRect(0, 0, c.width, c.height);
+      s.strokeStyle = "#FF0000"; s.lineWidth = 2;
+      const cx = c.width / 2, ty = 10, hr = 10;
+      s.beginPath(); s.arc(cx, ty + hr, hr, 0, 2 * Math.PI); s.stroke();
+      const bs = ty + 2 * hr, be = c.height - 20;
+      s.beginPath(); s.moveTo(cx, bs); s.lineTo(cx, be); s.stroke();
+      const ay = bs + (be - bs) / 3;
+      s.beginPath(); s.moveTo(cx - 10, ay); s.lineTo(cx + 10, ay); s.stroke();
+      s.beginPath(); s.moveTo(cx, be); s.lineTo(cx - 10, be + 15); s.stroke();
+      s.beginPath(); s.moveTo(cx, be); s.lineTo(cx + 10, be + 15); s.stroke();
     }
 
     // ===============================
@@ -262,31 +262,31 @@
         victory = false,
         victoryTime = 0,
         confettiParticles = [],
-+       messageY = canvas.height + 50;  // start just off-screen
+        messageY = canvas.height + 50;  // start just off-screen
 
     const player = {
-      x: 100, y: 450, width:30, height:50,
-      vx:0, vy:0, onGround:false
+      x: 100, y: 450, width: 30, height: 50,
+      vx: 0, vy: 0, onGround: false
     };
 
     const keys = {};
-    document.addEventListener("keydown", e => keys[e.key]=true);
-    document.addEventListener("keyup",   e => keys[e.key]=false);
+    document.addEventListener("keydown", e => keys[e.key] = true);
+    document.addEventListener("keyup",   e => keys[e.key] = false);
 
     const gravity = 0.5, moveSpeed = 3, jumpForce = -10;
 
     const groundPlatforms = [
-      {x:0, y:500, width:levelWidth, height:100},
-      {x:1200, y:400, width:200, height:20},
-      {x:4500, y:400, width:200, height:20}
+      {x:0,    y:500, width:levelWidth, height:100},
+      {x:1200, y:400, width:200,        height:20},
+      {x:4500, y:400, width:200,        height:20}
     ];
 
     const furniturePlatforms = [
-      {x:520, y:420, width:60, height:10},
-      {x:730, y:430, width:50, height:10},
-      {x:1330,y:400, width:50, height:10},
-      {x:1550,y:430, width:70, height:10},
-      {x:3700,y:340, width:60, height:10}
+      {x:520,  y:420, width:60, height:10},
+      {x:730,  y:430, width:50, height:10},
+      {x:1330, y:400, width:50, height:10},
+      {x:1550, y:430, width:70, height:10},
+      {x:3700, y:340, width:60, height:10}
     ];
 
     const hills = [
@@ -297,7 +297,7 @@
     ];
     function hillSurface(h, x) {
       const t = (x - h.x) / h.width;
-      if (t<0||t>1) return null;
+      if (t < 0 || t > 1) return null;
       return h.groundY - (2 * h.height * t * (1 - t));
     }
 
@@ -320,25 +320,25 @@
     ];
 
     let collectibles = [
-      {index:0, letter:'Y', x:600, y:480, width:20, height:20, collected:false},
-      {index:1, letter:'O', x:800, y:460, width:20, height:20, collected:false},
-      {index:2, letter:'U', x:1000,y:470, width:20, height:20, collected:false},
-      {index:3, letter:'R', x:1200,y:480, width:20, height:20, collected:false},
-      {index:4, letter:'E', x:1400,y:465, width:20, height:20, collected:false},
-      {index:5, letter:'T', x:1600,y:475, width:20, height:20, collected:false},
-      {index:6, letter:'H', x:1800,y:480, width:20, height:20, collected:false},
-      {index:7, letter:'E', x:2000,y:470, width:20, height:20, collected:false},
-      {index:8, letter:'B', x:2800,y:360, width:20, height:20, collected:false, layer:"midground"},
-      {index:9, letter:'E', x:3000,y:480, width:20, height:20, collected:false},
-      {index:10,letter:'S', x:3200,y:360, width:20, height:20, collected:false, layer:"midground"},
-      {index:11,letter:'T', x:3400,y:480, width:20, height:20, collected:false},
-      {index:12,letter:'D', x:3600,y:480, width:20, height:20, collected:false},
-      {index:13,letter:'A', x:3800,y:480, width:20, height:20, collected:false},
-      {index:14,letter:'D', x:4000,y:360, width:20, height:20, collected:false, layer:"midground"},
-      {index:15,letter:'E', x:4200,y:480, width:20, height:20, collected:false},
-      {index:16,letter:'V', x:4400,y:360, width:20, height:20, collected:false, layer:"midground"},
-      {index:17,letter:'E', x:4600,y:480, width:20, height:20, collected:false},
-      {index:18,letter:'R', x:4800,y:480, width:20, height:20, collected:false}
+      {index:0, letter:'Y', x:600,  y:480, width:20, height:20, collected:false},
+      {index:1, letter:'O', x:800,  y:460, width:20, height:20, collected:false},
+      {index:2, letter:'U', x:1000, y:470, width:20, height:20, collected:false},
+      {index:3, letter:'R', x:1200, y:480, width:20, height:20, collected:false},
+      {index:4, letter:'E', x:1400, y:465, width:20, height:20, collected:false},
+      {index:5, letter:'T', x:1600, y:475, width:20, height:20, collected:false},
+      {index:6, letter:'H', x:1800, y:480, width:20, height:20, collected:false},
+      {index:7, letter:'E', x:2000, y:470, width:20, height:20, collected:false},
+      {index:8, letter:'B', x:2800, y:360, width:20, height:20, collected:false, layer:"midground"},
+      {index:9, letter:'E', x:3000, y:480, width:20, height:20, collected:false},
+      {index:10,letter:'S', x:3200, y:360, width:20, height:20, collected:false, layer:"midground"},
+      {index:11,letter:'T', x:3400, y:480, width:20, height:20, collected:false},
+      {index:12,letter:'D', x:3600, y:480, width:20, height:20, collected:false},
+      {index:13,letter:'A', x:3800, y:480, width:20, height:20, collected:false},
+      {index:14,letter:'D', x:4000, y:360, width:20, height:20, collected:false, layer:"midground"},
+      {index:15,letter:'E', x:4200, y:480, width:20, height:20, collected:false},
+      {index:16,letter:'V', x:4400, y:360, width:20, height:20, collected:false, layer:"midground"},
+      {index:17,letter:'E', x:4600, y:480, width:20, height:20, collected:false},
+      {index:18,letter:'R', x:4800, y:480, width:20, height:20, collected:false}
     ];
 
     const bgDecorations = [
@@ -533,25 +533,21 @@
     // CONFETTI / VICTORY
     // ===============================
     const runVictoryAnimation = () => {
-      // move confetti
       confettiParticles.forEach(p=>{
-        p.x+=p.vx; p.y+=p.vy;
-        if(p.y>canvas.height){ p.y=-10; p.x=Math.random()*canvas.width; }
+        p.x += p.vx; p.y += p.vy;
+        if(p.y>canvas.height){ p.y=-10; p.x=Math.random()*canvas.width }
       });
-      // darken
       ctx.fillStyle="rgba(0,0,0,0.8)";
       ctx.fillRect(0,0,canvas.width,canvas.height);
-      // draw confetti
       confettiParticles.forEach(p=>{
         ctx.fillStyle=p.color;
         ctx.fillRect(p.x,p.y,p.size,p.size);
       });
-      // draw scrolling message
       const finalMsg = collectibles
         .slice()
         .sort((a,b)=>a.index-b.index)
         .map(i=>i.letter)
-        .join(" ");
+        .join("");
       ctx.save();
       ctx.fillStyle="#FFF";
       ctx.font="60px Arial";
@@ -559,21 +555,20 @@
       ctx.textBaseline="middle";
       ctx.fillText(finalMsg, canvas.width/2, messageY);
       ctx.restore();
-      // scroll up
       messageY -= 2;
     };
 
     function initConfetti() {
       confettiParticles = [];
       messageY = canvas.height + 50;
-      for(let i=0;i<100;i++){
+      for (let i = 0; i < 100; i++) {
         confettiParticles.push({
-          x:Math.random()*canvas.width,
-          y:Math.random()*canvas.height - canvas.height,
-          vx:(Math.random()-0.5)*4,
-          vy:Math.random()*4+2,
-          size:Math.random()*4+2,
-          color:`hsl(${Math.floor(Math.random()*360)},70%,60%)`
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          vx: (Math.random() - 0.5) * 4,
+          vy: Math.random() * 4 + 2,
+          size: Math.random() * 4 + 2,
+          color: `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`
         });
       }
     }
@@ -583,7 +578,7 @@
     // ===============================
     const helpOverlay = document.getElementById("helpOverlay");
     document.getElementById("startButton")
-      .addEventListener("click", ()=> helpOverlay.style.display = "none");
+      .addEventListener("click", () => helpOverlay.style.display = "none");
     drawStickExample();
   </script>
 </body>
