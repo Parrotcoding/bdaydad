@@ -75,19 +75,17 @@
   <canvas id="gameCanvas" width="800" height="600"></canvas>
   
   <script>
-    // ===============================
+    // ========================================================
     // HELPER FUNCTIONS
-    // ===============================
-    
-    // Returns true if rectangles a and b intersect.
+    // ========================================================
+
     function rectIntersect(a, b) {
       return a.x < b.x + b.width &&
              a.x + a.width > b.x &&
              a.y < b.y + b.height &&
              a.y + a.height > b.y;
     }
-    
-    // Checks whether the player is on the lower trunk of any tree.
+
     function isPlayerOnTree() {
       for (let obj of fgDecorations) {
         if (obj.type === 'tree') {
@@ -103,8 +101,7 @@
       }
       return false;
     }
-    
-    // Draws a mountain shape.
+
     function drawMountain(m) {
       ctx.fillStyle = '#A9A9A9';
       ctx.beginPath();
@@ -114,8 +111,7 @@
       ctx.closePath();
       ctx.fill();
     }
-    
-    // Draws a bush.
+
     function drawBush(b) {
       ctx.save();
       if (rectIntersect(player, b)) ctx.globalAlpha = 0.5;
@@ -125,8 +121,7 @@
       ctx.fill();
       ctx.restore();
     }
-    
-    // Draws a tree.
+
     function drawTree(t) {
       ctx.save();
       if (rectIntersect(player, t)) ctx.globalAlpha = 0.5;
@@ -140,8 +135,7 @@
       ctx.fill();
       ctx.restore();
     }
-    
-    // Draws a house.
+
     function drawHouse(h) {
       ctx.save();
       if (rectIntersect(player, h)) ctx.globalAlpha = 0.5;
@@ -156,8 +150,7 @@
       ctx.fill();
       ctx.restore();
     }
-    
-    // Draws a portal.
+
     function drawPortal(portal) {
       ctx.save();
       ctx.fillStyle = '#800080';
@@ -165,8 +158,7 @@
       ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
       ctx.restore();
     }
-    
-    // Draws the player as a stick figure.
+
     function drawStickFigure() {
       ctx.strokeStyle = '#FF0000';
       ctx.lineWidth = 2;
@@ -197,8 +189,23 @@
       ctx.lineTo(centerX + player.width / 2, bodyEndY + 20);
       ctx.stroke();
     }
-    
-    // Draws a small stick figure in the help overlay.
+
+    function drawHUD() {
+      let collectedLetters = [];
+      collectibles.slice().sort((a, b) => a.index - b.index).forEach(item => {
+        collectedLetters.push(item.collected ? item.letter : '_');
+      });
+      const message = collectedLetters.join(' ');
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+      ctx.fillStyle = '#FFF';
+      ctx.font = "20px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("Secret Message: " + message, canvas.width / 2, canvas.height - 10);
+      ctx.restore();
+    }
+
     function drawStickExample() {
       const stickExample = document.getElementById("stickExample");
       const ctxStick = stickExample.getContext("2d");
@@ -231,8 +238,7 @@
       ctxStick.lineTo(centerX + 10, bodyEnd + 15);
       ctxStick.stroke();
     }
-    
-    // Victory confetti and final message animation.
+
     function initConfetti() {
       confettiParticles = [];
       for (let i = 0; i < 100; i++) {
@@ -246,7 +252,7 @@
         });
       }
     }
-    
+
     function updateConfetti() {
       confettiParticles.forEach(p => {
         p.x += p.vx;
@@ -257,19 +263,19 @@
         }
       });
     }
-    
+
     function drawConfetti() {
       confettiParticles.forEach(p => {
         ctx.fillStyle = p.color;
         ctx.fillRect(p.x, p.y, p.size, p.size);
       });
     }
-    
+
     function updateVictoryAnimation() {
       victoryTime += 0.05;
       updateConfetti();
     }
-    
+
     function drawVictoryAnimation() {
       ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -287,12 +293,13 @@
       ctx.fillText(finalMessage, canvas.width / 2, canvas.height / 2 + offsetY);
       ctx.restore();
     }
-    
+
     // ========================================================
     // GLOBAL GAME VARIABLES & DATA (Single Declaration)
     // ========================================================
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+
     const levelWidth = 6000, levelHeight = 600;
     let camX = 0;
     let gameState = "ground";
@@ -301,6 +308,7 @@
     let victory = false;
     let victoryTime = 0;
     let confettiParticles = [];
+
     const player = {
       x: 100,
       y: 450,
@@ -310,15 +318,19 @@
       vy: 0,
       onGround: false
     };
+
     const keys = {};
     document.addEventListener("keydown", e => { keys[e.key] = true; });
     document.addEventListener("keyup", e => { keys[e.key] = false; });
+
     const gravity = 0.5, moveSpeed = 3, jumpForce = -10;
+
     const groundPlatforms = [
       { x: 0, y: 500, width: levelWidth, height: 100 },
       { x: 1200, y: 400, width: 200, height: 20 },
       { x: 4500, y: 400, width: 200, height: 20 }
     ];
+
     const furniturePlatforms = [
       { x: 520, y: 420, width: 60, height: 10 },
       { x: 730, y: 430, width: 50, height: 10 },
@@ -326,17 +338,20 @@
       { x: 1550, y: 430, width: 70, height: 10 },
       { x: 3700, y: 340, width: 60, height: 10 }
     ];
+
     const hills = [
       { x: 0, width: 1200, height: 300, groundY: 500, color: "#228B22" },
       { x: 1200, width: 1500, height: 400, groundY: 500, color: "#2E8B57" },
       { x: 2700, width: 1800, height: 250, groundY: 500, color: "#006400" },
       { x: 4500, width: 1500, height: 500, groundY: 500, color: "#228B22" }
     ];
+
     function hillSurface(hill, x) {
       let t = (x - hill.x) / hill.width;
       if (t < 0 || t > 1) return null;
       return hill.groundY - (2 * hill.height * t * (1 - t));
     }
+
     const fgDecorations = [
       { type: 'bush', x: 100, y: 460, width: 80, height: 40 },
       { type: 'tree', x: 300, y: 380, width: 60, height: 120 },
@@ -354,6 +369,7 @@
       { type: 'house', x: 3700, y: 360, width: 120, height: 140 },
       { type: 'house', x: 5000, y: 360, width: 120, height: 140 }
     ];
+
     let collectibles = [
       { index: 0, letter: 'Y', x: 600, y: 480, width: 20, height: 20, collected: false },
       { index: 1, letter: 'O', x: 800, y: 460, width: 20, height: 20, collected: false },
@@ -375,28 +391,31 @@
       { index: 17, letter: 'E', x: 4600, y: 480, width: 20, height: 20, collected: false },
       { index: 18, letter: 'R', x: 4800, y: 480, width: 20, height: 20, collected: false }
     ];
+
     const bgDecorations = [
       { type: 'mountain', x: 800, y: 200, width: 200, height: 300 },
       { type: 'mountain', x: 2200, y: 150, width: 250, height: 350 },
       { type: 'mountain', x: 3200, y: 170, width: 250, height: 350 },
       { type: 'mountain', x: 4800, y: 180, width: 300, height: 340 }
     ];
+
     const obstacles = [
       { x: 750, y: 450, width: 50, height: 50 },
       { x: 2250, y: 420, width: 60, height: 60 },
       { x: 3500, y: 450, width: 40, height: 40 },
       { x: 4400, y: 470, width: 80, height: 80 }
     ];
+
     const groundPortal = { x: 5500, y: 420, width: 60, height: 80 };
     const midPortal = { x: 500, y: 220, width: 60, height: 80 };
+
     let victory = false;
     let victoryTime = 0;
     let confettiParticles = [];
-    
-    // ===============================
+
+    // ========================================================
     // GAME UPDATE & DRAW FUNCTIONS
-    // ===============================
-    
+    // ========================================================
     function updateGame() {
       if (!victory) {
         // Horizontal movement.
@@ -404,7 +423,7 @@
         else if (keys['ArrowRight'] || keys['d']) { player.vx = moveSpeed; }
         else { player.vx = 0; }
         player.x += player.vx;
-        
+      
         // Vertical movement.
         if (isPlayerOnTree() && !keys[' ']) {
           if (keys['ArrowUp'] || keys['w']) { player.vy = -2; }
@@ -418,8 +437,8 @@
           player.vy += gravity;
         }
         player.y += player.vy;
-        
-        // Collision with platforms.
+      
+        // Collision.
         if (platformMode === "ground") {
           let activePlatforms = groundPlatforms.concat(furniturePlatforms);
           for (let plat of activePlatforms) {
@@ -451,13 +470,13 @@
             player.onGround = true;
           }
         }
-        
-        // Constrain player within level boundaries.
+      
+        // Constrain player.
         if (player.x < 0) player.x = 0;
         if (player.x + player.width > levelWidth) player.x = levelWidth - player.width;
         if (player.y + player.height > levelHeight) player.y = levelHeight - player.height;
-        
-        // Collectibles (no oscillation). Midground items are only collectible in midground mode.
+      
+        // Collectibles.
         collectibles.forEach(item => {
           let itemRect = { x: item.x, y: item.y, width: item.width, height: item.height };
           if (item.layer === "midground" && platformMode === "ground") return;
@@ -465,8 +484,8 @@
             item.collected = true;
           }
         });
-        
-        // Portal teleportation.
+      
+        // Portals.
         if (platformMode === "ground" && rectIntersect(player, groundPortal)) {
           platformMode = "midground";
           let playerCenterX = player.x + player.width / 2;
@@ -478,7 +497,7 @@
           player.vx = 0;
           player.vy = 0;
         }
-        
+      
         if (platformMode === "midground" && rectIntersect(player, midPortal)) {
           platformMode = "ground";
           player.x = 50;
@@ -486,11 +505,11 @@
           player.vx = 0;
           player.vy = 0;
         }
-        
+      
         camX = player.x + player.width/2 - canvas.width/2;
         if (camX < 0) camX = 0;
         if (camX > levelWidth - canvas.width) camX = levelWidth - canvas.width;
-        
+      
         if (!victory && collectibles.every(item => item.collected)) {
           victory = true;
           initConfetti();
@@ -505,23 +524,19 @@
       ctx.save();
       ctx.translate(-camX, 0);
       
-      // Draw sky.
       ctx.fillStyle = '#87CEEB';
       ctx.fillRect(0, 0, levelWidth, canvas.height);
       
-      // Draw brown ground.
       groundPlatforms.forEach(plat => {
         ctx.fillStyle = '#654321';
         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
       });
       
-      // Draw furniture platforms.
       furniturePlatforms.forEach(plat => {
         ctx.fillStyle = '#8B4513';
         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
       });
       
-      // Draw hills.
       hills.forEach(hill => {
         ctx.beginPath();
         ctx.moveTo(hill.x, hill.groundY);
@@ -538,10 +553,8 @@
         ctx.fill();
       });
       
-      // Draw background mountains.
       bgDecorations.forEach(obj => { drawMountain(obj); });
       
-      // Draw collectibles.
       collectibles.forEach(item => {
         if (!item.collected) {
           ctx.fillStyle = '#FFD700';
@@ -556,33 +569,26 @@
         }
       });
       
-      // Draw obstacles.
       obstacles.forEach(obs => {
         ctx.fillStyle = '#555555';
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
       });
       
-      // Draw portals.
       drawPortal(groundPortal);
       drawPortal(midPortal);
       
-      // Draw foreground decorations.
       fgDecorations.forEach(obj => {
         if (obj.type === 'bush') { drawBush(obj); }
         else if (obj.type === 'tree') { drawTree(obj); }
         else if (obj.type === 'house') { drawHouse(obj); }
       });
       
-      // Draw the player.
       drawStickFigure();
       
       ctx.restore();
       
-      if (victory) {
-        drawVictoryAnimation();
-      } else {
-        drawHUD();
-      }
+      if (victory) { drawVictoryAnimation(); }
+      else { drawHUD(); }
     }
     
     function gameLoop() {
@@ -592,10 +598,9 @@
     }
     gameLoop();
     
-    // ===============================
+    // ========================================================
     // VICTORY ANIMATION FUNCTIONS
-    // ===============================
-    
+    // ========================================================
     function updateVictoryAnimation() {
       victoryTime += 0.05;
       updateConfetti();
@@ -651,9 +656,9 @@
       });
     }
     
-    // ===============================
+    // ========================================================
     // HELP OVERLAY HANDLING
-    // ===============================
+    // ========================================================
     const helpOverlay = document.getElementById("helpOverlay");
     const startButton = document.getElementById("startButton");
     startButton.addEventListener("click", function() {
