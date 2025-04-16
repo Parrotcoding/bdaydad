@@ -285,7 +285,8 @@
       });
       const finalMessage = collectibles.slice().sort((a, b) => a.index - b.index)
                                .map(x => x.letter).join(" ");
-      const scale = 1 + victoryTime * 0.5;
+      // Only change: reduce zoom multiplier from 0.5 to 0.2 for a slower zoom rate.
+      const scale = 1 + victoryTime * 0.2;
       const offsetY = -victoryTime * 10;
       ctx.save();
       ctx.fillStyle = "#FFF";
