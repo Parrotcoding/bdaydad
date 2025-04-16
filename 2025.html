@@ -75,9 +75,9 @@
   <canvas id="gameCanvas" width="800" height="600"></canvas>
   
   <script>
-    // ========================================================
+    // ===============================
     // HELPER FUNCTIONS
-    // ========================================================
+    // ===============================
     
     function rectIntersect(a, b) {
       return a.x < b.x + b.width &&
@@ -192,6 +192,7 @@
     
     function drawHUD() {
       let collectedLetters = [];
+      // We use a slice to ensure we don’t change the original order.
       collectibles.slice().sort((a, b) => a.index - b.index).forEach(item => {
         collectedLetters.push(item.collected ? item.letter : '_');
       });
@@ -239,7 +240,7 @@
       ctxStick.stroke();
     }
     
-    // Victory animation (consolidated as an arrow function).
+    // Victory animation using a single arrow function.
     const runVictoryAnimation = () => {
       victoryTime += 0.05;
       confettiParticles.forEach(p => {
@@ -258,8 +259,9 @@
         ctx.fillStyle = p.color;
         ctx.fillRect(p.x, p.y, p.size, p.size);
       });
-      // Assemble and draw final message.
-      const finalMessage = collectibles.slice().sort((a, b) => a.index - b.index).map(x => x.letter).join(" ");
+      // Assemble final message.
+      const finalMessage = collectibles.slice().sort((a, b) => a.index - b.index)
+                               .map(x => x.letter).join(" ");
       const scale = 1 + victoryTime * 0.5;
       const offsetY = -victoryTime * 10;
       ctx.save();
@@ -270,7 +272,7 @@
       ctx.fillText(finalMessage, canvas.width / 2, canvas.height / 2 + offsetY);
       ctx.restore();
     };
-    
+
     function initConfetti() {
       confettiParticles = [];
       for (let i = 0; i < 100; i++) {
@@ -283,11 +285,30 @@
           color: "hsl(" + Math.floor(Math.random() * 360) + ", 70%, 60%)"
         });
       }
-    };
+    }
+
+    function updateConfetti() {
+      confettiParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y > canvas.height) {
+          p.y = -10;
+          p.x = Math.random() * canvas.width;
+        }
+      });
+    }
+
+    function drawConfetti() {
+      confettiParticles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      });
+    }
     
-    // ========================================================
-    // GLOBAL GAME VARIABLES & DATA (Single Declaration)
-    // ========================================================
+    // ===============================
+    // GLOBAL GAME VARIABLES & DATA
+    // (Declared only once in this script block)
+    // ===============================
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const levelWidth = 6000, levelHeight = 600;
@@ -298,7 +319,6 @@
     let victory = false;
     let victoryTime = 0;
     let confettiParticles = [];
-    
     const player = {
       x: 100,
       y: 450,
@@ -308,19 +328,15 @@
       vy: 0,
       onGround: false
     };
-    
     const keys = {};
     document.addEventListener("keydown", e => { keys[e.key] = true; });
     document.addEventListener("keyup", e => { keys[e.key] = false; });
-    
     const gravity = 0.5, moveSpeed = 3, jumpForce = -10;
-    
     const groundPlatforms = [
       { x: 0, y: 500, width: levelWidth, height: 100 },
       { x: 1200, y: 400, width: 200, height: 20 },
       { x: 4500, y: 400, width: 200, height: 20 }
     ];
-    
     const furniturePlatforms = [
       { x: 520, y: 420, width: 60, height: 10 },
       { x: 730, y: 430, width: 50, height: 10 },
@@ -328,20 +344,17 @@
       { x: 1550, y: 430, width: 70, height: 10 },
       { x: 3700, y: 340, width: 60, height: 10 }
     ];
-    
     const hills = [
       { x: 0, width: 1200, height: 300, groundY: 500, color: "#228B22" },
       { x: 1200, width: 1500, height: 400, groundY: 500, color: "#2E8B57" },
       { x: 2700, width: 1800, height: 250, groundY: 500, color: "#006400" },
       { x: 4500, width: 1500, height: 500, groundY: 500, color: "#228B22" }
     ];
-    
     function hillSurface(hill, x) {
       let t = (x - hill.x) / hill.width;
       if (t < 0 || t > 1) return null;
       return hill.groundY - (2 * hill.height * t * (1 - t));
     }
-    
     const fgDecorations = [
       { type: 'bush', x: 100, y: 460, width: 80, height: 40 },
       { type: 'tree', x: 300, y: 380, width: 60, height: 120 },
@@ -359,10 +372,9 @@
       { type: 'house', x: 3700, y: 360, width: 120, height: 140 },
       { type: 'house', x: 5000, y: 360, width: 120, height: 140 }
     ];
-    
     let collectibles = [
-      { index: 0, letter: 'Y', x: 600,  y: 480, width: 20, height: 20, collected: false },
-      { index: 1, letter: 'O', x: 800,  y: 460, width: 20, height: 20, collected: false },
+      { index: 0, letter: 'Y', x: 600, y: 480, width: 20, height: 20, collected: false },
+      { index: 1, letter: 'O', x: 800, y: 460, width: 20, height: 20, collected: false },
       { index: 2, letter: 'U', x: 1000, y: 470, width: 20, height: 20, collected: false },
       { index: 3, letter: 'R', x: 1200, y: 480, width: 20, height: 20, collected: false },
       { index: 4, letter: 'E', x: 1400, y: 465, width: 20, height: 20, collected: false },
@@ -381,37 +393,32 @@
       { index: 17, letter: 'E', x: 4600, y: 480, width: 20, height: 20, collected: false },
       { index: 18, letter: 'R', x: 4800, y: 480, width: 20, height: 20, collected: false }
     ];
-    
     const bgDecorations = [
       { type: 'mountain', x: 800, y: 200, width: 200, height: 300 },
       { type: 'mountain', x: 2200, y: 150, width: 250, height: 350 },
       { type: 'mountain', x: 3200, y: 170, width: 250, height: 350 },
       { type: 'mountain', x: 4800, y: 180, width: 300, height: 340 }
     ];
-    
     const obstacles = [
       { x: 750, y: 450, width: 50, height: 50 },
       { x: 2250, y: 420, width: 60, height: 60 },
       { x: 3500, y: 450, width: 40, height: 40 },
       { x: 4400, y: 470, width: 80, height: 80 }
     ];
-    
     const groundPortal = { x: 5500, y: 420, width: 60, height: 80 };
     const midPortal = { x: 500, y: 220, width: 60, height: 80 };
 
-    // ========================================================
+    // ===============================
     // GAME UPDATE & DRAW FUNCTIONS
-    // ========================================================
+    // ===============================
     
     function updateGame() {
       if (!victory) {
-        // Horizontal movement.
         if (keys['ArrowLeft'] || keys['a']) { player.vx = -moveSpeed; }
         else if (keys['ArrowRight'] || keys['d']) { player.vx = moveSpeed; }
         else { player.vx = 0; }
         player.x += player.vx;
         
-        // Vertical movement.
         if (isPlayerOnTree() && !keys[' ']) {
           if (keys['ArrowUp'] || keys['w']) { player.vy = -2; }
           else if (keys['ArrowDown'] || keys['s']) { player.vy = 2; }
@@ -425,7 +432,6 @@
         }
         player.y += player.vy;
         
-        // Collision with platforms.
         if (platformMode === "ground") {
           let activePlatforms = groundPlatforms.concat(furniturePlatforms);
           for (let plat of activePlatforms) {
@@ -585,9 +591,10 @@
     }
     gameLoop();
     
-    // ========================================================
-    // VICTORY ANIMATION (Consolidated Arrow Function)
-    // ========================================================
+    // ===============================
+    // VICTORY ANIMATION (Arrow Function)
+    // ===============================
+    
     const runVictoryAnimation = () => {
       victoryTime += 0.05;
       confettiParticles.forEach(p => {
@@ -598,15 +605,12 @@
           p.x = Math.random() * canvas.width;
         }
       });
-      // Darken the screen.
       ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      // Draw confetti.
       confettiParticles.forEach(p => {
         ctx.fillStyle = p.color;
         ctx.fillRect(p.x, p.y, p.size, p.size);
       });
-      // Assemble final message.
       const finalMessage = collectibles.slice().sort((a, b) => a.index - b.index)
                                .map(x => x.letter).join(" ");
       const scale = 1 + victoryTime * 0.5;
@@ -652,9 +656,9 @@
       });
     }
     
-    // ========================================================
+    // ===============================
     // HELP OVERLAY HANDLING
-    // ========================================================
+    // ===============================
     const helpOverlay = document.getElementById("helpOverlay");
     const startButton = document.getElementById("startButton");
     startButton.addEventListener("click", function() {
