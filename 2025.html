@@ -2,27 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Layered Platformer Letter Hunt – Final Version</title>
+  <title>Layered Platformer Letter Hunt – Stick Figure & Help Menu</title>
   <style>
     body {
       margin: 0;
       overflow: hidden;
       background: #87CEEB; /* sky blue */
+      font-family: Arial, sans-serif;
     }
     canvas {
       display: block;
       background: #87CEEB;
     }
+    /* Help Overlay styles */
+    #helpOverlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+    #helpOverlay h1 {
+      font-size: 2.5em;
+      margin: 0.2em;
+    }
+    #helpOverlay p {
+      font-size: 1.2em;
+      max-width: 600px;
+    }
+    #helpOverlay button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+    /* Optional: Style for control illustrations using Unicode arrows */
+    .controls {
+      margin-top: 1em;
+      font-size: 2em;
+    }
   </style>
 </head>
 <body>
+  <!-- Help Overlay -->
+  <div id="helpOverlay">
+    <h1>Welcome to Letter Hunt!</h1>
+    <p>Help: Use the arrow keys or WASD to move. Press Space to jump.
+      Collect the letters to reveal the secret message.
+      Some letters are hidden on the hills – you can only collect those when you enter the midground by using the purple portal.
+      Avoid obstacles that hide the letters.
+    </p>
+    <div class="controls">
+      ←  →  ↑  ↓<br>
+      [Space] Jump
+    </div>
+    <p>Your character is a stick figure (see below) – you can jump and run just like a person!</p>
+    <!-- A small canvas to illustrate the stick figure -->
+    <canvas id="stickExample" width="100" height="150" style="background: transparent; margin-top:10px;"></canvas>
+    <br>
+    <button id="startButton">Start Game</button>
+  </div>
+  
+  <!-- Main Game Canvas -->
   <canvas id="gameCanvas" width="800" height="600"></canvas>
+  
   <script>
     // ========================================================
-    // HELPER FUNCTIONS (Declared first for use throughout)
+    // HELPER FUNCTIONS (Drawing Helpers)
     // ========================================================
     
-    // Returns true if rectangles a and b intersect.
     function rectIntersect(a, b) {
       return a.x < b.x + b.width &&
              a.x + a.width > b.x &&
@@ -30,25 +87,7 @@
              a.y + a.height > b.y;
     }
     
-    // Checks whether the player is overlapping the climbable (trunk) part of any tree.
-    function isPlayerOnTree() {
-      // We assume that trees are in the fgDecorations array with type 'tree'
-      for (let obj of fgDecorations) {
-        if (obj.type === 'tree') {
-          let trunkX = obj.x + obj.width / 2 - (obj.width / 3) / 2;
-          let trunkWidth = obj.width / 3;
-          let trunkY = obj.y + obj.height - obj.height / 2;
-          let trunkHeight = obj.height / 2;
-          let trunkRect = { x: trunkX, y: trunkY, width: trunkWidth, height: trunkHeight };
-          if (rectIntersect(player, trunkRect)) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-    
-    // Drawing helper: Draws a mountain shape.
+    // Draw mountain shape.
     function drawMountain(m) {
       ctx.fillStyle = '#A9A9A9';
       ctx.beginPath();
@@ -59,33 +98,33 @@
       ctx.fill();
     }
     
-    // Drawing helper: Draws a bush.
+    // Draw a bush.
     function drawBush(b) {
       ctx.save();
       if (rectIntersect(player, b)) ctx.globalAlpha = 0.5;
       ctx.fillStyle = '#228B22';
       ctx.beginPath();
-      ctx.ellipse(b.x + b.width / 2, b.y + b.height / 2, b.width / 2, b.height / 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(b.x + b.width/2, b.y + b.height/2, b.width/2, b.height/2, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
     
-    // Drawing helper: Draws a tree.
+    // Draw a tree.
     function drawTree(t) {
       ctx.save();
       if (rectIntersect(player, t)) ctx.globalAlpha = 0.5;
       ctx.fillStyle = '#8B4513';
       const trunkWidth = t.width / 3;
       const trunkHeight = t.height / 2;
-      ctx.fillRect(t.x + t.width / 2 - trunkWidth / 2, t.y + t.height - trunkHeight, trunkWidth, trunkHeight);
+      ctx.fillRect(t.x + t.width/2 - trunkWidth/2, t.y + t.height - trunkHeight, trunkWidth, trunkHeight);
       ctx.fillStyle = '#006400';
       ctx.beginPath();
-      ctx.arc(t.x + t.width / 2, t.y + t.height / 2, t.width / 2, 0, Math.PI * 2);
+      ctx.arc(t.x + t.width/2, t.y + t.height/2, t.width/2, 0, Math.PI*2);
       ctx.fill();
       ctx.restore();
     }
     
-    // Drawing helper: Draws a house.
+    // Draw a house.
     function drawHouse(h) {
       ctx.save();
       if (rectIntersect(player, h)) ctx.globalAlpha = 0.5;
@@ -94,14 +133,14 @@
       ctx.fillStyle = '#B22222';
       ctx.beginPath();
       ctx.moveTo(h.x, h.y);
-      ctx.lineTo(h.x + h.width / 2, h.y - h.height / 2);
+      ctx.lineTo(h.x + h.width/2, h.y - h.height/2);
       ctx.lineTo(h.x + h.width, h.y);
       ctx.closePath();
       ctx.fill();
       ctx.restore();
     }
     
-    // Drawing helper: Draws a portal.
+    // Draw a portal.
     function drawPortal(portal) {
       ctx.save();
       ctx.fillStyle = '#800080';
@@ -110,7 +149,51 @@
       ctx.restore();
     }
     
-    // Drawing helper: Draws the HUD.
+    // Draw the player as a stick figure.
+    function drawStickFigure() {
+      // Use player's x, y as the top left of the collision box.
+      // We'll draw a simple stick figure inside that rectangle.
+      let centerX = player.x + player.width/2;
+      let topY = player.y;
+      // Define a head radius relative to player's width.
+      let headRadius = player.width / 2;
+      ctx.strokeStyle = '#FF0000';
+      ctx.lineWidth = 2;
+      
+      // Draw the head.
+      ctx.beginPath();
+      ctx.arc(centerX, topY + headRadius, headRadius, 0, 2*Math.PI);
+      ctx.stroke();
+      
+      // Draw the body.
+      let bodyStartY = topY + 2*headRadius;
+      let bodyEndY = player.y + player.height;
+      ctx.beginPath();
+      ctx.moveTo(centerX, bodyStartY);
+      ctx.lineTo(centerX, bodyEndY);
+      ctx.stroke();
+      
+      // Draw arms.
+      let armY = bodyStartY + (bodyEndY - bodyStartY) / 3;
+      let armLength = player.width;
+      ctx.beginPath();
+      ctx.moveTo(centerX - armLength/2, armY);
+      ctx.lineTo(centerX + armLength/2, armY);
+      ctx.stroke();
+      
+      // Draw legs.
+      ctx.beginPath();
+      ctx.moveTo(centerX, bodyEndY);
+      ctx.lineTo(centerX - player.width/2, bodyEndY + 20);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(centerX, bodyEndY);
+      ctx.lineTo(centerX + player.width/2, bodyEndY + 20);
+      ctx.stroke();
+    }
+    
+    // Draw the Heads Up Display.
     function drawHUD() {
       let collectedLetters = [];
       collectibles.slice().sort((a, b) => a.index - b.index).forEach(item => {
@@ -123,12 +206,12 @@
       ctx.fillStyle = '#FFF';
       ctx.font = "20px Arial";
       ctx.textAlign = "center";
-      ctx.fillText("Secret Message: " + message, canvas.width / 2, canvas.height - 10);
+      ctx.fillText("Secret Message: " + message, canvas.width/2, canvas.height - 10);
       ctx.restore();
     }
     
     // ========================================================
-    // GLOBAL VARIABLES & SETUP
+    // GLOBAL VARIABLES & GAME SETUP
     // ========================================================
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -137,11 +220,8 @@
     const levelHeight = 600;
     
     let camX = 0;
-    let gameState = "ground";  // Only ground mode exists now.
-    
-    // Collision mode:
-    // "ground" uses brown ground (and furniture),
-    // "midground" uses hills.
+    let gameState = "ground"; // Only ground mode.
+    // Collision mode: "ground" uses brown ground + furniture, "midground" uses hills.
     let platformMode = "ground";
     let time = 0;
     
@@ -174,7 +254,7 @@
       { x: 4500, y: 400, width: 200, height: 20 }
     ];
     
-    // Furniture platforms that act as additional collision platforms (e.g., tables in houses).
+    // Furniture platforms (in houses).
     const furniturePlatforms = [
       { x: 520, y: 420, width: 60, height: 10 },
       { x: 730, y: 430, width: 50, height: 10 },
@@ -183,7 +263,7 @@
       { x: 3700, y: 340, width: 60, height: 10 }
     ];
     
-    // Hills used in midground collision mode.
+    // Hills as midground platforms.
     const hills = [
       { x: 0,    width: 1200, height: 300, groundY: 500, color: "#228B22" },
       { x: 1200, width: 1500, height: 400, groundY: 500, color: "#2E8B57" },
@@ -191,16 +271,14 @@
       { x: 4500, width: 1500, height: 500, groundY: 500, color: "#228B22" }
     ];
     
-    // Compute hill surface using a quadratic formula matching the drawn curve.
-    // Let t = (x - hill.x) / hill.width, then:
-    // surface = hill.groundY - (2 * hill.height * t * (1 - t))
+    // Hill surface function.
     function hillSurface(hill, x) {
       let t = (x - hill.x) / hill.width;
       if (t < 0 || t > 1) return null;
       return hill.groundY - (2 * hill.height * t * (1 - t));
     }
     
-    // Foreground decorations (houses, trees, bushes).
+    // Foreground decorations.
     const fgDecorations = [
       { type: 'bush',  x: 100,  y: 460, width: 80, height: 40 },
       { type: 'tree',  x: 300,  y: 380, width: 60, height: 120 },
@@ -229,7 +307,6 @@
       { index: 5,  letter: 'T', x: 1600, y: 475, width: 20, height: 20, collected: false },
       { index: 6,  letter: 'H', x: 1800, y: 480, width: 20, height: 20, collected: false },
       { index: 7,  letter: 'E', x: 2000, y: 470, width: 20, height: 20, collected: false },
-      // These letters are on midground and only collectible when platformMode is "midground".
       { index: 8,  letter: 'B', x: 2800, y: 360, width: 20, height: 20, collected: false, layer: "midground" },
       { index: 9,  letter: 'E', x: 3000, y: 480, width: 20, height: 20, collected: false },
       { index: 10, letter: 'S', x: 3200, y: 360, width: 20, height: 20, collected: false, layer: "midground" },
@@ -260,14 +337,11 @@
     ];
     
     // Portals (teleportation).
-    // Touching the "to‑midground" portal (groundPortal) switches collision mode to "midground"
-    // and teleports the player upward onto a hill.
-    // Touching the "return‑to‑ground" portal (midPortal) switches back to "ground" mode.
     const groundPortal = { x: 5500, y: 420, width: 60, height: 80 };
     const midPortal    = { x: 500,  y: 220, width: 60, height: 80 };
     
     // ========================================================
-    // UPDATE FUNCTION (Ground Mode Only)
+    // UPDATE FUNCTION (Ground Mode)
     // ========================================================
     function updateGround() {
       // Horizontal movement.
@@ -290,9 +364,8 @@
       }
       player.y += player.vy;
       
-      // Collision with platforms.
+      // Collision with active platforms.
       if (platformMode === "ground") {
-        // Use brown ground plus furniture.
         let activePlatforms = groundPlatforms.concat(furniturePlatforms);
         for (let plat of activePlatforms) {
           if (rectIntersect(player, plat)) {
@@ -304,7 +377,7 @@
           }
         }
       } else if (platformMode === "midground") {
-        // Sample multiple points along the player's bottom over overlapping hills.
+        // Sample points along the player's bottom over overlapping hills.
         let candidateSurface = -Infinity;
         hills.forEach(hill => {
           let overlapStart = Math.max(player.x, hill.x);
@@ -330,11 +403,11 @@
       if (player.x + player.width > levelWidth) player.x = levelWidth - player.width;
       if (player.y + player.height > levelHeight) player.y = levelHeight - player.height;
       
-      // Collectibles: no oscillation. If a collectible is designated as midground (layer:"midground")
-      // it will only be collected when platformMode is "midground".
+      // Collectibles (no oscillation).
       collectibles.forEach(item => {
         let floatOffset = 0;
         let itemRect = { x: item.x, y: item.y + floatOffset, width: item.width, height: item.height };
+        // If item designated as midground but we're in ground mode, do not collect.
         if (item.layer === "midground" && platformMode === "ground") return;
         if (!item.collected && rectIntersect(player, itemRect)) {
           item.collected = true;
@@ -342,13 +415,11 @@
       });
       
       // Portal Teleportation.
-      // Touching the "to‑midground" portal (groundPortal) in ground mode.
       if (platformMode === "ground" && rectIntersect(player, groundPortal)) {
         platformMode = "midground";
         let playerCenterX = player.x + player.width / 2;
         let targetHill = hills.find(hill => playerCenterX >= hill.x && playerCenterX <= hill.x + hill.width);
         if (!targetHill) targetHill = hills[0];
-        // Use a factor (e.g., 0.8) to set landing height.
         let desiredFactor = 0.8;
         let targetSurface = targetHill.groundY - (targetHill.height * desiredFactor);
         player.y = targetSurface - player.height;
@@ -356,7 +427,6 @@
         player.vy = 0;
       }
       
-      // Touching the "return‑to‑ground" portal (midPortal) in midground mode.
       if (platformMode === "midground" && rectIntersect(player, midPortal)) {
         platformMode = "ground";
         player.x = 50;
@@ -379,7 +449,7 @@
       ctx.save();
       ctx.translate(-camX, 0);
       
-      // Draw the sky.
+      // Draw sky.
       ctx.fillStyle = '#87CEEB';
       ctx.fillRect(0, 0, levelWidth, canvas.height);
       
@@ -395,12 +465,12 @@
         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
       });
       
-      // Draw hills as rounded platforms.
+      // Draw hills.
       hills.forEach(hill => {
         ctx.beginPath();
         ctx.moveTo(hill.x, hill.groundY);
         ctx.quadraticCurveTo(
-          hill.x + hill.width / 2,
+          hill.x + hill.width/2,
           hill.groundY - hill.height,
           hill.x + hill.width,
           hill.groundY
@@ -415,23 +485,23 @@
       // Draw background mountains.
       bgDecorations.forEach(obj => { drawMountain(obj); });
       
-      // Draw collectibles (without oscillation).
+      // Draw collectibles.
       collectibles.forEach(item => {
         if (!item.collected) {
           let floatOffset = 0;
           ctx.fillStyle = '#FFD700';
           ctx.beginPath();
-          ctx.arc(item.x + item.width / 2, item.y + floatOffset + item.height / 2, item.width, 0, Math.PI * 2);
+          ctx.arc(item.x + item.width/2, item.y + floatOffset + item.height/2, item.width, 0, Math.PI*2);
           ctx.fill();
           ctx.fillStyle = '#000';
           ctx.font = "16px Arial";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.fillText(item.letter, item.x + item.width / 2, item.y + floatOffset + item.height / 2);
+          ctx.fillText(item.letter, item.x + item.width/2, item.y + floatOffset + item.height/2);
         }
       });
       
-      // Draw obstacles that hide letters.
+      // Draw obstacles.
       obstacles.forEach(obs => {
         ctx.fillStyle = '#555555';
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
@@ -448,12 +518,10 @@
         else if (obj.type === 'house') { drawHouse(obj); }
       });
       
-      // Draw the player.
-      ctx.fillStyle = '#FF0000';
-      ctx.fillRect(player.x, player.y, player.width, player.height);
+      // Draw the player as a stick figure.
+      drawStickFigure();
       
       ctx.restore();
-      
       drawHUD();
     }
     
@@ -467,6 +535,90 @@
       requestAnimationFrame(gameLoop);
     }
     gameLoop();
+    
+    // ========================================================
+    // HELP OVERLAY HANDLING
+    // ========================================================
+    const helpOverlay = document.getElementById("helpOverlay");
+    const startButton = document.getElementById("startButton");
+    startButton.addEventListener("click", function() {
+      helpOverlay.style.display = "none";
+    });
+    
+    // Draw a simple stick figure in the "help" canvas as an illustration.
+    const stickExample = document.getElementById("stickExample");
+    const ctxStick = stickExample.getContext("2d");
+    function drawStickExample() {
+      ctxStick.clearRect(0, 0, stickExample.width, stickExample.height);
+      ctxStick.strokeStyle = "#FF0000";
+      ctxStick.lineWidth = 2;
+      let centerX = stickExample.width / 2;
+      let topY = 10;
+      let headRadius = 10;
+      // Head.
+      ctxStick.beginPath();
+      ctxStick.arc(centerX, topY + headRadius, headRadius, 0, 2*Math.PI);
+      ctxStick.stroke();
+      // Body.
+      let bodyStart = topY + 2 * headRadius;
+      let bodyEnd = stickExample.height - 20;
+      ctxStick.beginPath();
+      ctxStick.moveTo(centerX, bodyStart);
+      ctxStick.lineTo(centerX, bodyEnd);
+      ctxStick.stroke();
+      // Arms.
+      let armY = bodyStart + (bodyEnd - bodyStart)/3;
+      ctxStick.beginPath();
+      ctxStick.moveTo(centerX - 10, armY);
+      ctxStick.lineTo(centerX + 10, armY);
+      ctxStick.stroke();
+      // Legs.
+      ctxStick.beginPath();
+      ctxStick.moveTo(centerX, bodyEnd);
+      ctxStick.lineTo(centerX - 10, bodyEnd + 15);
+      ctxStick.stroke();
+      ctxStick.beginPath();
+      ctxStick.moveTo(centerX, bodyEnd);
+      ctxStick.lineTo(centerX + 10, bodyEnd + 15);
+      ctxStick.stroke();
+    }
+    drawStickExample();
+    
+    // Function to draw the player as a stick figure.
+    function drawStickFigure() {
+      ctx.strokeStyle = '#FF0000';
+      ctx.lineWidth = 2;
+      let centerX = player.x + player.width / 2;
+      let topY = player.y;
+      let headRadius = player.width / 2;
+      // Head.
+      ctx.beginPath();
+      ctx.arc(centerX, topY + headRadius, headRadius, 0, 2*Math.PI);
+      ctx.stroke();
+      // Body.
+      let bodyStartY = topY + 2 * headRadius;
+      let bodyEndY = player.y + player.height;
+      ctx.beginPath();
+      ctx.moveTo(centerX, bodyStartY);
+      ctx.lineTo(centerX, bodyEndY);
+      ctx.stroke();
+      // Arms.
+      let armY = bodyStartY + (bodyEndY - bodyStartY) / 3;
+      let armLength = player.width;
+      ctx.beginPath();
+      ctx.moveTo(centerX - armLength / 2, armY);
+      ctx.lineTo(centerX + armLength / 2, armY);
+      ctx.stroke();
+      // Legs.
+      ctx.beginPath();
+      ctx.moveTo(centerX, bodyEndY);
+      ctx.lineTo(centerX - player.width / 2, bodyEndY + 20);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(centerX, bodyEndY);
+      ctx.lineTo(centerX + player.width / 2, bodyEndY + 20);
+      ctx.stroke();
+    }
   </script>
 </body>
 </html>
