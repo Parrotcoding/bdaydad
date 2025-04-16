@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Layered Platformer Letter Hunt – No Interior, Furniture & Hidden Letters</title>
+  <title>Layered Platformer Letter Hunt – Modified Collectibles</title>
   <style>
     body {
       margin: 0;
@@ -28,15 +28,9 @@
     const levelHeight = 600;
     
     let camX = 0;
-    
-    // Game state: we now use only "ground" mode.
-    let gameState = "ground";
-    
-    // Collision mode:
-    // "ground" uses brown ground + furniture platforms,
-    // "midground" uses hills.
+    let gameState = "ground";  // Now only ground mode
+    // Collision mode: "ground" uses brown ground; "midground" uses hills.
     let platformMode = "ground";
-    
     let time = 0;
     
     const player = {
@@ -49,7 +43,6 @@
       onGround: false
     };
     
-    // Keyboard tracking.
     const keys = {};
     document.addEventListener('keydown', e => { keys[e.key] = true; });
     document.addEventListener('keyup', e => { keys[e.key] = false; });
@@ -62,29 +55,25 @@
     // GROUND PLATFORMS (Brown Ground)
     // ---------------------------
     const groundPlatforms = [
-      { x: 0, y: 500, width: levelWidth, height: 100 },
+      { x: 0,    y: 500, width: levelWidth, height: 100 },
       { x: 1200, y: 400, width: 200, height: 20 },
       { x: 4500, y: 400, width: 200, height: 20 }
     ];
     
-    // ---------------------------
-    // FURNITURE PLATFORMS (Inside Houses)
-    // ---------------------------
-    // These platforms are drawn as furniture inside the houses.
+    // (Optional) Furniture platforms inside houses – not used further here.
     const furniturePlatforms = [
-      { x: 520, y: 420, width: 60, height: 10 },   // inside house at x=500
-      { x: 730, y: 430, width: 50, height: 10 },   // inside house at x=700
-      { x: 1330, y: 400, width: 50, height: 10 },  // inside house at x=1320
-      { x: 1550, y: 430, width: 70, height: 10 },  // inside house at x=1520
-      { x: 3700, y: 340, width: 60, height: 10 }   // inside house at x=3700
+      { x: 520, y: 420, width: 60, height: 10 },
+      { x: 730, y: 430, width: 50, height: 10 },
+      { x: 1330, y: 400, width: 50, height: 10 },
+      { x: 1550, y: 430, width: 70, height: 10 },
+      { x: 3700, y: 340, width: 60, height: 10 }
     ];
     
     // ---------------------------
     // HILLS (Midground Platforms)
     // ---------------------------
-    // Each hill spans a portion of the level.
-    // The hill is defined by its starting x, width, maximum drop from groundY (height),
-    // groundY (here 500), and fill color.
+    // Each hill is defined by its starting x, width, maximum drop (height),
+    // groundY (brown ground level, set to 500), and its fill color.
     const hills = [
       { x: 0,    width: 1200, height: 300, groundY: 500, color: "#228B22" },
       { x: 1200, width: 1500, height: 400, groundY: 500, color: "#2E8B57" },
@@ -92,10 +81,9 @@
       { x: 4500, width: 1500, height: 500, groundY: 500, color: "#228B22" }
     ];
     
-    // Compute hill surface using a quadratic formula.
+    // Compute hill surface using a bell-curve formula that matches the drawn quadratic curve.
     // Let t = (x - hill.x) / hill.width, then:
     // surface = hill.groundY - (2 * hill.height * t * (1-t))
-    // This matches the drawn quadratic curve.
     function hillSurface(hill, x) {
       let t = (x - hill.x) / hill.width;
       if (t < 0 || t > 1) return null;
@@ -126,8 +114,8 @@
     // ---------------------------
     // COLLECTIBLES (Letters)
     // ---------------------------
-    // Some letters are placed on the ground, and a few are moved to the midground.
-    // For example, here index 8, 11, and 16 are placed on hills.
+    // Some letters are designated with "layer: midground" so that they can only be collected
+    // when the collision mode is "midground" (i.e. the player is on a hill).
     let collectibles = [
       { index: 0,  letter: 'Y', x: 600,  y: 480, width: 20, height: 20, collected: false },
       { index: 1,  letter: 'O', x: 800,  y: 460, width: 20, height: 20, collected: false },
@@ -137,18 +125,16 @@
       { index: 5,  letter: 'T', x: 1600, y: 475, width: 20, height: 20, collected: false },
       { index: 6,  letter: 'H', x: 1800, y: 480, width: 20, height: 20, collected: false },
       { index: 7,  letter: 'E', x: 2000, y: 470, width: 20, height: 20, collected: false },
-      // Place letter "B" on a hill:
-      { index: 8,  letter: 'B', x: 2800, y: 360, width: 20, height: 20, collected: false },
+      // These three letters are intended for midground (on the hills).
+      { index: 8,  letter: 'B', x: 2800, y: 360, width: 20, height: 20, collected: false, layer: "midground" },
       { index: 9,  letter: 'E', x: 3000, y: 480, width: 20, height: 20, collected: false },
-      // Place letter "S" on a hill:
-      { index: 10, letter: 'S', x: 3200, y: 360, width: 20, height: 20, collected: false },
+      { index: 10, letter: 'S', x: 3200, y: 360, width: 20, height: 20, collected: false, layer: "midground" },
       { index: 11, letter: 'T', x: 3400, y: 480, width: 20, height: 20, collected: false },
       { index: 12, letter: 'D', x: 3600, y: 480, width: 20, height: 20, collected: false },
       { index: 13, letter: 'A', x: 3800, y: 480, width: 20, height: 20, collected: false },
-      // Place letter "D" on a hill:
-      { index: 14, letter: 'D', x: 4000, y: 360, width: 20, height: 20, collected: false },
+      { index: 14, letter: 'D', x: 4000, y: 360, width: 20, height: 20, collected: false, layer: "midground" },
       { index: 15, letter: 'E', x: 4200, y: 480, width: 20, height: 20, collected: false },
-      { index: 16, letter: 'V', x: 4400, y: 360, width: 20, height: 20, collected: false },
+      { index: 16, letter: 'V', x: 4400, y: 360, width: 20, height: 20, collected: false, layer: "midground" },
       { index: 17, letter: 'E', x: 4600, y: 480, width: 20, height: 20, collected: false },
       { index: 18, letter: 'R', x: 4800, y: 480, width: 20, height: 20, collected: false }
     ];
@@ -164,9 +150,8 @@
     ];
     
     // ---------------------------
-    // OBSTACLES (To hide letters)
+    // OBSTACLES (to hide letters)
     // ---------------------------
-    // These obstacles are drawn on top of the collectibles.
     const obstacles = [
       { x: 750, y: 450, width: 50, height: 50 },
       { x: 2250, y: 420, width: 60, height: 60 },
@@ -178,9 +163,9 @@
     // PORTALS (TELEPORTATION)
     // ---------------------------
     // There is no interior mode.
-    // Touching the "to‑midground" portal (groundPortal) teleports the player upward onto a hill,
+    // Touching the "to‑midground" portal teleports the player upward onto a hill,
     // switching collision mode to "midground".
-    // Touching the "return‑to‑ground" portal (midPortal) teleports the player to a fixed left‑side ground location.
+    // Touching the "return‑to‑ground" portal teleports the player to a fixed left‑side location.
     const groundPortal = { x: 5500, y: 420, width: 60, height: 80 };
     const midPortal    = { x: 500,  y: 220, width: 60, height: 80 };
     
@@ -194,13 +179,12 @@
              a.y + a.height > b.y;
     }
     
-    // Check if the player is on a tree (for climbing).
     function isPlayerOnTree() {
       for (let obj of fgDecorations) {
         if (obj.type === 'tree') {
-          let trunkX = obj.x + obj.width/2 - (obj.width/3)/2;
+          let trunkX = obj.x + obj.width / 2 - (obj.width / 3) / 2;
           let trunkWidth = obj.width / 3;
-          let trunkY = obj.y + obj.height - obj.height/2;
+          let trunkY = obj.y + obj.height - obj.height / 2;
           let trunkHeight = obj.height / 2;
           let trunkRect = { x: trunkX, y: trunkY, width: trunkWidth, height: trunkHeight };
           if (rectIntersect(player, trunkRect)) {
@@ -235,9 +219,9 @@
       }
       player.y += player.vy;
       
-      // Collision with active platforms.
+      // Collision with platforms.
       if (platformMode === "ground") {
-        // In ground mode, use both brown ground and furniture.
+        // Use brown ground and furniture platforms.
         let activePlatforms = groundPlatforms.concat(furniturePlatforms);
         for (let plat of activePlatforms) {
           if (rectIntersect(player, plat)) {
@@ -249,7 +233,7 @@
           }
         }
       } else if (platformMode === "midground") {
-        // In midground mode, sample multiple points along the player's bottom over overlapping hills.
+        // Sample points along the player's bottom over any overlapping hill.
         let candidateSurface = -Infinity;
         hills.forEach(hill => {
           let overlapStart = Math.max(player.x, hill.x);
@@ -264,38 +248,36 @@
           }
         });
         if (candidateSurface !== -Infinity && player.y + player.height > candidateSurface) {
-          // Adjust by a small offset if needed.
           player.y = candidateSurface - player.height;
           player.vy = 0;
           player.onGround = true;
         }
       }
       
-      // Constrain player within level boundaries.
+      // Constrain player within level.
       if (player.x < 0) player.x = 0;
       if (player.x + player.width > levelWidth) player.x = levelWidth - player.width;
       if (player.y + player.height > levelHeight) player.y = levelHeight - player.height;
       
-      // Floating collectibles.
+      // Collectibles – no oscillation.
       collectibles.forEach(item => {
-        let floatOffset = Math.sin(time + item.index) * 5;
+        let floatOffset = 0; // Oscillation removed.
         let itemRect = { x: item.x, y: item.y + floatOffset, width: item.width, height: item.height };
+        // If the letter is designated as midground but we are in ground mode, skip collision.
+        if (item.layer === "midground" && platformMode === "ground") return;
         if (!item.collected && rectIntersect(player, itemRect)) {
           item.collected = true;
         }
       });
       
-      // Reassign collectible layer to interior if touching a house (unused now).
-      // (This block is kept for reference but not used since interior mode is removed.)
-      
       // Portal Teleportation:
-      // Touching the "to‑midground" portal (groundPortal) in ground mode.
+      // Touching the "to‑midground" portal.
       if (platformMode === "ground" && rectIntersect(player, groundPortal)) {
         platformMode = "midground";
         let playerCenterX = player.x + player.width / 2;
         let targetHill = hills.find(hill => playerCenterX >= hill.x && playerCenterX <= hill.x + hill.width);
         if (!targetHill) targetHill = hills[0];
-        // Use a factor (0.8) to let the player land somewhat lower on the hill.
+        // Use a factor (e.g., 0.8) to adjust landing position.
         let desiredFactor = 0.8;
         let targetSurface = targetHill.groundY - (targetHill.height * desiredFactor);
         player.y = targetSurface - player.height;
@@ -303,7 +285,7 @@
         player.vy = 0;
       }
       
-      // Touching the "return‑to‑ground" portal (midPortal) in midground mode.
+      // Touching the "return‑to‑ground" portal.
       if (platformMode === "midground" && rectIntersect(player, midPortal)) {
         platformMode = "ground";
         player.x = 50;
@@ -313,7 +295,7 @@
       }
       
       // Update camera.
-      camX = player.x + player.width / 2 - canvas.width / 2;
+      camX = player.x + player.width/2 - canvas.width/2;
       if (camX < 0) camX = 0;
       if (camX > levelWidth - canvas.width) camX = levelWidth - canvas.width;
     }
@@ -326,28 +308,28 @@
       ctx.save();
       ctx.translate(-camX, 0);
       
-      // Draw the sky.
+      // Draw sky.
       ctx.fillStyle = '#87CEEB';
       ctx.fillRect(0, 0, levelWidth, canvas.height);
       
-      // Always draw the brown ground.
+      // Draw brown ground.
       groundPlatforms.forEach(plat => {
         ctx.fillStyle = '#654321';
         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
       });
       
-      // Draw furniture platforms (inside houses) on top of the brown ground.
+      // Draw furniture platforms.
       furniturePlatforms.forEach(plat => {
         ctx.fillStyle = '#8B4513';
         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
       });
       
-      // Draw the hills as rounded platforms.
+      // Draw hills.
       hills.forEach(hill => {
         ctx.beginPath();
         ctx.moveTo(hill.x, hill.groundY);
         ctx.quadraticCurveTo(
-          hill.x + hill.width / 2,
+          hill.x + hill.width/2,
           hill.groundY - hill.height,
           hill.x + hill.width,
           hill.groundY
@@ -362,10 +344,10 @@
       // Draw background mountains.
       bgDecorations.forEach(obj => { drawMountain(obj); });
       
-      // Draw floating collectibles.
+      // Draw floating collectibles (without oscillation).
       collectibles.forEach(item => {
         if (!item.collected) {
-          let floatOffset = Math.sin(time + item.index) * 5;
+          let floatOffset = 0; // No oscillation.
           ctx.fillStyle = '#FFD700';
           ctx.beginPath();
           ctx.arc(item.x + item.width/2, item.y + floatOffset + item.height/2, item.width, 0, Math.PI*2);
@@ -384,7 +366,7 @@
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
       });
       
-      // Draw the portals.
+      // Draw portals.
       drawPortal(groundPortal);
       drawPortal(midPortal);
       
@@ -395,17 +377,15 @@
         else if (obj.type === 'house') { drawHouse(obj); }
       });
       
-      // Draw the player.
+      // Draw player.
       ctx.fillStyle = '#FF0000';
       ctx.fillRect(player.x, player.y, player.width, player.height);
+      
       ctx.restore();
       
       drawHUD();
     }
     
-    // ---------------------------
-    // HUD
-    // ---------------------------
     function drawHUD() {
       let collectedLetters = [];
       collectibles.slice().sort((a, b) => a.index - b.index).forEach(item => {
@@ -423,76 +403,12 @@
     }
     
     // ---------------------------
-    // DRAWING HELPERS
-    // ---------------------------
-    function drawMountain(m) {
-      ctx.fillStyle = '#A9A9A9';
-      ctx.beginPath();
-      ctx.moveTo(m.x, m.y + m.height);
-      ctx.lineTo(m.x + m.width/2, m.y);
-      ctx.lineTo(m.x + m.width, m.y + m.height);
-      ctx.closePath();
-      ctx.fill();
-    }
-    
-    function drawBush(b) {
-      ctx.save();
-      if (rectIntersect(player, b)) { ctx.globalAlpha = 0.5; }
-      ctx.fillStyle = '#228B22';
-      ctx.beginPath();
-      ctx.ellipse(b.x + b.width/2, b.y + b.height/2, b.width/2, b.height/2, 0, 0, Math.PI*2);
-      ctx.fill();
-      ctx.restore();
-    }
-    
-    function drawTree(t) {
-      ctx.save();
-      if (rectIntersect(player, t)) { ctx.globalAlpha = 0.5; }
-      ctx.fillStyle = '#8B4513';
-      const trunkWidth = t.width / 3;
-      const trunkHeight = t.height / 2;
-      ctx.fillRect(t.x + t.width/2 - trunkWidth/2, t.y + t.height - trunkHeight, trunkWidth, trunkHeight);
-      ctx.fillStyle = '#006400';
-      ctx.beginPath();
-      ctx.arc(t.x + t.width/2, t.y + t.height/2, t.width/2, 0, Math.PI*2);
-      ctx.fill();
-      ctx.restore();
-    }
-    
-    function drawHouse(h) {
-      ctx.save();
-      if (rectIntersect(player, h)) { ctx.globalAlpha = 0.5; }
-      ctx.fillStyle = '#FFDAB9';
-      ctx.fillRect(h.x, h.y, h.width, h.height);
-      ctx.fillStyle = '#B22222';
-      ctx.beginPath();
-      ctx.moveTo(h.x, h.y);
-      ctx.lineTo(h.x + h.width/2, h.y - h.height/2);
-      ctx.lineTo(h.x + h.width, h.y);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    }
-    
-    function drawPortal(portal) {
-      ctx.save();
-      ctx.fillStyle = '#800080';
-      ctx.globalAlpha = 0.7;
-      ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
-      ctx.restore();
-    }
-    
-    // ---------------------------
     // MAIN GAME LOOP
     // ---------------------------
     function gameLoop() {
       time += 0.05;
-      
-      if (gameState === "ground") {
-        updateGround();
-        drawGround();
-      }
-      
+      updateGround();
+      drawGround();
       requestAnimationFrame(gameLoop);
     }
     gameLoop();
