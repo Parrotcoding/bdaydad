@@ -10,6 +10,8 @@
       background: #87CEEB;
       font-family: Arial, sans-serif;
     }
+    /* The canvas will use its internal resolution of 800x600,
+       but its CSS size is scaled via JavaScript to maintain aspect ratio */
     canvas {
       display: block;
       background: #87CEEB;
@@ -71,14 +73,36 @@
     <button id="startButton">Start Game</button>
   </div>
   
-  <!-- Main Game Canvas -->
+  <!-- Main Game Canvas (native resolution 800x600) -->
   <canvas id="gameCanvas" width="800" height="600"></canvas>
   
   <script>
-    // ===============================
-    // HELPER FUNCTIONS
-    // ===============================
+    /* ------------------------------
+       Canvas Scaling Function
+       ------------------------------
+       The following function scales the canvas (CSS size) to
+       fit the window while preserving the 800x600 aspect ratio.
+    */
+    function resizeCanvas() {
+      const canvas = document.getElementById("gameCanvas");
+      const aspect = 800 / 600;
+      let w = window.innerWidth;
+      let h = window.innerHeight;
+      // Adjust width or height to preserve the aspect ratio.
+      if (w / h > aspect) {
+        w = h * aspect;
+      } else {
+        h = w / aspect;
+      }
+      canvas.style.width = w + "px";
+      canvas.style.height = h + "px";
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
     
+    /* ------------------------------
+       HELPER FUNCTIONS
+       ------------------------------ */
     function rectIntersect(a, b) {
       return a.x < b.x + b.width &&
              a.x + a.width > b.x &&
@@ -117,7 +141,7 @@
       if (rectIntersect(player, b)) ctx.globalAlpha = 0.5;
       ctx.fillStyle = '#228B22';
       ctx.beginPath();
-      ctx.ellipse(b.x + b.width / 2, b.y + b.height / 2, b.width/2, b.height/2, 0, 0, Math.PI*2);
+      ctx.ellipse(b.x + b.width / 2, b.y + b.height / 2, b.width / 2, b.height / 2, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -128,10 +152,10 @@
       ctx.fillStyle = '#8B4513';
       const trunkWidth = t.width / 3;
       const trunkHeight = t.height / 2;
-      ctx.fillRect(t.x + t.width/2 - trunkWidth/2, t.y + t.height - trunkHeight, trunkWidth, trunkHeight);
+      ctx.fillRect(t.x + t.width / 2 - trunkWidth / 2, t.y + t.height - trunkHeight, trunkWidth, trunkHeight);
       ctx.fillStyle = '#006400';
       ctx.beginPath();
-      ctx.arc(t.x + t.width/2, t.y + t.height/2, t.width/2, 0, Math.PI*2);
+      ctx.arc(t.x + t.width / 2, t.y + t.height / 2, t.width / 2, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -144,7 +168,7 @@
       ctx.fillStyle = '#B22222';
       ctx.beginPath();
       ctx.moveTo(h.x, h.y);
-      ctx.lineTo(h.x + h.width/2, h.y - h.height/2);
+      ctx.lineTo(h.x + h.width / 2, h.y - h.height / 2);
       ctx.lineTo(h.x + h.width, h.y);
       ctx.closePath();
       ctx.fill();
@@ -162,37 +186,36 @@
     function drawStickFigure() {
       ctx.strokeStyle = '#FF0000';
       ctx.lineWidth = 2;
-      let centerX = player.x + player.width/2;
+      let centerX = player.x + player.width / 2;
       let topY = player.y;
-      let headRadius = player.width/2;
+      let headRadius = player.width / 2;
       ctx.beginPath();
-      ctx.arc(centerX, topY + headRadius, headRadius, 0, 2*Math.PI);
+      ctx.arc(centerX, topY + headRadius, headRadius, 0, 2 * Math.PI);
       ctx.stroke();
-      let bodyStartY = topY + 2*headRadius;
+      let bodyStartY = topY + 2 * headRadius;
       let bodyEndY = player.y + player.height;
       ctx.beginPath();
       ctx.moveTo(centerX, bodyStartY);
       ctx.lineTo(centerX, bodyEndY);
       ctx.stroke();
-      let armY = bodyStartY + (bodyEndY - bodyStartY)/3;
+      let armY = bodyStartY + (bodyEndY - bodyStartY) / 3;
       let armLength = player.width;
       ctx.beginPath();
-      ctx.moveTo(centerX - armLength/2, armY);
-      ctx.lineTo(centerX + armLength/2, armY);
+      ctx.moveTo(centerX - armLength / 2, armY);
+      ctx.lineTo(centerX + armLength / 2, armY);
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(centerX, bodyEndY);
-      ctx.lineTo(centerX - player.width/2, bodyEndY + 20);
+      ctx.lineTo(centerX - player.width / 2, bodyEndY + 20);
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(centerX, bodyEndY);
-      ctx.lineTo(centerX + player.width/2, bodyEndY + 20);
+      ctx.lineTo(centerX + player.width / 2, bodyEndY + 20);
       ctx.stroke();
     }
     
     function drawHUD() {
       let collectedLetters = [];
-      // We use a slice to ensure we don’t change the original order.
       collectibles.slice().sort((a, b) => a.index - b.index).forEach(item => {
         collectedLetters.push(item.collected ? item.letter : '_');
       });
@@ -203,7 +226,7 @@
       ctx.fillStyle = '#FFF';
       ctx.font = "20px Arial";
       ctx.textAlign = "center";
-      ctx.fillText("Secret Message: " + message, canvas.width/2, canvas.height - 10);
+      ctx.fillText("Secret Message: " + message, canvas.width / 2, canvas.height - 10);
       ctx.restore();
     }
     
@@ -213,19 +236,19 @@
       ctxStick.clearRect(0, 0, stickExample.width, stickExample.height);
       ctxStick.strokeStyle = "#FF0000";
       ctxStick.lineWidth = 2;
-      let centerX = stickExample.width/2;
+      let centerX = stickExample.width / 2;
       let topY = 10;
       let headRadius = 10;
       ctxStick.beginPath();
-      ctxStick.arc(centerX, topY + headRadius, headRadius, 0, 2*Math.PI);
+      ctxStick.arc(centerX, topY + headRadius, headRadius, 0, 2 * Math.PI);
       ctxStick.stroke();
-      let bodyStart = topY + 2*headRadius;
+      let bodyStart = topY + 2 * headRadius;
       let bodyEnd = stickExample.height - 20;
       ctxStick.beginPath();
       ctxStick.moveTo(centerX, bodyStart);
       ctxStick.lineTo(centerX, bodyEnd);
       ctxStick.stroke();
-      let armY = bodyStart + (bodyEnd - bodyStart)/3;
+      let armY = bodyStart + (bodyEnd - bodyStart) / 3;
       ctxStick.beginPath();
       ctxStick.moveTo(centerX - 10, armY);
       ctxStick.lineTo(centerX + 10, armY);
@@ -241,9 +264,8 @@
     }
     
     // ===============================
-    // VICTORY ANIMATION (Declared only once)
+    // VICTORY ANIMATION (Single Arrow Function)
     // ===============================
-    
     const runVictoryAnimation = () => {
       victoryTime += 0.05;
       confettiParticles.forEach(p => {
@@ -254,15 +276,12 @@
           p.x = Math.random() * canvas.width;
         }
       });
-      // Darken the screen.
       ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      // Draw confetti.
       confettiParticles.forEach(p => {
         ctx.fillStyle = p.color;
         ctx.fillRect(p.x, p.y, p.size, p.size);
       });
-      // Assemble final message.
       const finalMessage = collectibles.slice().sort((a, b) => a.index - b.index)
                                .map(x => x.letter).join(" ");
       const scale = 1 + victoryTime * 0.5;
@@ -275,9 +294,42 @@
       ctx.fillText(finalMessage, canvas.width / 2, canvas.height / 2 + offsetY);
       ctx.restore();
     };
-
+    
+    function initConfetti() {
+      confettiParticles = [];
+      for (let i = 0; i < 100; i++) {
+        confettiParticles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          vx: (Math.random() - 0.5) * 4,
+          vy: Math.random() * 4 + 2,
+          size: Math.random() * 4 + 2,
+          color: "hsl(" + Math.floor(Math.random() * 360) + ", 70%, 60%)"
+        });
+      }
+    }
+    
+    function updateConfetti() {
+      confettiParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y > canvas.height) {
+          p.y = -10;
+          p.x = Math.random() * canvas.width;
+        }
+      });
+    }
+    
+    function drawConfetti() {
+      confettiParticles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      });
+    }
+    
     // ===============================
     // GLOBAL GAME VARIABLES & DATA
+    // (Declared only once)
     // ===============================
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -289,6 +341,7 @@
     let victory = false;
     let victoryTime = 0;
     let confettiParticles = [];
+    
     const player = {
       x: 100,
       y: 450,
@@ -298,15 +351,19 @@
       vy: 0,
       onGround: false
     };
+    
     const keys = {};
     document.addEventListener("keydown", e => { keys[e.key] = true; });
     document.addEventListener("keyup", e => { keys[e.key] = false; });
+    
     const gravity = 0.5, moveSpeed = 3, jumpForce = -10;
+    
     const groundPlatforms = [
       { x: 0, y: 500, width: levelWidth, height: 100 },
       { x: 1200, y: 400, width: 200, height: 20 },
       { x: 4500, y: 400, width: 200, height: 20 }
     ];
+    
     const furniturePlatforms = [
       { x: 520, y: 420, width: 60, height: 10 },
       { x: 730, y: 430, width: 50, height: 10 },
@@ -314,17 +371,20 @@
       { x: 1550, y: 430, width: 70, height: 10 },
       { x: 3700, y: 340, width: 60, height: 10 }
     ];
+    
     const hills = [
       { x: 0, width: 1200, height: 300, groundY: 500, color: "#228B22" },
       { x: 1200, width: 1500, height: 400, groundY: 500, color: "#2E8B57" },
       { x: 2700, width: 1800, height: 250, groundY: 500, color: "#006400" },
       { x: 4500, width: 1500, height: 500, groundY: 500, color: "#228B22" }
     ];
+    
     function hillSurface(hill, x) {
       let t = (x - hill.x) / hill.width;
       if (t < 0 || t > 1) return null;
       return hill.groundY - (2 * hill.height * t * (1 - t));
     }
+    
     const fgDecorations = [
       { type: 'bush', x: 100, y: 460, width: 80, height: 40 },
       { type: 'tree', x: 300, y: 380, width: 60, height: 120 },
@@ -342,6 +402,7 @@
       { type: 'house', x: 3700, y: 360, width: 120, height: 140 },
       { type: 'house', x: 5000, y: 360, width: 120, height: 140 }
     ];
+    
     let collectibles = [
       { index: 0, letter: 'Y', x: 600, y: 480, width: 20, height: 20, collected: false },
       { index: 1, letter: 'O', x: 800, y: 460, width: 20, height: 20, collected: false },
@@ -363,25 +424,27 @@
       { index: 17, letter: 'E', x: 4600, y: 480, width: 20, height: 20, collected: false },
       { index: 18, letter: 'R', x: 4800, y: 480, width: 20, height: 20, collected: false }
     ];
+    
     const bgDecorations = [
       { type: 'mountain', x: 800, y: 200, width: 200, height: 300 },
       { type: 'mountain', x: 2200, y: 150, width: 250, height: 350 },
       { type: 'mountain', x: 3200, y: 170, width: 250, height: 350 },
       { type: 'mountain', x: 4800, y: 180, width: 300, height: 340 }
     ];
+    
     const obstacles = [
       { x: 750, y: 450, width: 50, height: 50 },
       { x: 2250, y: 420, width: 60, height: 60 },
       { x: 3500, y: 450, width: 40, height: 40 },
       { x: 4400, y: 470, width: 80, height: 80 }
     ];
+    
     const groundPortal = { x: 5500, y: 420, width: 60, height: 80 };
     const midPortal = { x: 500, y: 220, width: 60, height: 80 };
-
+    
     // ===============================
     // GAME UPDATE & DRAW FUNCTIONS
     // ===============================
-    
     function updateGame() {
       if (!victory) {
         if (keys['ArrowLeft'] || keys['a']) { player.vx = -moveSpeed; }
@@ -475,8 +538,7 @@
           initConfetti();
         }
       } else {
-        // Update the victory animation.
-        runVictoryAnimation();
+        updateVictoryAnimation();
       }
     }
     
@@ -548,11 +610,8 @@
       
       ctx.restore();
       
-      if (victory) {
-        runVictoryAnimation();
-      } else {
-        drawHUD();
-      }
+      if (victory) { runVictoryAnimation(); }
+      else { drawHUD(); }
     }
     
     function gameLoop() {
@@ -563,8 +622,38 @@
     gameLoop();
     
     // ===============================
-    // CONFETTI FUNCTIONS
+    // VICTORY ANIMATION FUNCTIONS
+    // (Using the single arrow function defined above)
     // ===============================
+    const runVictoryAnimation = () => {
+      victoryTime += 0.05;
+      confettiParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y > canvas.height) {
+          p.y = -10;
+          p.x = Math.random() * canvas.width;
+        }
+      });
+      ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      confettiParticles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      });
+      const finalMessage = collectibles.slice().sort((a, b) => a.index - b.index)
+                               .map(x => x.letter).join(" ");
+      const scale = 1 + victoryTime * 0.5;
+      const offsetY = -victoryTime * 10;
+      ctx.save();
+      ctx.fillStyle = "#FFF";
+      ctx.font = `${40 * scale}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(finalMessage, canvas.width / 2, canvas.height / 2 + offsetY);
+      ctx.restore();
+    };
+    
     function initConfetti() {
       confettiParticles = [];
       for (let i = 0; i < 100; i++) {
@@ -577,6 +666,24 @@
           color: "hsl(" + Math.floor(Math.random() * 360) + ", 70%, 60%)"
         });
       }
+    }
+    
+    function updateConfetti() {
+      confettiParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y > canvas.height) {
+          p.y = -10;
+          p.x = Math.random() * canvas.width;
+        }
+      });
+    }
+    
+    function drawConfetti() {
+      confettiParticles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      });
     }
     
     // ===============================
