@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Envelope Unroll (Smooth Scroll)</title>
+  <title>Smooth Envelope Unroll</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?
@@ -14,119 +14,118 @@
     family=Fira+Sans&family=Inconsolata&family=Source+Sans+Pro
     &display=swap" rel="stylesheet">
   <style>
-    /*—— reset & allow scrolling ——*/
+    /* Reset & allow scrolling */
     * { margin:0; padding:0; box-sizing:border-box }
     html, body { height:100%; }
     body {
       background: #f0f0f0;
       font-family: Poppins, sans-serif;
-      /* make room to scroll */
-      min-height: 200vh;
+      min-height: 200vh;          /* room to scroll */
     }
 
-    /*—— envelope centered, 80vh×80vw ——*/
+    /* Envelope centered at 60vh × 60vw */
     .envelope {
       position: fixed;
       top: 50%; left: 50%;
-      width: 80vw; height: 80vh;
+      width: 60vw; height: 60vh;
       transform: translate(-50%,-50%);
       perspective: 800px;
       z-index: 10;
     }
-    /* paper layer (grows upward) */
+    /* Paper (bottom layer) */
     .paper {
       position: absolute;
       bottom: 2px; left: 2px;
       width: calc(100% - 4px);
-      height: 0;
-      background: white;
+      height: 0;                      /* grows upward */
+      background: #fff;
       overflow: hidden;
-      padding: 2rem 1rem 0; /* top & sides */
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 2rem 1rem 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1);
       z-index: 2;
       transition: height .2s ease-out;
     }
-    /* envelope body */
+    /* Envelope body & border */
     .body {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: white;
+      position: absolute; top:0; left:0;
+      width:100%; height:100%;
+      background: #fff;
       border: 2px solid #ccc;
       border-radius: 4px;
       z-index: 1;
     }
-    /* single bottom mask, 80% of envelope height */
+    /* Single bottom mask (80% of envelope height) */
     .mask {
       position: absolute;
       bottom: 2px; left: 2px;
       width: calc(100% - 4px);
       height: 80%;
-      background: white;
+      background: #fff;
       z-index: 3;
     }
-    /* triangular flap */
+    /* Triangular flap (20% of envelope height) */
     .flap {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 30%;
-      background: #eee; border: 2px solid #ccc;
-      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      position: absolute; top:0; left:0;
+      width:100%; height:20%;
+      background: #eee; border:2px solid #ccc;
+      clip-path: polygon(0 0,100% 0,50% 100%);
       transform-origin: top;
       transform: rotateX(0deg);
       transition: transform .8s ease, z-index 0s .8s;
       z-index: 4;
     }
-    /* flip flap behind paper */
+    /* Flip flap fully behind paper */
     .envelope.open .flap {
       transform: rotateX(180deg);
       z-index: -1;
     }
-    /* address appears on final flip */
+    /* Address appears after flip */
     .address {
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%,-50%);
-      text-align: center; opacity: 0;
+      position:absolute; top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      text-align:center; opacity:0;
       transition: opacity .8s ease;
       z-index: 5;
     }
-    .address.show { opacity: 1; }
-    /* final 3D flip of envelope */
+    .address.show { opacity:1 }
+    /* Final envelope 3D flip */
     .envelope.flip {
       transform: translate(-50%,-50%) rotateY(180deg);
       transition: transform 1s ease;
     }
 
-    /* message lines */
+    /* Message lines */
     .line {
       margin: 1rem 0;
       font-size: 1.25rem;
       white-space: nowrap;
     }
-    /* optional unique fonts */
-    #line1  { font-family: 'Roboto', sans-serif; }
-    #line2  { font-family: 'Lato', sans-serif; }
-    #line3  { font-family: 'Montserrat', sans-serif; }
-    #line4  { font-family: 'Open Sans', sans-serif; }
-    #line5  { font-family: 'Raleway', sans-serif; }
-    #line6  { font-family: 'Merriweather', serif; }
-    #line7  { font-family: 'Oswald', sans-serif; }
-    #line8  { font-family: 'Playfair Display', serif; }
-    #line9  { font-family: 'Nunito', sans-serif; }
-    #line10 { font-family: 'Ubuntu', sans-serif; }
-    #line11 { font-family: 'PT Sans', sans-serif; }
-    #line12 { font-family: 'Work Sans', sans-serif; }
-    #line13 { font-family: 'Fira Sans', sans-serif; }
-    #line14 { font-family: 'Inconsolata', monospace; }
-    #line15 { font-family: 'Source Sans Pro', sans-serif; }
+    /* Optional unique fonts */
+    #line1  { font-family:'Roboto',sans-serif; }
+    #line2  { font-family:'Lato',sans-serif; }
+    #line3  { font-family:'Montserrat',sans-serif; }
+    #line4  { font-family:'Open Sans',sans-serif; }
+    #line5  { font-family:'Raleway',sans-serif; }
+    #line6  { font-family:'Merriweather',serif; }
+    #line7  { font-family:'Oswald',sans-serif; }
+    #line8  { font-family:'Playfair Display',serif; }
+    #line9  { font-family:'Nunito',sans-serif; }
+    #line10 { font-family:'Ubuntu',sans-serif; }
+    #line11 { font-family:'PT Sans',sans-serif; }
+    #line12 { font-family:'Work Sans',sans-serif; }
+    #line13 { font-family:'Fira Sans',sans-serif; }
+    #line14 { font-family:'Inconsolata',monospace; }
+    #line15 { font-family:'Source Sans Pro',sans-serif; }
 
-    /* confetti bits */
+    /* Confetti bits */
     .confetti {
-      position: absolute; top: 0; width: 8px; height: 8px;
-      border-radius: 50%;
+      position:absolute; top:0; width:8px; height:8px;
+      border-radius:50%;
       animation: fall 3s ease-out forwards;
-      z-index: 2;
+      z-index:2;
     }
     @keyframes fall {
-      to { transform: translateY(100vh); opacity: 0; }
+      to { transform:translateY(100vh); opacity:0; }
     }
   </style>
 </head>
@@ -161,30 +160,31 @@
 
   <script>
     window.addEventListener('DOMContentLoaded', () => {
-      const env   = document.querySelector('.envelope');
-      const paper = env.querySelector('.paper');
-      const addr  = env.querySelector('.address');
-      let done    = false;
+      const env    = document.querySelector('.envelope');
+      const paper  = env.querySelector('.paper');
+      const addr   = env.querySelector('.address');
+      let fired    = false;
 
-      // measure full content height
+      // measure full paper height once
       const fullH = paper.scrollHeight;
       paper.style.height = '0px';
 
       window.addEventListener('scroll', () => {
-        const maxScroll = document.body.scrollHeight - window.innerHeight;
-        const frac = Math.min(window.scrollY / maxScroll, 1);
+        const scrollY = window.scrollY;
+        const vh      = window.innerHeight;
 
-        // open flap when you start scrolling
-        if (window.scrollY > 20) {
+        // open flap immediately when scrolling
+        if (scrollY > 10) {
           env.classList.add('open');
         }
 
-        // grow paper
-        paper.style.height = `${fullH * frac}px`;
+        // unroll over first viewport
+        const unrollFrac = Math.min(scrollY / vh, 1);
+        paper.style.height = `${fullH * unrollFrac}px`;
 
-        // when fully unrolled, flip envelope and show address + confetti
-        if (frac === 1 && !done) {
-          done = true;
+        // after unroll complete and scrolled past 1.1 viewports, flip + confetti
+        if (scrollY > vh * 1.1 && !fired) {
+          fired = true;
           env.classList.add('flip');
           addr.classList.add('show');
           // spawn confetti
