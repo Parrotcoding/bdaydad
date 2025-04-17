@@ -7,13 +7,13 @@
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* reset & huge scroll area */
+    /* reset & scroll area */
     * { margin:0; padding:0; box-sizing:border-box }
     html, body { height:100%; }
     body {
       background:#f0f0f0;
       font-family:Poppins, sans-serif;
-      min-height:1800vh; /* 18×100vh */
+      min-height:1800vh;
     }
 
     /* envelope container */
@@ -51,18 +51,19 @@
       border-radius:4px;
       z-index:1;
     }
-    /* bird stamp (back side) */
+    /* bird‐outline stamp on back side */
     .stamp {
       position:absolute;
       top:12px; right:12px;
       width:40px; height:40px;
-      z-index:1;
       opacity:0;
       transform:rotateY(180deg);
       backface-visibility:hidden;
       transition:opacity .6s ease, transform .6s ease;
+      z-index:1;
     }
-    /* bottom mask */
+
+    /* mask to hide paper */
     .mask {
       position:absolute;
       bottom:2px; left:2px;
@@ -89,7 +90,7 @@
       z-index:-1;
     }
 
-    /* address */
+    /* address text */
     .address {
       position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
@@ -97,13 +98,12 @@
       transition:opacity .6s ease, transform .6s ease;
       z-index:5;
     }
-    /* only show address after flip, counter‑rotate to read normally */
     .envelope.flip .address {
       opacity:1;
       transform:translate(-50%,-50%) rotateY(180deg);
     }
 
-    /* flip envelope */
+    /* envelope flip */
     .envelope.flip {
       transform:translate(-50%,-50%) rotateY(180deg);
       transition:transform .8s ease, top .8s ease;
@@ -128,100 +128,107 @@
 </head>
 <body>
 
-  <div class="envelope">
-    <div class="body">
-      <!-- SVG bird icon for stamp -->
-      <div class="stamp">
-        <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="15" cy="15" r="8" fill="#607D8B"/>
-          <polygon points="15,7 23,15 15,23" fill="#455A64"/>
-        </svg>
-      </div>
-    </div>
-    <div class="mask"></div>
-    <div class="flap"></div>
-    <div class="paper">
-      <div class="line">Line 1: Your first message</div>
-      <div class="line">Line 2: A cheerful note</div>
-      <div class="line">Line 3: Keep smiling</div>
-      <div class="line">Line 4: You’re awesome</div>
-      <div class="line">Line 5: Believe in you</div>
-      <div class="line">Line 6: Shine on</div>
-      <div class="line">Line 7: Stay curious</div>
-      <div class="line">Line 8: Dream big</div>
-      <div class="line">Line 9: Spread joy</div>
-      <div class="line">Line 10: Keep going</div>
-      <div class="line">Line 11: ✨Typewriter✨</div>
-      <div class="line">Line 12: Rolling in</div>
-      <div class="line">Line 13: Spinning in</div>
-      <div class="line">Line 14: Sliding up</div>
-      <div class="line">Line 15: Jitter party!</div>
-    </div>
-    <div class="address">
-      <p>To: Recipient Name</p>
-      <p>From: Your Name</p>
+<div class="envelope">
+  <div class="body">
+    <!-- SVG bird‑outline inside a rectangle -->
+    <div class="stamp">
+      <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+        <!-- rectangle border -->
+        <rect x="1" y="1" width="38" height="38" fill="none" stroke="#455A64" stroke-width="2"/>
+        <!-- simple bird outline -->
+        <path d="M10 25 
+                 C12 18, 18 15, 22 20 
+                 C26 15, 32 18, 30 25" 
+              fill="none" stroke="#455A64" stroke-width="2" stroke-linecap="round"/>
+      </svg>
     </div>
   </div>
+  <div class="mask"></div>
+  <div class="flap"></div>
+  <div class="paper">
+    <div class="line">Line 1: Your first message</div>
+    <div class="line">Line 2: A cheerful note</div>
+    <div class="line">Line 3: Keep smiling</div>
+    <div class="line">Line 4: You’re awesome</div>
+    <div class="line">Line 5: Believe in you</div>
+    <div class="line">Line 6: Shine on</div>
+    <div class="line">Line 7: Stay curious</div>
+    <div class="line">Line 8: Dream big</div>
+    <div class="line">Line 9: Spread joy</div>
+    <div class="line">Line 10: Keep going</div>
+    <div class="line">Line 11: ✨Typewriter✨</div>
+    <div class="line">Line 12: Rolling in</div>
+    <div class="line">Line 13: Spinning in</div>
+    <div class="line">Line 14: Sliding up</div>
+    <div class="line">Line 15: Jitter party!</div>
+  </div>
+  <div class="address">
+    <p>To: Recipient Name</p>
+    <p>From: Your Name</p>
+  </div>
+</div>
 
-  <script>
-    window.addEventListener('DOMContentLoaded',() => {
-      const env   = document.querySelector('.envelope');
-      const paper = env.querySelector('.paper');
-      const addr  = env.querySelector('.address');
-      const stamp = env.querySelector('.stamp');
-      let flipped = false;
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  const env   = document.querySelector('.envelope');
+  const paper = env.querySelector('.paper');
+  const addr  = env.querySelector('.address');
+  const stamp = env.querySelector('.stamp');
+  let flipped = false;
 
-      // compute unroll/retract distances
-      const envH     = env.clientHeight;
-      const maskH    = envH * 0.6;
-      const fullH    = paper.scrollHeight;
-      const totalH   = maskH + fullH;
-      paper.style.height = '0px';
+  // compute unroll/retract spans
+  const envH     = env.clientHeight;
+  const maskH    = envH * 0.6;
+  const fullH    = paper.scrollHeight;
+  const totalH   = maskH + fullH;
+  paper.style.height = '0px';
 
-      window.addEventListener('scroll',() => {
-        const y       = window.scrollY;
-        const vh      = window.innerHeight;
-        const unroll  = 7.5 * vh;
-        const pause   = 0.5 * vh;   // 50vh pause
-        const retract = 7.5 * vh;
+  window.addEventListener('scroll', () => {
+    const y       = window.scrollY;
+    const vh      = window.innerHeight;
+    const unroll  = 7.5 * vh;
+    const pause   = 50   * vh;
+    const retract = 7.5  * vh;
 
-        // open flap immediately
-        if (y > 10) env.classList.add('open');
+    // open flap
+    if (y > 10) env.classList.add('open');
 
-        if (y <= unroll) {
-          // unroll
-          paper.style.height = `${totalH * (y / unroll)}px`;
-        } else if (y <= unroll + pause) {
-          // hold
-          paper.style.height = `${totalH}px`;
-        } else if (y <= unroll + pause + retract) {
-          // retract
-          const r = (y - unroll - pause) / retract;
-          paper.style.height = `${totalH * (1 - r)}px`;
-        } else if (!flipped) {
-          // after retract: close flap, flip envelope, show stamp & address, confetti
-          flipped = true;
-          env.classList.remove('open');
-          setTimeout(() => {
-            env.classList.add('flip');
-            stamp.style.opacity = '1';
-            stamp.style.transform = 'rotateY(0deg)';
-            addr.classList.add('show');
-            setInterval(() => {
-              for (let i = 0; i < 8; i++) {
-                const c = document.createElement('div');
-                c.className = 'confetti';
-                c.style.left = Math.random() * 100 + 'vw';
-                c.style.backgroundColor =
-                  `hsl(${Math.random()*360},100%,60%)`;
-                c.style.animationDelay = Math.random() * 0.8 + 's';
-                document.body.appendChild(c);
-              }
-            }, 800);
-          }, 600);
-        }
-      });
-    });
-  </script>
+    if (y <= unroll) {
+      // unroll
+      paper.style.height = `${totalH * (y/unroll)}px`;
+    } else if (y <= unroll + pause) {
+      // pause fully unrolled
+      paper.style.height = `${totalH}px`;
+    } else if (y <= unroll + pause + retract) {
+      // retract
+      const r = (y - unroll - pause)/retract;
+      paper.style.height = `${totalH * (1 - r)}px`;
+    } else if (!flipped) {
+      // after retract: close flap, then flip, then reveal stamp & address & confetti
+      flipped = true;
+      env.classList.remove('open');      // flap closes
+      setTimeout(() => {
+        env.classList.add('flip');       // envelope flips
+        // show back-side stamp
+        stamp.style.opacity = '1';
+        stamp.style.transform = 'rotateY(0deg)';
+        // show address
+        addr.classList.add('show');
+        // infinite confetti
+        setInterval(() => {
+          for (let i = 0; i < 8; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random()*100 + 'vw';
+            c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
+            c.style.animationDelay = Math.random()*0.8 + 's';
+            document.body.appendChild(c);
+          }
+        }, 800);
+      }, 600);
+    }
+  });
+});
+</script>
 </body>
 </html>
