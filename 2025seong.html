@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,19 +13,9 @@
     body {
       background:#f0f0f0;
       font-family:Poppins, sans-serif;
-      min-height:1800vh; /* 18×100vh scroll */
+      min-height:1800vh; /* 18×100vh */
     }
 
-    /* sticker on flap/front */
-    .sticker {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 200px;
-      height: 200px;
-      z-index: 5;
-      pointer-events: none;
-    }
     /* envelope container */
     .envelope {
       position:fixed;
@@ -48,7 +37,7 @@
       bottom:2px; left:2px;
       width:calc(100% - 4px);
       height:0;
-      background:#fff8e7; /* cream */
+      background:#fff8e7;
       overflow:hidden;
       padding:2rem 1rem 0;
       box-shadow:0 2px 6px rgba(0,0,0,.1);
@@ -65,6 +54,21 @@
       border:2px solid #82C9A1;
       border-radius:4px;
       z-index:1;
+    }
+
+    /* sticker on flap/front, 500×500px */
+    .sticker {
+      position:absolute;
+      top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      width:500px; height:500px;
+      z-index:5; /* above flap */
+      pointer-events:none;
+      transition:opacity .6s ease;
+    }
+    /* hide sticker once flipped */
+    .envelope.flip .sticker {
+      opacity:0;
     }
 
     /* 3. bottom mask (pocket) */
@@ -93,6 +97,7 @@
       transform:rotateX(180deg);
       z-index:-1;
     }
+
     /* message lines */
     .line {
       margin:1rem 0;
@@ -110,7 +115,7 @@
       opacity:0;
       backface-visibility:hidden;
       transition:opacity .6s ease, transform .6s ease;
-      z-index:6;
+      z-index:20; /* above everything */
     }
     .envelope.flip .address {
       opacity:1;
@@ -136,34 +141,32 @@
     <div class="body"></div>
 
     <!-- your 500×500 sticker -->
-    <img class="sticker" src="badtzmaruhana.webp" alt="Sticker"> 
+    <img class="sticker" src="https://via.placeholder.com/500" alt="Sticker">
+
     <div class="mask"></div>
     <div class="flap"></div>
 
     <div class="paper">
-      <div class="line">우리 사랑하는 여보 46번째 생일 축하해요!</div>
-      <div class="line">우리가 부부로 함께 한 세월이 벌써</div>
-      <div class="line">15년이네요. 우리 가족을 위해 고생하는</div>
-      <div class="line">당신을 보면 당신은 더 일찍 만났다면 내가</div>
-      <div class="line">더 빨리 철도 들고 더 나은 사람이 되서</div>
-      <div class="line">당신을 지금보다 더 행복하게, 덜 힘들게 </div>
-      <div class="line">해줄 수도 있었을텐데 생각이 들곤 해요. </div>
-      <div class="line">앞으로 더 성숙하고 멋진 사람이 되어 우리 </div>
-      <div class="line">여보 행복하게 해줄게요. 어디를 가든 무슨 </div>
-      <div class="line">상황이든 나는 당신만 있으면 어떠한 어려움도 </div>
-      <div class="line">이겨낼 수 있는 힘이 생기는 것 같아요. 당신은</div>
-      <div class="line">나의 인생을 완성해주는 크리스마스 선물, </div>
-      <div class="line">사과 반쪽, 영원한 반려자에요. 나의 사랑 </div>
-      <div class="line">멋진 우리 여보 태어나줘서 고마워요. 사랑해요~</div>
-      <div class="line">🎉</div>
+      <div class="line">Line 1: Your first message</div>
+      <div class="line">Line 2: A cheerful note</div>
+      <div class="line">Line 3: Keep smiling</div>
+      <div class="line">Line 4: You’re awesome</div>
+      <div class="line">Line 5: Believe in you</div>
+      <div class="line">Line 6: Shine on</div>
+      <div class="line">Line 7: Stay curious</div>
+      <div class="line">Line 8: Dream big</div>
+      <div class="line">Line 9: Spread joy</div>
+      <div class="line">Line 10: Keep going</div>
+      <div class="line">Line 11: ✨Typewriter✨</div>
+      <div class="line">Line 12: Rolling in</div>
+      <div class="line">Line 13: Spinning in</div>
+      <div class="line">Line 14: Sliding up</div>
+      <div class="line">Line 15: Jitter party!</div>
     </div>
 
     <div class="address">
-      <p></p>
-      <p></p>
-      <p>To: 웅이</p>
-      <p>From: 썽</p>
-      <p>Sent with ❤️ on the web</p>
+      <p>To: Recipient Name</p>
+      <p>From: Your Name</p>
     </div>
   </div>
 
@@ -173,10 +176,10 @@
       const paper = env.querySelector('.paper');
       let flipped = false;
 
-      const vh      = window.innerHeight;
-      const maskH   = env.clientHeight * 0.6;
-      const fullH   = paper.scrollHeight;
-      const totalH  = maskH + fullH;
+      const vh       = window.innerHeight;
+      const maskH    = env.clientHeight * 0.6;
+      const fullH    = paper.scrollHeight;
+      const totalH   = maskH + fullH;
       paper.style.height = '0px';
 
       window.addEventListener('scroll', () => {
@@ -199,12 +202,11 @@
           const r = (y - unroll - pause) / retract;
           paper.style.height = `${totalH * (1 - r)}px`;
         } else if (!flipped) {
-          // after retract: close flap, flip envelope, show address & confetti
+          // after retract: close flap, flip, show address & confetti
           flipped = true;
           env.classList.remove('open');
           setTimeout(() => {
             env.classList.add('flip');
-            // infinite confetti
             setInterval(() => {
               for (let i = 0; i < 8; i++) {
                 const c = document.createElement('div');
