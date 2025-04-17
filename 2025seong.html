@@ -3,89 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Pinned E‑Card Reveal</title>
+  <title>Scroll‑Snap E‑Card</title>
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&family=Roboto&family=Lato&family=Montserrat&family=Open+Sans&family=Raleway&family=Merriweather&family=Oswald&family=Playfair+Display&family=Nunito&family=Ubuntu&family=PT+Sans&family=Work+Sans&family=Fira+Sans&family=Inconsolata&family=Source+Sans+Pro&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Roboto&family=Lato&family=Montserrat&family=Open+Sans&family=Raleway&family=Merriweather&family=Oswald&family=Playfair+Display&family=Nunito&family=Ubuntu&family=PT+Sans&family=Work+Sans&family=Fira+Sans&family=Inconsolata&family=Source+Sans+Pro&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #f0f0f0; }
-    /* create enough scroll-space for 15 lines + open + flip */
-    .wrapper { height: 1700vh; }
-    /* pin everything in one viewport */
-    .pin {
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    /* reset & scroll‑snap setup */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      height:100%; scroll-behavior:smooth;
     }
-    /* envelope container clips its contents */
-    .envelope {
-      position: relative;
-      width: 260px;
-      height: 180px;
-      perspective: 800px;
-      overflow: hidden;
+    body {
+      background:#f0f0f0;
+      overflow-y:scroll;
+      scroll-snap-type:y mandatory;
+      font-family:Poppins, sans-serif;
     }
-    /* flap above everything */
-    .flap {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 120px;
-      background: #eee;
-      border: 2px solid #ccc;
-      transform-origin: top;
-      transform: rotateX(0deg);
-      transition: transform .8s ease;
-      z-index: 3;
+    section {
+      height:100vh;
+      scroll-snap-align:start;
     }
-    /* back of envelope */
-    .body {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: white;
-      border: 2px solid #ccc;
-      z-index: 2;
-    }
-    /* the letter itself */
-    .paper {
-      position: absolute;
-      left: 6px;               /* inside the envelope border */
-      width: calc(100% - 12px);
-      padding: 20px;
-      background: #fff;
-      box-shadow: 0 2px 6px rgba(0,0,0,.1);
-      z-index: 1;
-      /* top will be set by JS so it's hidden initially */
-    }
-    /* hide each line until shown */
-    .line {
-      opacity: 0;
-      margin: 12px 0;
-      font-size: 1.4rem;
-      white-space: nowrap;
-    }
-    /* assign a unique font per line */
-    #line1  { font-family: 'Roboto', sans-serif; }
-    #line2  { font-family: 'Lato', sans-serif; }
-    #line3  { font-family: 'Montserrat', sans-serif; }
-    #line4  { font-family: 'Open Sans', sans-serif; }
-    #line5  { font-family: 'Raleway', sans-serif; }
-    #line6  { font-family: 'Merriweather', serif; }
-    #line7  { font-family: 'Oswald', sans-serif; }
-    #line8  { font-family: 'Playfair Display', serif; }
-    #line9  { font-family: 'Nunito', sans-serif; }
-    #line10 { font-family: 'Ubuntu', sans-serif; }
-    #line11 { font-family: 'PT Sans', sans-serif; overflow: hidden; border-right: 2px solid; white-space: nowrap; }
-    #line12 { font-family: 'Work Sans', sans-serif; }
-    #line13 { font-family: 'Fira Sans', sans-serif; }
-    #line14 { font-family: 'Inconsolata', monospace; }
-    #line15 { font-family: 'Source Sans Pro', sans-serif; }
 
-    /* entrance animations */
+    /* envelope fixed in viewport center */
+    .envelope {
+      position:fixed;
+      top:50%; left:50%;
+      width:260px; height:180px;
+      transform:translate(-50%,-50%);
+      perspective:800px;
+      z-index:100;
+    }
+    .flap {
+      position:absolute; top:0; left:0;
+      width:100%; height:120px;
+      background:#eee; border:2px solid #ccc;
+      transform-origin:top;
+      transform:rotateX(0deg);
+      transition:transform .8s ease;
+      z-index:3;
+    }
+    .body {
+      position:absolute; top:0; left:0;
+      width:100%; height:100%;
+      background:#fff; border:2px solid #ccc;
+      z-index:1;
+    }
+    .paper {
+      position:absolute;
+      top:6px; left:6px;
+      width:calc(100% - 12px);
+      height:calc(100% - 12px);
+      background:#fff;
+      padding:20px;
+      overflow:hidden;
+      z-index:2;
+    }
+
+    /* lines hidden by default */
+    .line {
+      opacity:0;
+      margin:12px 0;
+      font-size:1.4rem;
+      white-space:nowrap;
+    }
+    /* unique fonts */
+    #line1  { font-family:'Roboto',sans-serif; }
+    #line2  { font-family:'Lato',sans-serif; }
+    #line3  { font-family:'Montserrat',sans-serif; }
+    #line4  { font-family:'Open Sans',sans-serif; }
+    #line5  { font-family:'Raleway',sans-serif; }
+    #line6  { font-family:'Merriweather',serif; }
+    #line7  { font-family:'Oswald',sans-serif; }
+    #line8  { font-family:'Playfair Display',serif; }
+    #line9  { font-family:'Nunito',sans-serif; }
+    #line10 { font-family:'Ubuntu',sans-serif; }
+    #line11 { font-family:'PT Sans',sans-serif; overflow:hidden; border-right:2px solid; }
+    #line12 { font-family:'Work Sans',sans-serif; }
+    #line13 { font-family:'Fira Sans',sans-serif; }
+    #line14 { font-family:'Inconsolata',monospace; }
+    #line15 { font-family:'Source Sans Pro',sans-serif; }
+
+    /* keyframes */
     @keyframes slide-in-left  { from{transform:translateX(-100%);} to{transform:none;} }
     @keyframes slide-in-right { from{transform:translateX(100%);}  to{transform:none;} }
     @keyframes fade-in        { from{opacity:0;}                 to{opacity:1;}     }
@@ -102,7 +99,7 @@
     @keyframes slide-up       { from{transform:translateY(100%);}to{transform:none;} }
     @keyframes jitter         { 0%,100%{transform:none;}25%{transform:translateX(-5px);}75%{transform:translateX(5px);} }
 
-    /* map animations to each line when .show is added */
+    /* apply when .show */
     #line1.show  { animation: slide-in-left  .8s ease forwards;  }
     #line2.show  { animation: slide-in-right .8s ease forwards;  }
     #line3.show  { animation: fade-in        .8s ease forwards;  }
@@ -113,121 +110,119 @@
     #line8.show  { animation: skew-in       .8s ease forwards;  }
     #line9.show  { animation: fade-down     .8s ease forwards;  }
     #line10.show { animation: zoom-in       .8s ease forwards;  }
-    #line11.show { animation: typewriter    2s steps(20) forwards;}
+    #line11.show { animation: typewriter    2s steps(20) forwards; }
     #line12.show { animation: roll-in       .8s ease forwards;  }
     #line13.show { animation: spin-in       .8s ease forwards;  }
     #line14.show { animation: slide-up      .8s ease forwards;  }
     #line15.show { animation: jitter        1s ease infinite;    }
 
     /* envelope states */
-    .envelope.open .flap { transform: rotateX(-180deg); }
-    .envelope.flip { transform: rotateY(180deg); transition: transform 1s ease; }
+    .envelope.open  .flap { transform:rotateX(-180deg); }
+    .envelope.flip  { transform:translate(-50%,-50%) rotateY(180deg); transition:transform 1s ease; }
 
     /* address on flip */
     .address {
-      position: absolute;
-      top: 40%;
-      width: 260px;
-      text-align: center;
-      font-family: 'Poppins', sans-serif;
-      opacity: 0;
-      transition: opacity .8s ease;
-      z-index: 4;
+      position:absolute;
+      top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      text-align:center;
+      font-family:Poppins, sans-serif;
+      opacity:0;
+      transition:opacity .8s ease;
+      z-index:4;
     }
-    .address.show { opacity: 1; }
+    .address.show { opacity:1; }
 
     /* confetti bits */
     .confetti {
-      position: absolute; top: 0; width: 8px; height: 8px;
-      border-radius: 50%;
-      animation: fall 3s ease-out forwards;
+      position:absolute; top:0; width:8px; height:8px;
+      border-radius:50%;
+      animation:fall 3s ease-out forwards;
     }
-    @keyframes fall { to { transform: translateY(100vh); opacity: 0; } }
+    @keyframes fall { to{transform:translateY(100vh);opacity:0;} }
   </style>
 </head>
 <body>
 
-  <div class="wrapper">
-    <div class="pin">
-      <div class="envelope">
-        <div class="flap"></div>
-        <div class="body"></div>
-        <div class="paper">
-          <div id="line1"  class="line">Line 1: Your first message</div>
-          <div id="line2"  class="line">Line 2: A second thought</div>
-          <div id="line3"  class="line">Line 3: More to say</div>
-          <div id="line4"  class="line">Line 4: Hello!</div>
-          <div id="line5"  class="line">Line 5: Keep going</div>
-          <div id="line6"  class="line">Line 6: Surprise!</div>
-          <div id="line7"  class="line">Line 7: Almost there</div>
-          <div id="line8"  class="line">Line 8: Just one more</div>
-          <div id="line9"  class="line">Line 9: Nice!</div>
-          <div id="line10" class="line">Line 10: Keep scrolling</div>
-          <div id="line11" class="line">Line 11: ✨Typewriter style✨</div>
-          <div id="line12" class="line">Line 12: Rolling in</div>
-          <div id="line13" class="line">Line 13: Spinning in</div>
-          <div id="line14" class="line">Line 14: Sliding up</div>
-          <div id="line15" class="line">Line 15: Jitter party!</div>
-        </div>
-      </div>
-      <div class="address">
-        <p>From: Your Name</p>
-        <p>To: Recipient Name</p>
-      </div>
+  <!-- fixed envelope + paper -->
+  <div class="envelope">
+    <div class="flap"></div>
+    <div class="body"></div>
+    <div class="paper">
+      <div id="line1"  class="line">Line 1: Your first message</div>
+      <div id="line2"  class="line">Line 2: A cheerful note</div>
+      <div id="line3"  class="line">Line 3: Keep smiling</div>
+      <div id="line4"  class="line">Line 4: You’re awesome</div>
+      <div id="line5"  class="line">Line 5: Believe in you</div>
+      <div id="line6"  class="line">Line 6: Shine on</div>
+      <div id="line7"  class="line">Line 7: Stay curious</div>
+      <div id="line8"  class="line">Line 8: Dream big</div>
+      <div id="line9"  class="line">Line 9: Spread joy</div>
+      <div id="line10" class="line">Line 10: Keep going</div>
+      <div id="line11" class="line">Line 11: ✨Typewriter✨</div>
+      <div id="line12" class="line">Line 12: Rolling in</div>
+      <div id="line13" class="line">Line 13: Spinning in</div>
+      <div id="line14" class="line">Line 14: Sliding up</div>
+      <div id="line15" class="line">Line 15: Jitter party!</div>
+    </div>
+    <div class="address">
+      <p>From: Your Name</p>
+      <p>To: Recipient Name</p>
     </div>
   </div>
 
+  <!-- 18 snap‑sections to drive the phases -->
+  <section></section><!-- 0: start -->
+  <section></section><!-- 1: open flap -->
+  <!-- 2–16: reveal lines 1–15 -->
+  <section></section><section></section><section></section><section></section><section></section>
+  <section></section><section></section><section></section><section></section><section></section>
+  <section></section><section></section><section></section><section></section><section></section>
+  <section></section><!-- 17: flip/envelope end -->
+
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const envelope = document.querySelector('.envelope');
-      const flap     = envelope.querySelector('.flap');
-      const bodyEl   = envelope.querySelector('.body');
-      const paper    = envelope.querySelector('.paper');
-      const lines    = Array.from(paper.querySelectorAll('.line'));
-      const address  = document.querySelector('.address');
-      const vh       = window.innerHeight;
-      const bodyH    = bodyEl.getBoundingClientRect().height;
+    const sections = document.querySelectorAll('section');
+    const envelope = document.querySelector('.envelope');
+    const lines    = document.querySelectorAll('.line');
+    const address  = document.querySelector('.address');
+    let confDone   = false;
 
-      // hide paper below envelope at start
-      paper.style.top = `${bodyH}px`;
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const idx = Array.from(sections).indexOf(entry.target);
+        // reset
+        envelope.classList.remove('open','flip');
+        lines.forEach(l=>l.classList.remove('show'));
+        address.classList.remove('show');
 
-      let confDone = false;
-      window.addEventListener('scroll', () => {
-        const y = window.scrollY;
-
-        // move paper from under the envelope up into view
-        const prog = Math.min(y / vh, 1);
-        paper.style.top = `${bodyH * (1 - prog)}px`;
-
-        // open flap once we start
-        if (y > 0.1 * vh) envelope.classList.add('open');
-
-        // reveal each line one‑viewport at a time
-        lines.forEach((ln, i) => {
-          if (y > (i + 1) * vh) ln.classList.add('show');
-        });
-
-        // after all 15 lines (at >16vh), flip & show address & confetti
-        if (y > 16 * vh) {
+        if (idx >= 1) {
+          envelope.classList.add('open');
+        }
+        if (idx >= 2 && idx <= 16) {
+          lines[idx - 2].classList.add('show');
+        }
+        if (idx === 17) {
           envelope.classList.add('flip');
           address.classList.add('show');
           if (!confDone) spawnConfetti();
         }
       });
+    }, { threshold: 0.6 });
 
-      function spawnConfetti() {
-        confDone = true;
-        for (let i = 0; i < 120; i++) {
-          const c = document.createElement('div');
-          c.className = 'confetti';
-          c.style.left = Math.random() * 100 + 'vw';
-          c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
-          c.style.animationDelay = Math.random() * .8 + 's';
-          document.body.appendChild(c);
-        }
+    sections.forEach(s => io.observe(s));
+
+    function spawnConfetti() {
+      confDone = true;
+      for (let i = 0; i < 120; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
+        c.style.animationDelay = Math.random() * .8 + 's';
+        document.body.appendChild(c);
       }
-    });
+    }
   </script>
-
 </body>
 </html>
