@@ -7,18 +7,19 @@
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* reset & giant scroll area */
+    /* reset & scroll area */
     * { margin:0; padding:0; box-sizing:border-box }
     html, body { height:100%; }
     body {
       background:#f0f0f0;
       font-family:Poppins, sans-serif;
-      min-height:1800vh; /* 18×100vh scroll */
+      min-height:1800vh; /* plenty of scroll */
     }
 
     /* envelope container */
     .envelope {
-      position:fixed; top:65%; left:50%;
+      position:fixed;
+      top:65%; left:50%;
       width:60vw; height:60vh;
       transform:translate(-50%,-50%);
       perspective:800px;
@@ -48,32 +49,10 @@
       position:absolute; top:0; left:0;
       width:100%; height:100%;
       background:#A8E6CF;
-      border:2px solid #82C9A1; border-radius:4px;
+      border:2px solid #82C9A1;
+      border-radius:4px;
       z-index:1;
-    }
-
-    /* bottom mask (pocket) */
-    .mask {
-      position:absolute; bottom:2px; left:2px;
-      width:calc(100% - 4px); height:60%;
-      background:#A8E6CF;
-      z-index:3;
-    }
-
-    /* flap (darker seafoam) */
-    .flap {
-      position:absolute; top:0; left:0;
-      width:100%; height:50%;
-      background:#76C69C; border:2px solid #60A085;
-      clip-path:polygon(0 0,100% 0,50% 100%);
-      transform-origin:top;
-      transform:rotateX(0deg);
-      transition:transform .6s ease;
-      z-index:4;
-    }
-    .envelope.open .flap {
-      transform:rotateX(180deg);
-      z-index:6; /* keep flap visible when open */
+      backface-visibility:visible;
     }
 
     /* sticker on flap/front, 500×500px */
@@ -86,6 +65,32 @@
     }
     .envelope.flip .sticker {
       opacity:0;
+    }
+
+    /* bottom mask (pocket) */
+    .mask {
+      position:absolute; bottom:2px; left:2px;
+      width:calc(100% - 4px); height:60%;
+      background:#A8E6CF;
+      z-index:3;
+      backface-visibility:visible;
+    }
+
+    /* flap (darker seafoam) */
+    .flap {
+      position:absolute; top:0; left:0;
+      width:100%; height:50%;
+      background:#76C69C; border:2px solid #60A085;
+      clip-path:polygon(0 0,100% 0,50% 100%);
+      transform-origin:top;
+      transform:rotateX(0deg);
+      transition:transform .6s ease, z-index 0s .6s;
+      z-index:4;
+      backface-visibility:visible;
+    }
+    .envelope.open .flap {
+      transform:rotateX(180deg);
+      z-index:6; /* keep visible above body */
     }
 
     /* message lines */
@@ -103,6 +108,7 @@
       text-align:center; opacity:0;
       transition:opacity .6s ease, transform .6s ease;
       z-index:20;
+      backface-visibility:hidden;
     }
     .envelope.flip .address {
       opacity:1;
@@ -125,7 +131,10 @@
 
   <div class="envelope">
     <div class="body"></div>
+
+    <!-- sticker: replace src with your link -->
     <img class="sticker" src="https://via.placeholder.com/500" alt="Sticker">
+
     <div class="mask"></div>
     <div class="flap"></div>
     <div class="paper">
@@ -145,6 +154,7 @@
       <div class="line">Line 14: Sliding up</div>
       <div class="line">Line 15: Jitter party!</div>
     </div>
+
     <div class="address">
       <p>To: Recipient Name</p>
       <p>From: Your Name</p>
@@ -157,33 +167,33 @@
       const paper = env.querySelector('.paper');
       let flipped = false;
 
-      const vh       = window.innerHeight;
-      const maskH    = env.clientHeight * 0.6;
-      const fullH    = paper.scrollHeight;
-      const totalH   = maskH + fullH;
+      const vh     = window.innerHeight;
+      const maskH  = env.clientHeight * 0.6;
+      const fullH  = paper.scrollHeight;
+      const totalH = maskH + fullH;
       paper.style.height = '0px';
 
       window.addEventListener('scroll', () => {
         const y       = window.scrollY;
         const unroll  = 7.5 * vh;
-        const pause   = 50  * vh;  // 50vh pause
+        const pause   = 0.5 * vh;   // half-viewport pause
         const retract = 7.5 * vh;
 
-        // open flap right away
+        // open flap
         if (y > 10) env.classList.add('open');
 
         if (y <= unroll) {
           // unroll
           paper.style.height = `${totalH * (y / unroll)}px`;
         } else if (y <= unroll + pause) {
-          // hold fully unrolled
+          // hold
           paper.style.height = `${totalH}px`;
         } else if (y <= unroll + pause + retract) {
           // retract
           const r = (y - unroll - pause) / retract;
           paper.style.height = `${totalH * (1 - r)}px`;
         } else if (!flipped) {
-          // after retract: close flap, flip, show address & confetti
+          // after retract: close flap, flip envelope, show address & confetti
           flipped = true;
           env.classList.remove('open');
           setTimeout(() => {
