@@ -14,17 +14,16 @@
     family=Fira+Sans&family=Inconsolata&family=Source+Sans+Pro
     &display=swap" rel="stylesheet">
   <style>
-    /* reset & big scroll area */
+    /* reset & huge scroll area (18 screens tall) */
     * { margin:0; padding:0; box-sizing:border-box }
     html, body { height:100%; }
     body {
       background:#f0f0f0;
-      font-family:Poppins,sans-serif;
-      /* 18 screens tall */
-      min-height:1800vh;
+      font-family:Poppins, sans-serif;
+      min-height:1800vh; /* allow 18× viewport to scroll */
     }
 
-    /* envelope centered (60vh × 60vw) */
+    /* envelope container: 60vh × 60vw, centered */
     .envelope {
       position:fixed;
       top:50%; left:50%;
@@ -33,7 +32,7 @@
       perspective:800px;
       z-index:10;
     }
-    /* 1. paper (grows up) */
+    /* paper layer (grows upward) */
     .paper {
       position:absolute;
       bottom:2px; left:2px;
@@ -46,7 +45,7 @@
       z-index:2;
       transition:height .2s ease-out;
     }
-    /* 2. envelope body */
+    /* envelope body & border */
     .body {
       position:absolute; top:0; left:0;
       width:100%; height:100%;
@@ -55,7 +54,7 @@
       border-radius:4px;
       z-index:1;
     }
-    /* 3. bottom mask (60% of envelope) */
+    /* bottom mask: 60% of envelope height */
     .mask {
       position:absolute;
       bottom:2px; left:2px;
@@ -64,7 +63,7 @@
       background:#fff;
       z-index:3;
     }
-    /* 4. flap (50% height triangle) */
+    /* flap: triangle, 50% of envelope height */
     .flap {
       position:absolute; top:0; left:0;
       width:100%; height:50%;
@@ -77,9 +76,9 @@
     }
     .envelope.open .flap {
       transform:rotateX(180deg);
-      z-index:-1;
+      z-index:-1; /* drop behind paper */
     }
-    /* 5. address & confetti */
+    /* address shown after flip */
     .address {
       position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
@@ -88,7 +87,7 @@
       z-index:5;
     }
     .address.show { opacity:1 }
-    /* final flip */
+    /* final 3D flip of envelope */
     .envelope.flip {
       transform:translate(-50%,-50%) rotateY(180deg);
       transition:transform 1s ease;
@@ -100,7 +99,7 @@
       font-size:1.25rem;
       white-space:nowrap;
     }
-    /* optional fonts */
+    /* optional unique fonts */
     #line1  { font-family:'Roboto',sans-serif; }
     #line2  { font-family:'Lato',sans-serif; }
     #line3  { font-family:'Montserrat',sans-serif; }
@@ -117,7 +116,7 @@
     #line14 { font-family:'Inconsolata',monospace; }
     #line15 { font-family:'Source Sans Pro',sans-serif; }
 
-    /* confetti */
+    /* confetti bits */
     .confetti {
       position:absolute; top:0; width:8px; height:8px;
       border-radius:50%;
@@ -133,21 +132,21 @@
 
   <div class="envelope">
     <div class="paper">
-      <div id="line1"  class="line">Line 1: Your first message</div>
-      <div id="line2"  class="line">Line 2: A cheerful note</div>
-      <div id="line3"  class="line">Line 3: Keep smiling</div>
-      <div id="line4"  class="line">Line 4: You’re awesome</div>
-      <div id="line5"  class="line">Line 5: Believe in you</div>
-      <div id="line6"  class="line">Line 6: Shine on</div>
-      <div id="line7"  class="line">Line 7: Stay curious</div>
-      <div id="line8"  class="line">Line 8: Dream big</div>
-      <div id="line9"  class="line">Line 9: Spread joy</div>
-      <div id="line10" class="line">Line 10: Keep going</div>
-      <div id="line11" class="line">Line 11: ✨Typewriter✨</div>
-      <div id="line12" class="line">Line 12: Rolling in</div>
-      <div id="line13" class="line">Line 13: Spinning in</div>
-      <div id="line14" class="line">Line 14: Sliding up</div>
-      <div id="line15" class="line">Line 15: Jitter party!</div>
+      <div id="line1"  class="line">Line 1: Your first message</div>
+      <div id="line2"  class="line">Line 2: A cheerful note</div>
+      <div id="line3"  class="line">Line 3: Keep smiling</div>
+      <div id="line4"  class="line">Line 4: You’re awesome</div>
+      <div id="line5"  class="line">Line 5: Believe in you</div>
+      <div id="line6"  class="line">Line 6: Shine on</div>
+      <div id="line7"  class="line">Line 7: Stay curious</div>
+      <div id="line8"  class="line">Line 8: Dream big</div>
+      <div id="line9"  class="line">Line 9: Spread joy</div>
+      <div id="line10" class="line">Line 10: Keep going</div>
+      <div id="line11" class="line">Line 11: ✨Typewriter✨</div>
+      <div id="line12" class="line">Line 12: Rolling in</div>
+      <div id="line13" class="line">Line 13: Spinning in</div>
+      <div id="line14" class="line">Line 14: Sliding up</div>
+      <div id="line15" class="line">Line 15: Jitter party!</div>
     </div>
     <div class="body"></div>
     <div class="mask"></div>
@@ -160,11 +159,12 @@
 
   <script>
     window.addEventListener('DOMContentLoaded', () => {
-      const env   = document.querySelector('.envelope');
-      const paper = env.querySelector('.paper');
-      const addr  = env.querySelector('.address');
-      let done    = false;
+      const env    = document.querySelector('.envelope');
+      const paper  = env.querySelector('.paper');
+      const addr   = env.querySelector('.address');
+      let flipped  = false;
 
+      // measure full paper content height
       const fullH = paper.scrollHeight;
       paper.style.height = '0px';
 
@@ -172,25 +172,25 @@
         const y  = window.scrollY;
         const vh = window.innerHeight;
 
-        // open flap
+        // open flap after a tiny scroll
         if (y > 10) env.classList.add('open');
 
-        // unroll over first 2 viewports (0→2vh)
-        const frac = Math.min(y / (2*vh), 1);
+        // unroll over first 16 viewports (sections 2–16 of snap original)
+        const frac = Math.max(0, Math.min((y/vh - 1) / 15, 1));
         paper.style.height = `${fullH * frac}px`;
 
-        // flip once fully unrolled
-        if (frac === 1 && !done) {
-          done = true;
+        // flip only once all lines are above the mask: frac===1
+        if (frac === 1 && !flipped) {
+          flipped = true;
           env.classList.add('flip');
           addr.classList.add('show');
-          // confetti
-          for (let i=0; i<120; i++) {
+          // burst confetti
+          for (let i = 0; i < 120; i++) {
             const c = document.createElement('div');
             c.className = 'confetti';
-            c.style.left  = Math.random()*100+'vw';
+            c.style.left = Math.random() * 100 + 'vw';
             c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
-            c.style.animationDelay = Math.random()*0.8+'s';
+            c.style.animationDelay = Math.random() * 0.8 + 's';
             document.body.appendChild(c);
           }
         }
