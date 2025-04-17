@@ -13,18 +13,18 @@
     body {
       background:#f0f0f0;
       font-family:Poppins, sans-serif;
-      min-height:1800vh; /* 18×100vh */
+      min-height:1800vh; /* allow plenty of scroll */
     }
 
     /* envelope container */
     .envelope {
-      position:fixed;
-      top:65%; left:50%;
+      position:fixed; top:65%; left:50%;
       width:60vw; height:60vh;
       transform:translate(-50%,-50%);
       perspective:800px;
-      z-index:10;
+      transform-style:preserve-3d;
       transition:top .6s ease, transform .8s ease;
+      z-index:10;
     }
     .envelope.open { top:50%; }
     .envelope.flip {
@@ -33,17 +33,14 @@
 
     /* 1. cream paper */
     .paper {
-      position:absolute;
-      bottom:2px; left:2px;
-      width:calc(100% - 4px);
-      height:0;
-      background:#fff8e7;
-      overflow:hidden;
-      padding:2rem 1rem 0;
+      position:absolute; bottom:2px; left:2px;
+      width:calc(100% - 4px); height:0;
+      background:#fff8e7; /* cream */
+      overflow:hidden; padding:2rem 1rem 0;
       box-shadow:0 2px 6px rgba(0,0,0,.1);
       transition:height .1s linear;
       z-index:2;
-      text-align:center; /* center messages */
+      text-align:center;
     }
 
     /* 2. seafoam green envelope body */
@@ -51,51 +48,48 @@
       position:absolute; top:0; left:0;
       width:100%; height:100%;
       background:#A8E6CF;
-      border:2px solid #82C9A1;
-      border-radius:4px;
+      border:2px solid #82C9A1; border-radius:4px;
       z-index:1;
-    }
-
-    /* sticker on flap/front, 500×500px */
-    .sticker {
-      position:absolute;
-      top:50%; left:50%;
-      transform:translate(-50%,-50%);
-      width:200px; height:200px;
-      z-index:5; /* above flap */
-      pointer-events:none;
-      transition:opacity .6s ease;
-    }
-    /* hide sticker once flipped */
-    .envelope.flip .sticker {
-      opacity:0;
+      backface-visibility:hidden;
     }
 
     /* 3. bottom mask (pocket) */
     .mask {
-      position:absolute;
-      bottom:2px; left:2px;
-      width:calc(100% - 4px);
-      height:60%;
-      background:#A8E6CF;
-      z-index:3;
+      position:absolute; bottom:2px; left:2px;
+      width:calc(100% - 4px); height:60%;
+      background:#A8E6CF; z-index:3;
+      backface-visibility:hidden;
     }
 
     /* 4. flap (darker seafoam) */
     .flap {
       position:absolute; top:0; left:0;
       width:100%; height:50%;
-      background:#76C69C;
-      border:2px solid #60A085;
+      background:#76C69C; border:2px solid #60A085;
       clip-path:polygon(0 0,100% 0,50% 100%);
       transform-origin:top;
       transform:rotateX(0deg);
       transition:transform .6s ease, z-index 0s .6s;
       z-index:4;
+      backface-visibility:hidden;
     }
     .envelope.open .flap {
       transform:rotateX(180deg);
       z-index:-1;
+    }
+
+    /* sticker on flap/front, 500×500px */
+    .sticker {
+      position:absolute; top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      width:500px; height:500px;
+      z-index:5; pointer-events:none;
+      transition:opacity .6s ease;
+      backface-visibility:hidden;
+    }
+    /* hide sticker on back */
+    .envelope.flip .sticker {
+      opacity:0;
     }
 
     /* message lines */
@@ -108,15 +102,13 @@
 
     /* 5. back‑side address */
     .address {
-      position:absolute;
-      top:50%; left:50%;
+      position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
-      text-align:center;
-      opacity:0;
-      backface-visibility:hidden;
+      text-align:center; opacity:0;
       transition:opacity .6s ease, transform .6s ease;
-      z-index:20; /* above everything */
+      z-index:6; backface-visibility:hidden;
     }
+    /* reveal & counter‑rotate on flip */
     .envelope.flip .address {
       opacity:1;
       transform:translate(-50%,-50%) rotateY(180deg);
@@ -125,8 +117,7 @@
     /* confetti bits */
     .confetti {
       position:absolute; top:0;
-      width:8px; height:8px;
-      border-radius:50%;
+      width:8px; height:8px; border-radius:50%;
       animation:fall 3s ease-out forwards;
       z-index:7;
     }
@@ -141,7 +132,7 @@
     <div class="body"></div>
 
     <!-- your 500×500 sticker -->
-    <img class="sticker" src="badtzmaruhana.webp" alt="Sticker">
+    <img class="sticker" src="https://via.placeholder.com/500" alt="Sticker">
 
     <div class="mask"></div>
     <div class="flap"></div>
@@ -192,21 +183,18 @@
         if (y > 10) env.classList.add('open');
 
         if (y <= unroll) {
-          // unroll
           paper.style.height = `${totalH * (y / unroll)}px`;
         } else if (y <= unroll + pause) {
-          // hold fully unrolled
           paper.style.height = `${totalH}px`;
         } else if (y <= unroll + pause + retract) {
-          // retract
           const r = (y - unroll - pause) / retract;
           paper.style.height = `${totalH * (1 - r)}px`;
         } else if (!flipped) {
-          // after retract: close flap, flip, show address & confetti
           flipped = true;
-          env.classList.remove('open');
+          env.classList.remove('open'); // close flap
           setTimeout(() => {
-            env.classList.add('flip');
+            env.classList.add('flip');   // flip envelope
+            // infinite confetti
             setInterval(() => {
               for (let i = 0; i < 8; i++) {
                 const c = document.createElement('div');
