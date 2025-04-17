@@ -36,8 +36,7 @@
     }
     /* 1. Paper (grows up under masks) */
     .paper {
-      position:absolute;
-      bottom:6px; left:6px;
+      position:absolute; bottom:6px; left:6px;
       width:calc(100% - 12px);
       height:0; /* will grow */
       background:#fff;
@@ -49,8 +48,7 @@
     }
     /* 2. Envelope body (background & border) */
     .body {
-      position:absolute;
-      top:0; left:0;
+      position:absolute; top:0; left:0;
       width:100%; height:100%;
       background:#fff;
       border:2px solid #ccc;
@@ -60,10 +58,10 @@
     /* 3. Bottom mask (single rectangle under flap) */
     .mask-body {
       position:absolute;
-      top:100px;    /* flap height */
-      left:6px;     /* inside border */
+      top:100px;           /* right below the flap */
+      left:6px;            /* inside the border */
       width:calc(100% - 12px);
-      height:calc(100% - 106px);
+      height:80px;         /* only mask that pocket region */
       background:#fff;
       z-index:3;
     }
@@ -77,33 +75,29 @@
     }
     /* 5. Triangular flap */
     .flap {
-      position:absolute;
-      top:0; left:0;
+      position:absolute; top:0; left:0;
       width:100%; height:100px;
       background:#eee; border:2px solid #ccc;
-      clip-path: polygon(0 0,100% 0,50% 100%);
+      clip-path:polygon(0 0,100% 0,50% 100%);
       transform-origin:top;
       transform:rotateX(0deg);
       transition:transform .8s ease, z-index 0s .8s;
       z-index:5;
     }
-    /* flap flips 180° behind the paper */
+    /* flap flips fully behind the paper */
     .envelope.open .flap {
       transform:rotateX(180deg);
       z-index:-1;
     }
     /* 6. Address on final flip */
     .address {
-      position:absolute;
-      top:50%; left:50%;
+      position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
-      text-align:center;
-      opacity:0;
+      text-align:center; opacity:0;
       transition:opacity .8s ease;
       z-index:6;
     }
     .address.show { opacity:1 }
-
     /* final envelope 3D flip */
     .envelope.flip {
       transform:translate(-50%,-50%) rotateY(180deg);
@@ -147,7 +141,7 @@
 </head>
 <body>
 
-  <!-- fixed envelope with layers -->
+  <!-- Fixed envelope with layered masks -->
   <div class="envelope">
     <div class="paper">
       <div id="line1"  class="line">Line 1: Your first message</div>
@@ -176,7 +170,7 @@
     </div>
   </div>
 
-  <!-- 18 scroll‑snap sections -->
+  <!-- 18 scroll‑snap sections drive the animation -->
   <section></section> <!-- 0 idle -->
   <section></section> <!-- 1 open flap -->
   <!-- 2→16: unroll paper in 15 steps -->
@@ -194,7 +188,6 @@
       const addr   = env.querySelector('.address');
       let confDone = false;
 
-      // measure full desired paper height
       const fullH = paper.scrollHeight;
       paper.style.height = '0px';
 
@@ -204,20 +197,16 @@
           17
         );
 
-        // reset everything
         env.classList.remove('open','flip');
         addr.classList.remove('show');
 
-        // 1: open flap
         if (idx >= 1) env.classList.add('open');
 
-        // 2–16: grow paper
         if (idx >= 2 && idx <= 16) {
-          const frac = (idx - 1) / 15;
-          paper.style.height = `${fullH * frac}px`;
+          const f = (idx - 1) / 15;
+          paper.style.height = `${fullH * f}px`;
         }
 
-        // 17: flip envelope, show address & confetti
         if (idx === 17) {
           env.classList.add('flip');
           addr.classList.add('show');
