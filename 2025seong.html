@@ -46,7 +46,7 @@
       text-align:center; /* center messages */
     }
 
-    /* 2. seafoam envelope body */
+    /* 2. seafoam green envelope body */
     .body {
       position:absolute; top:0; left:0;
       width:100%; height:100%;
@@ -162,10 +162,9 @@
 
   <script>
     window.addEventListener('DOMContentLoaded', () => {
-      const env    = document.querySelector('.envelope');
-      const paper  = env.querySelector('.paper');
-      const addr   = env.querySelector('.address');
-      let flipped  = false;
+      const env   = document.querySelector('.envelope');
+      const paper = env.querySelector('.paper');
+      let flipped = false;
 
       const vh      = window.innerHeight;
       const maskH   = env.clientHeight * 0.6;
@@ -176,10 +175,10 @@
       window.addEventListener('scroll', () => {
         const y       = window.scrollY;
         const unroll  = 7.5 * vh;
-        const pause   = 1   * vh;
+        const pause   = 50  * vh;    // now a 50vh pause
         const retract = 7.5 * vh;
 
-        // open flap immediately
+        // open flap right away
         if (y > 10) env.classList.add('open');
 
         if (y <= unroll) {
@@ -193,7 +192,7 @@
           const r = (y - unroll - pause) / retract;
           paper.style.height = `${totalH * (1 - r)}px`;
         } else if (!flipped) {
-          // after retract: close flap, flip envelope, show address & confetti
+          // after retract: close flap, flip envelope, then confetti
           flipped = true;
           env.classList.remove('open');
           setTimeout(() => {
