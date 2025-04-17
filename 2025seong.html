@@ -7,7 +7,7 @@
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* reset & giant scroll area */
+    /* reset & huge scroll area */
     * { margin:0; padding:0; box-sizing:border-box }
     html, body { height:100%; }
     body {
@@ -16,10 +16,10 @@
       min-height:1800vh; /* 18 × 100vh scroll */
     }
 
-    /* envelope lowered slightly: 60vh × 60vw */
+    /* envelope lowered so flap isn’t cut off */
     .envelope {
       position:fixed;
-      top:55%; left:50%;
+      top:60%; left:50%;
       width:60vw; height:60vh;
       transform:translate(-50%,-50%);
       perspective:800px;
@@ -47,7 +47,7 @@
       border-radius:4px;
       z-index:1;
     }
-    /* bottom mask: 60% of envelope height */
+    /* bottom mask (60% of envelope height) */
     .mask {
       position:absolute;
       bottom:2px; left:2px;
@@ -56,7 +56,7 @@
       background:white;
       z-index:3;
     }
-    /* flap: triangle, 50% height */
+    /* flap: 50% height triangle */
     .flap {
       position:absolute; top:0; left:0;
       width:100%; height:50%;
@@ -67,6 +67,7 @@
       transition:transform .6s ease, z-index 0s .6s;
       z-index:4;
     }
+    /* when “open” class is present, flip flap back */
     .envelope.open .flap {
       transform:rotateX(180deg);
       z-index:-1;
@@ -108,90 +109,90 @@
 </head>
 <body>
 
-<div class="envelope">
-  <div class="paper">
-    <div class="line">Line 1: Your first message</div>
-    <div class="line">Line 2: A cheerful note</div>
-    <div class="line">Line 3: Keep smiling</div>
-    <div class="line">Line 4: You’re awesome</div>
-    <div class="line">Line 5: Believe in you</div>
-    <div class="line">Line 6: Shine on</div>
-    <div class="line">Line 7: Stay curious</div>
-    <div class="line">Line 8: Dream big</div>
-    <div class="line">Line 9: Spread joy</div>
-    <div class="line">Line 10: Keep going</div>
-    <div class="line">Line 11: ✨Typewriter✨</div>
-    <div class="line">Line 12: Rolling in</div>
-    <div class="line">Line 13: Spinning in</div>
-    <div class="line">Line 14: Sliding up</div>
-    <div class="line">Line 15: Jitter party!</div>
+  <div class="envelope">
+    <div class="paper">
+      <div class="line">Line 1: Your first message</div>
+      <div class="line">Line 2: A cheerful note</div>
+      <div class="line">Line 3: Keep smiling</div>
+      <div class="line">Line 4: You’re awesome</div>
+      <div class="line">Line 5: Believe in you</div>
+      <div class="line">Line 6: Shine on</div>
+      <div class="line">Line 7: Stay curious</div>
+      <div class="line">Line 8: Dream big</div>
+      <div class="line">Line 9: Spread joy</div>
+      <div class="line">Line 10: Keep going</div>
+      <div class="line">Line 11: ✨Typewriter✨</div>
+      <div class="line">Line 12: Rolling in</div>
+      <div class="line">Line 13: Spinning in</div>
+      <div class="line">Line 14: Sliding up</div>
+      <div class="line">Line 15: Jitter party!</div>
+    </div>
+    <div class="body"></div>
+    <div class="mask"></div>
+    <div class="flap"></div>
+    <div class="address">
+      <p>To: Recipient Name</p>
+      <p>From: Your Name</p>
+    </div>
   </div>
-  <div class="body"></div>
-  <div class="mask"></div>
-  <div class="flap"></div>
-  <div class="address">
-    <p>From: Your Name</p>
-    <p>To: Recipient Name</p>
-  </div>
-</div>
 
-<script>
-window.addEventListener('DOMContentLoaded',()=> {
-  const env      = document.querySelector('.envelope');
-  const paper    = env.querySelector('.paper');
-  const addr     = env.querySelector('.address');
-  let flipped    = false;
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const env      = document.querySelector('.envelope');
+      const paper    = env.querySelector('.paper');
+      const addr     = env.querySelector('.address');
+      let flipped    = false;
 
-  // measurements
-  const envH      = env.clientHeight;
-  const maskH     = envH * 0.6;
-  const fullH     = paper.scrollHeight;
-  const totalH    = maskH + fullH;
-  paper.style.height = '0px';
+      // measurements
+      const envH     = env.clientHeight;
+      const maskH    = envH * 0.6;
+      const fullH    = paper.scrollHeight;
+      const totalH   = maskH + fullH;
+      paper.style.height = '0px';
 
-  window.addEventListener('scroll',()=> {
-    const y      = window.scrollY;
-    const vh     = window.innerHeight;
-    const unroll = 7.5 * vh;
-    const pause  = 1 * vh;
-    const retract= 7.5 * vh;
+      window.addEventListener('scroll', () => {
+        const y       = window.scrollY;
+        const vh      = window.innerHeight;
+        const unroll  = 7.5 * vh;
+        const pause   = 1   * vh;
+        const retract = 7.5 * vh;
 
-    // open flap immediately
-    if (y > 10) env.classList.add('open');
+        // open flap on tiny scroll
+        if (y > 10) env.classList.add('open');
 
-    if (y <= unroll) {
-      // unroll
-      paper.style.height = `${totalH * (y / unroll)}px`;
-    } else if (y <= unroll + pause) {
-      // pause fully unrolled
-      paper.style.height = `${totalH}px`;
-    } else if (y <= unroll + pause + retract) {
-      // retract
-      const r = (y - unroll - pause) / retract;
-      paper.style.height = `${totalH * (1 - r)}px`;
-    } else if (!flipped) {
-      // after retract: close flap, then flip envelope, then show address, start confetti
-      flipped = true;
-      env.classList.remove('open');
-      setTimeout(()=>{
-        env.classList.add('flip');
-        addr.classList.add('show');
-        setInterval(()=>{
-          for (let i=0; i<8; i++){
-            const c = document.createElement('div');
-            c.className = 'confetti';
-            c.style.left = Math.random()*100+'vw';
-            c.style.backgroundColor =
-              `hsl(${Math.random()*360},100%,60%)`;
-            c.style.animationDelay = Math.random()*0.8+'s';
-            document.body.appendChild(c);
-          }
-        },800);
-      },600);
-    }
-  });
-});
-</script>
+        if (y <= unroll) {
+          // unroll
+          paper.style.height = `${totalH * (y / unroll)}px`;
+        } else if (y <= unroll + pause) {
+          // pause fully unrolled
+          paper.style.height = `${totalH}px`;
+        } else if (y <= unroll + pause + retract) {
+          // retract
+          const r = (y - unroll - pause) / retract;
+          paper.style.height = `${totalH * (1 - r)}px`;
+        } else if (!flipped) {
+          // after retract, close flap, then flip + show address + confetti
+          flipped = true;
+          env.classList.remove('open');  // close flap
+          setTimeout(() => {
+            env.classList.add('flip');
+            addr.classList.add('show');
+            setInterval(() => {
+              for (let i = 0; i < 8; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.backgroundColor =
+                  `hsl(${Math.random()*360},100%,60%)`;
+                c.style.animationDelay = Math.random() * 0.8 + 's';
+                document.body.appendChild(c);
+              }
+            }, 800);
+          }, 600);
+        }
+      });
+    });
+  </script>
 
 </body>
 </html>
