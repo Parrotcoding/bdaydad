@@ -1,3 +1,9 @@
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,6 +22,16 @@
       min-height:1800vh; /* 18×100vh scroll */
     }
 
+    /* sticker on flap/front */
+    .sticker {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 200px;
+      z-index: 5;
+      pointer-events: none;
+    }
     /* envelope container */
     .envelope {
       position:fixed;
@@ -83,15 +99,15 @@
       z-index:-1;
     }
 
-    /* sticker on flap/front */
+    /* sticker on flap/front, 500×500px */
     .sticker {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 200px;
-      height: 200px;
-      z-index: 5;
-      pointer-events: none;
+      position:absolute;
+      top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      width:500px;
+      height:500px;
+      z-index:5; /* above flap */
+      pointer-events:none;
     }
 
     /* message lines */
@@ -135,9 +151,12 @@
 
   <div class="envelope">
     <div class="body"></div>
+
+    <!-- your 500×500 sticker -->
     <img class="sticker" src="badtzmaruhana.webp" alt="Sticker" width="500px" height="500px"> 
     <div class="mask"></div>
     <div class="flap"></div>
+
     <div class="paper">
       <div class="line">Line 1: Your first message</div>
       <div class="line">Line 2: A cheerful note</div>
@@ -155,6 +174,7 @@
       <div class="line">Line 14: Sliding up</div>
       <div class="line">Line 15: Jitter party!</div>
     </div>
+
     <div class="address">
       <p>To: Recipient Name</p>
       <p>From: Your Name</p>
@@ -176,10 +196,10 @@
       window.addEventListener('scroll', () => {
         const y       = window.scrollY;
         const unroll  = 7.5 * vh;
-        const pause   = 50  * vh;    // now a 50vh pause
+        const pause   = 0.5 * vh;   // 50vh pause
         const retract = 7.5 * vh;
 
-        // open flap right away
+        // open flap immediately
         if (y > 10) env.classList.add('open');
 
         if (y <= unroll) {
@@ -193,11 +213,12 @@
           const r = (y - unroll - pause) / retract;
           paper.style.height = `${totalH * (1 - r)}px`;
         } else if (!flipped) {
-          // after retract: close flap, flip envelope, then confetti
+          // after retract: close flap, flip envelope, show address & confetti
           flipped = true;
           env.classList.remove('open');
           setTimeout(() => {
             env.classList.add('flip');
+            // infinite confetti
             setInterval(() => {
               for (let i = 0; i < 8; i++) {
                 const c = document.createElement('div');
