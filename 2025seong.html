@@ -1,198 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Smooth Envelope Unroll & Retract</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    /* reset & huge scroll area */
-    * { margin:0; padding:0; box-sizing:border-box }
-    html, body { height:100%; }
-    body {
-      background:#f0f0f0;
-      font-family:Poppins, sans-serif;
-      min-height:1800vh; /* 18 × 100vh scroll */
-    }
+<meta charset="UTF-8">
+<title>Smooth Envelope Unroll & Retract</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* reset & huge scroll area */
+  * { margin:0; padding:0; box-sizing:border-box }
+  html, body { height:100%; }
+  body {
+    background:#f0f0f0;
+    font-family:Poppins, sans-serif;
+    min-height:1800vh; /* 18 × 100vh scroll */
+  }
 
-    /* envelope lowered so flap isn’t cut off */
-    .envelope {
-      position:fixed;
-      top:60%; left:50%;
-      width:60vw; height:60vh;
-      transform:translate(-50%,-50%);
-      perspective:800px;
-      z-index:10;
-    }
-    /* paper layer */
-    .paper {
-      position:absolute;
-      bottom:2px; left:2px;
-      width:calc(100% - 4px);
-      height:0;
-      background:white;
-      overflow:hidden;
-      padding:2rem 1rem 0;
-      box-shadow:0 2px 6px rgba(0,0,0,.1);
-      z-index:2;
-      transition:height .1s linear;
-    }
-    /* envelope body */
-    .body {
-      position:absolute; top:0; left:0;
-      width:100%; height:100%;
-      background:white;
-      border:2px solid #ccc;
-      border-radius:4px;
-      z-index:1;
-    }
-    /* bottom mask (60% of envelope height) */
-    .mask {
-      position:absolute;
-      bottom:2px; left:2px;
-      width:calc(100% - 4px);
-      height:60%;
-      background:white;
-      z-index:3;
-    }
-    /* flap: 50% height triangle */
-    .flap {
-      position:absolute; top:0; left:0;
-      width:100%; height:50%;
-      background:#eee; border:2px solid #ccc;
-      clip-path:polygon(0 0,100% 0,50% 100%);
-      transform-origin:top;
-      transform:rotateX(0deg);
-      transition:transform .6s ease, z-index 0s .6s;
-      z-index:4;
-    }
-    /* when “open” class is present, flip flap back */
-    .envelope.open .flap {
-      transform:rotateX(180deg);
-      z-index:-1;
-    }
-    /* address text, hidden until flip */
-    .address {
-      position:absolute; top:50%; left:50%;
-      transform:translate(-50%,-50%);
-      text-align:center; opacity:0;
-      transition:opacity .6s ease;
-      z-index:5;
-      font-family:Poppins, sans-serif;
-    }
-    .address.show { opacity:1 }
-    /* final 3D flip */
-    .envelope.flip {
-      transform:translate(-50%,-50%) rotateY(180deg);
-      transition:transform .8s ease;
-    }
+  /* envelope lowered so flap can clear top */
+  .envelope {
+    position:fixed;
+    top:60%; left:50%;
+    width:60vw; height:60vh;
+    transform:translate(-50%,-50%);
+    perspective:800px;
+    z-index:10;
+  }
+  /* paper layer */
+  .paper {
+    position:absolute;
+    bottom:2px; left:2px;
+    width:calc(100% - 4px);
+    height:0;
+    background:white;
+    overflow:hidden;
+    padding:2rem 1rem 0;
+    box-shadow:0 2px 6px rgba(0,0,0,.1);
+    z-index:2;
+    transition:height .1s linear;
+  }
+  /* envelope body */
+  .body {
+    position:absolute; top:0; left:0;
+    width:100%; height:100%;
+    background:white;
+    border:2px solid #ccc;
+    border-radius:4px;
+    z-index:1;
+  }
+  /* bottom mask: 60% of envelope */
+  .mask {
+    position:absolute;
+    bottom:2px; left:2px;
+    width:calc(100% - 4px);
+    height:60%;
+    background:white;
+    z-index:3;
+  }
+  /* flap: triangle at top 50% */
+  .flap {
+    position:absolute; top:0; left:0;
+    width:100%; height:50%;
+    background:#eee; border:2px solid #ccc;
+    clip-path:polygon(0 0,100% 0,50% 100%);
+    transform-origin:top;
+    transform:rotateX(0deg);
+    transition:transform .6s ease, z-index 0s .6s;
+    z-index:4;
+  }
+  .envelope.open .flap {
+    transform:rotateX(180deg);
+    z-index:-1;
+  }
+  /* address text hidden until after flip */
+  .address {
+    position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center; opacity:0;
+    transition:opacity .6s ease, transform .6s ease;
+    z-index:5;
+    font-family:Poppins, sans-serif;
+  }
+  .address.show {
+    opacity:1;
+  }
+  /* counter‑rotate address when envelope flips */
+  .envelope.flip .address {
+    transform:translate(-50%,-50%) rotateY(180deg);
+  }
+  /* final 3D flip of whole envelope */
+  .envelope.flip {
+    transform:translate(-50%,-50%) rotateY(180deg);
+    transition:transform .8s ease;
+  }
 
-    /* message lines */
-    .line {
-      margin:1rem 0;
-      font-size:1.25rem;
-      white-space:nowrap;
-      font-family:Poppins, sans-serif;
-    }
-    /* confetti bits */
-    .confetti {
-      position:absolute; top:0; width:8px; height:8px;
-      border-radius:50%;
-      animation:fall 3s ease-out forwards;
-      z-index:2;
-    }
-    @keyframes fall {
-      to { transform:translateY(100vh); opacity:0 }
-    }
-  </style>
+  /* message lines in Poppins */
+  .line {
+    margin:1rem 0;
+    font-size:1.25rem;
+    white-space:nowrap;
+    font-family:Poppins, sans-serif;
+  }
+  /* infinite confetti */
+  .confetti {
+    position:absolute; top:0; width:8px; height:8px;
+    border-radius:50%;
+    animation:fall 3s ease-out forwards;
+    z-index:2;
+  }
+  @keyframes fall {
+    to { transform:translateY(100vh); opacity:0 }
+  }
+</style>
 </head>
 <body>
 
-  <div class="envelope">
-    <div class="paper">
-      <div class="line">Line 1: Your first message</div>
-      <div class="line">Line 2: A cheerful note</div>
-      <div class="line">Line 3: Keep smiling</div>
-      <div class="line">Line 4: You’re awesome</div>
-      <div class="line">Line 5: Believe in you</div>
-      <div class="line">Line 6: Shine on</div>
-      <div class="line">Line 7: Stay curious</div>
-      <div class="line">Line 8: Dream big</div>
-      <div class="line">Line 9: Spread joy</div>
-      <div class="line">Line 10: Keep going</div>
-      <div class="line">Line 11: ✨Typewriter✨</div>
-      <div class="line">Line 12: Rolling in</div>
-      <div class="line">Line 13: Spinning in</div>
-      <div class="line">Line 14: Sliding up</div>
-      <div class="line">Line 15: Jitter party!</div>
-    </div>
-    <div class="body"></div>
-    <div class="mask"></div>
-    <div class="flap"></div>
-    <div class="address">
-      <p>To: Recipient Name</p>
-      <p>From: Your Name</p>
-    </div>
+<div class="envelope">
+  <div class="paper">
+    <div class="line">Line 1: Your first message</div>
+    <div class="line">Line 2: A cheerful note</div>
+    <div class="line">Line 3: Keep smiling</div>
+    <div class="line">Line 4: You’re awesome</div>
+    <div class="line">Line 5: Believe in you</div>
+    <div class="line">Line 6: Shine on</div>
+    <div class="line">Line 7: Stay curious</div>
+    <div class="line">Line 8: Dream big</div>
+    <div class="line">Line 9: Spread joy</div>
+    <div class="line">Line 10: Keep going</div>
+    <div class="line">Line 11: ✨Typewriter✨</div>
+    <div class="line">Line 12: Rolling in</div>
+    <div class="line">Line 13: Spinning in</div>
+    <div class="line">Line 14: Sliding up</div>
+    <div class="line">Line 15: Jitter party!</div>
   </div>
+  <div class="body"></div>
+  <div class="mask"></div>
+  <div class="flap"></div>
+  <div class="address">
+    <p>To: Recipient Name</p>
+    <p>From: Your Name</p>
+  </div>
+</div>
 
-  <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      const env      = document.querySelector('.envelope');
-      const paper    = env.querySelector('.paper');
-      const addr     = env.querySelector('.address');
-      let flipped    = false;
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  const env      = document.querySelector('.envelope');
+  const paper    = env.querySelector('.paper');
+  const addr     = env.querySelector('.address');
+  let flipped    = false;
 
-      // measurements
-      const envH     = env.clientHeight;
-      const maskH    = envH * 0.6;
-      const fullH    = paper.scrollHeight;
-      const totalH   = maskH + fullH;
-      paper.style.height = '0px';
+  // measure travels
+  const envH      = env.clientHeight;
+  const maskH     = envH * 0.6;
+  const fullH     = paper.scrollHeight;
+  const totalH    = maskH + fullH;
+  paper.style.height = '0px';
 
-      window.addEventListener('scroll', () => {
-        const y       = window.scrollY;
-        const vh      = window.innerHeight;
-        const unroll  = 7.5 * vh;
-        const pause   = 1   * vh;
-        const retract = 7.5 * vh;
+  window.addEventListener('scroll', () => {
+    const y       = window.scrollY;
+    const vh      = window.innerHeight;
+    const unroll  = 7.5 * vh;
+    const pause   = 1   * vh;
+    const retract = 7.5 * vh;
 
-        // open flap on tiny scroll
-        if (y > 10) env.classList.add('open');
+    // open flap on initial scroll
+    if (y > 10) env.classList.add('open');
 
-        if (y <= unroll) {
-          // unroll
-          paper.style.height = `${totalH * (y / unroll)}px`;
-        } else if (y <= unroll + pause) {
-          // pause fully unrolled
-          paper.style.height = `${totalH}px`;
-        } else if (y <= unroll + pause + retract) {
-          // retract
-          const r = (y - unroll - pause) / retract;
-          paper.style.height = `${totalH * (1 - r)}px`;
-        } else if (!flipped) {
-          // after retract, close flap, then flip + show address + confetti
-          flipped = true;
-          env.classList.remove('open');  // close flap
-          setTimeout(() => {
-            env.classList.add('flip');
-            addr.classList.add('show');
-            setInterval(() => {
-              for (let i = 0; i < 8; i++) {
-                const c = document.createElement('div');
-                c.className = 'confetti';
-                c.style.left = Math.random() * 100 + 'vw';
-                c.style.backgroundColor =
-                  `hsl(${Math.random()*360},100%,60%)`;
-                c.style.animationDelay = Math.random() * 0.8 + 's';
-                document.body.appendChild(c);
-              }
-            }, 800);
-          }, 600);
-        }
-      });
-    });
-  </script>
+    if (y <= unroll) {
+      // unroll
+      paper.style.height = `${totalH * (y / unroll)}px`;
+    } else if (y <= unroll + pause) {
+      // stay fully unrolled
+      paper.style.height = `${totalH}px`;
+    } else if (y <= unroll + pause + retract) {
+      // retract
+      const r = (y - unroll - pause) / retract;
+      paper.style.height = `${totalH * (1 - r)}px`;
+    } else if (!flipped) {
+      // after retract: close flap, then flip envelope, then show address, then confetti
+      flipped = true;
+      env.classList.remove('open');  // flap closes
+      setTimeout(() => {
+        env.classList.add('flip');    // envelope flips
+        addr.classList.add('show');   // address appears counter‑rotated
+        setInterval(() => {
+          for (let i = 0; i < 8; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.backgroundColor =
+              `hsl(${Math.random()*360},100%,60%)`;
+            c.style.animationDelay = Math.random() * 0.8 + 's';
+            document.body.appendChild(c);
+          }
+        }, 800);
+      }, 600);
+    }
+  });
+});
+</script>
 
 </body>
 </html>
