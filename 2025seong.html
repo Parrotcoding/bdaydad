@@ -2,71 +2,63 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Scroll‑Reveal E‑Card</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pinned E‑Card Reveal</title>
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?
-    family=Poppins&family=Roboto&family=Lato&family=Montserrat&
-    family=Open+Sans&family=Raleway&family=Merriweather&
-    family=Oswald&family=Playfair+Display&family=Nunito&
-    family=Ubuntu&family=PT+Sans&family=Work+Sans&
-    family=Fira+Sans&family=Inconsolata&family=Source+Sans+Pro
-    &display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&family=Roboto&family=Lato&family=Montserrat&family=Open+Sans&family=Raleway&family=Merriweather&family=Oswald&family=Playfair+Display&family=Nunito&family=Ubuntu&family=PT+Sans&family=Work+Sans&family=Fira+Sans&family=Inconsolata&family=Source+Sans+Pro&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      min-height: 400vh;
-      background: #f0f0f0;
-      overflow-x: hidden;
+    body { background: #f0f0f0; }
+    /* wrapper creates scroll space */
+    .wrapper { height: 200vh; }
+    /* pin keeps content fixed in viewport */
+    .pin {
+      position: sticky; top: 0;
+      height: 100vh; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
     }
+    /* envelope styling */
     .envelope {
-      width: 240px; height: 160px;
-      margin: 100px auto 0;
       position: relative;
-      perspective: 1000px;
-      transition: transform 1s ease;
+      width: 260px; height: 180px;
+      perspective: 800px;
     }
-    /* front flap */
     .flap {
-      width: 240px; height: 120px;
-      background: #eee;
-      border: 2px solid #ccc;
       position: absolute; top: 0; left: 0;
+      width: 260px; height: 120px;
+      background: #eee; border: 2px solid #ccc;
       transform-origin: top;
       transform: rotateX(0deg);
-      transition: transform 1s ease;
+      transition: transform .8s ease;
+      z-index: 3;
+    }
+    .body {
+      position: absolute; top: 0; left: 0;
+      width: 260px; height: 180px;
+      background: white; border: 2px solid #ccc;
+      z-index: 1;
+    }
+    .envelope.open .flap { transform: rotateX(-180deg); }
+    .envelope.flip { transform: rotateY(180deg); transition: transform 1s ease; }
+    /* paper behind flap, above body */
+    .paper {
+      position: absolute; top: 0; left: 0;
+      width: calc(100% - 12px); /* inside borders */
+      padding: 20px;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+      transform: translateY(calc(100% - 180px)); /* hidden below body */
+      transition: transform 0s; /* instant—JS controls */
       z-index: 2;
     }
-    /* envelope body */
-    .body {
-      width: 240px; height: 160px;
-      background: white;
-      border: 2px solid #ccc;
-      position: absolute; top: 0; left: 0;
-      backface-visibility: hidden;
-    }
-    /* open flap */
-    .envelope.open .flap {
-      transform: rotateX(-180deg);
-    }
-    /* flip whole envelope */
-    .envelope.flip {
-      transform: rotateY(180deg);
-    }
-    /* message lines container */
-    #lines {
-      width: 80%;
-      max-width: 600px;
-      margin: 50px auto;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+    /* each line hidden */
     .line {
       opacity: 0;
-      font-size: 1.5rem;
+      margin: 12px 0;
+      font-size: 1.4rem;
+      white-space: nowrap;
     }
-    /* assign fonts */
+    /* fonts per line */
     #line1  { font-family: 'Roboto', sans-serif; }
     #line2  { font-family: 'Lato', sans-serif; }
     #line3  { font-family: 'Montserrat', sans-serif; }
@@ -77,106 +69,59 @@
     #line8  { font-family: 'Playfair Display', serif; }
     #line9  { font-family: 'Nunito', sans-serif; }
     #line10 { font-family: 'Ubuntu', sans-serif; }
-    #line11 { font-family: 'PT Sans', sans-serif; }
+    #line11 { font-family: 'PT Sans', sans-serif; overflow: hidden; border-right: 2px solid; white-space: nowrap; }
     #line12 { font-family: 'Work Sans', sans-serif; }
     #line13 { font-family: 'Fira Sans', sans-serif; }
     #line14 { font-family: 'Inconsolata', monospace; }
     #line15 { font-family: 'Source Sans Pro', sans-serif; }
-    /* show class triggers the unique animation */
-    .line.show { opacity: 1; }
-    /* animations */
-    @keyframes slide-in-left {
-      from { transform: translateX(-100%); opacity:0 }
-      to   { transform: translateX(0);     opacity:1 }
-    }
-    @keyframes slide-in-right {
-      from { transform: translateX(100%); opacity:0 }
-      to   { transform: translateX(0);     opacity:1 }
-    }
-    @keyframes fade-in {
-      from { opacity: 0 }
-      to   { opacity: 1 }
-    }
-    @keyframes bounce-in {
-      0%   { transform: scale(0.5);   opacity:0 }
-      60%  { transform: scale(1.2);   opacity:1 }
-      100% { transform: scale(1);     opacity:1 }
-    }
-    @keyframes flip-in {
-      from { transform: rotateY(90deg); opacity:0 }
-      to   { transform: rotateY(0);     opacity:1 }
-    }
-    @keyframes rotate-in {
-      from { transform: rotate(-180deg); opacity:0 }
-      to   { transform: rotate(0);       opacity:1 }
-    }
-    @keyframes scale-up {
-      from { transform: scale(0); opacity:0 }
-      to   { transform: scale(1); opacity:1 }
-    }
-    @keyframes skew-in {
-      from { transform: skewX(-30deg); opacity:0 }
-      to   { transform: skewX(0);      opacity:1 }
-    }
-    @keyframes fade-down {
-      from { transform: translateY(-30px); opacity:0 }
-      to   { transform: translateY(0);     opacity:1 }
-    }
-    @keyframes zoom-in {
-      from { transform: scale(2); opacity:0 }
-      to   { transform: scale(1); opacity:1 }
-    }
-    @keyframes typewriter {
-      from { width: 0; }
-      to   { width: 100%; }
-    }
-    @keyframes roll-in {
-      from { transform: translateX(-100%) rotate(-360deg); opacity:0 }
-      to   { transform: translateX(0)       rotate(0);      opacity:1 }
-    }
-    @keyframes spin-in {
-      from { transform: rotate(360deg); opacity:0 }
-      to   { transform: rotate(0);      opacity:1 }
-    }
-    @keyframes slide-up {
-      from { transform: translateY(100%); opacity:0 }
-      to   { transform: translateY(0);    opacity:1 }
-    }
-    @keyframes jitter {
-      0%,100% { transform: translateX(0); }
-      25%     { transform: translateX(-5px); }
-      75%     { transform: translateX(5px); }
-    }
-    /* apply each */
-    #line1.show  { animation: slide-in-left  1s ease forwards; }
-    #line2.show  { animation: slide-in-right 1s ease forwards; }
-    #line3.show  { animation: fade-in         1s ease forwards; }
-    #line4.show  { animation: bounce-in      1s ease forwards; }
-    #line5.show  { animation: flip-in        1s ease forwards; }
-    #line6.show  { animation: rotate-in      1s ease forwards; }
-    #line7.show  { animation: scale-up       1s ease forwards; }
-    #line8.show  { animation: skew-in        1s ease forwards; }
-    #line9.show  { animation: fade-down      1s ease forwards; }
-    #line10.show { animation: zoom-in        1s ease forwards; }
-    #line11.show { animation: typewriter     2s steps(20) forwards; overflow:hidden; white-space:nowrap; border-right:2px solid; }
-    #line12.show { animation: roll-in        1s ease forwards; }
-    #line13.show { animation: spin-in        1s ease forwards; }
-    #line14.show { animation: slide-up       1s ease forwards; }
-    #line15.show { animation: jitter         1s ease infinite; }
+
+    /* keyframes */
+    @keyframes slide-in-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+    @keyframes slide-in-right{ from { transform: translateX(100%); } to { transform: translateX(0); } }
+    @keyframes fade-in      { from { opacity:0 } to { opacity:1 } }
+    @keyframes bounce-in    { 0% { transform: scale(.5); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    @keyframes flip-in      { from { transform: rotateY(90deg); } to { transform: rotateY(0); } }
+    @keyframes rotate-in    { from { transform: rotate(-180deg); } to { transform: rotate(0); } }
+    @keyframes scale-up     { from { transform: scale(0); } to { transform: scale(1); } }
+    @keyframes skew-in      { from { transform: skewX(-30deg); } to { transform: skewX(0); } }
+    @keyframes fade-down    { from { transform: translateY(-30px); } to { transform: translateY(0); } }
+    @keyframes zoom-in      { from { transform: scale(2); } to { transform: scale(1); } }
+    @keyframes typewriter   { from { width:0 } to { width:100% } }
+    @keyframes roll-in      { from { transform: translateX(-100%) rotate(-360deg); } to { transform: translateX(0) rotate(0); } }
+    @keyframes spin-in      { from { transform: rotate(360deg); } to { transform: rotate(0); } }
+    @keyframes slide-up     { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes jitter       { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+    /* apply animations on show */
+    .show#line1  { animation: slide-in-left  .8s ease forwards; }
+    .show#line2  { animation: slide-in-right .8s ease forwards; }
+    .show#line3  { animation: fade-in        .8s ease forwards; }
+    .show#line4  { animation: bounce-in     .8s ease forwards; }
+    .show#line5  { animation: flip-in       .8s ease forwards; }
+    .show#line6  { animation: rotate-in     .8s ease forwards; }
+    .show#line7  { animation: scale-up      .8s ease forwards; }
+    .show#line8  { animation: skew-in       .8s ease forwards; }
+    .show#line9  { animation: fade-down     .8s ease forwards; }
+    .show#line10 { animation: zoom-in       .8s ease forwards; }
+    .show#line11 { animation: typewriter    2s steps(20) forwards; }
+    .show#line12 { animation: roll-in       .8s ease forwards; }
+    .show#line13 { animation: spin-in       .8s ease forwards; }
+    .show#line14 { animation: slide-up      .8s ease forwards; }
+    .show#line15 { animation: jitter        1s ease infinite; }
+
     /* address on flip */
     .address {
-      opacity: 0;
+      position: absolute; top: 40%;
+      width: 260px; text-align: center;
       font-family: 'Poppins', sans-serif;
-      width: 240px;
-      margin: 30px auto;
-      text-align: center;
-      transition: opacity 1s ease;
+      opacity: 0; transition: opacity .8s ease;
+      z-index: 4;
     }
     .address.show { opacity: 1; }
-    /* confetti bits */
+
+    /* confetti */
     .confetti {
-      position: absolute;
-      top: 0; width: 8px; height: 8px;
+      position: absolute; top: 0; width: 8px; height: 8px;
       border-radius: 50%;
       animation: fall 3s ease-out forwards;
     }
@@ -187,67 +132,86 @@
 </head>
 <body>
 
-  <div class="envelope">
-    <div class="flap"></div>
-    <div class="body"></div>
-  </div>
-
-  <div id="lines">
-    <div id="line1"  class="line">Line 1: [Your text here]</div>
-    <div id="line2"  class="line">Line 2: [Your text here]</div>
-    <div id="line3"  class="line">Line 3: [Your text here]</div>
-    <div id="line4"  class="line">Line 4: [Your text here]</div>
-    <div id="line5"  class="line">Line 5: [Your text here]</div>
-    <div id="line6"  class="line">Line 6: [Your text here]</div>
-    <div id="line7"  class="line">Line 7: [Your text here]</div>
-    <div id="line8"  class="line">Line 8: [Your text here]</div>
-    <div id="line9"  class="line">Line 9: [Your text here]</div>
-    <div id="line10" class="line">Line 10: [Your text here]</div>
-    <div id="line11" class="line">Line 11: [Your text here]</div>
-    <div id="line12" class="line">Line 12: [Your text here]</div>
-    <div id="line13" class="line">Line 13: [Your text here]</div>
-    <div id="line14" class="line">Line 14: [Your text here]</div>
-    <div id="line15" class="line">Line 15: [Your text here]</div>
-  </div>
-
-  <div class="address">
-    <p>From: Your Name</p>
-    <p>To: Recipient Name</p>
+  <div class="wrapper">
+    <div class="pin">
+      <div class="envelope">
+        <div class="flap"></div>
+        <div class="body"></div>
+        <div class="paper">
+          <div id="line1"  class="line">Line 1: [Your text]</div>
+          <div id="line2"  class="line">Line 2: [Your text]</div>
+          <div id="line3"  class="line">Line 3: [Your text]</div>
+          <div id="line4"  class="line">Line 4: [Your text]</div>
+          <div id="line5"  class="line">Line 5: [Your text]</div>
+          <div id="line6"  class="line">Line 6: [Your text]</div>
+          <div id="line7"  class="line">Line 7: [Your text]</div>
+          <div id="line8"  class="line">Line 8: [Your text]</div>
+          <div id="line9"  class="line">Line 9: [Your text]</div>
+          <div id="line10" class="line">Line 10: [Your text]</div>
+          <div id="line11" class="line">Line 11: [Your text]</div>
+          <div id="line12" class="line">Line 12: [Your text]</div>
+          <div id="line13" class="line">Line 13: [Your text]</div>
+          <div id="line14" class="line">Line 14: [Your text]</div>
+          <div id="line15" class="line">Line 15: [Your text]</div>
+        </div>
+      </div>
+      <div class="address">
+        <p>From: Your Name</p>
+        <p>To: Recipient Name</p>
+      </div>
+    </div>
   </div>
 
   <script>
-    const envelope = document.querySelector('.envelope');
-    const lines = document.querySelectorAll('.line');
-    const address = document.querySelector('.address');
-    let confettiDone = false;
+    document.addEventListener('DOMContentLoaded', () => {
+      const vh = window.innerHeight;
+      const paper = document.querySelector('.paper');
+      const bodyEl = document.querySelector('.body');
+      const envelope = document.querySelector('.envelope');
+      const lines = [...paper.querySelectorAll('.line')];
+      const address = document.querySelector('.address');
+      const paperH = paper.offsetHeight;
+      const bodyH  = bodyEl.offsetHeight;
+      const initOff = paperH - bodyH;
+      let doneConf = false;
 
-    window.addEventListener('scroll', () => {
-      const y = window.scrollY;
-      if (y > 100) envelope.classList.add('open');
+      window.addEventListener('scroll', () => {
+        const scrollY = window.scrollY;
+        const progress = Math.min(Math.max(scrollY / vh, 0), 1);
 
-      lines.forEach((ln, i) => {
-        if (y > (i + 1) * 200) ln.classList.add('show');
+        // move paper up
+        const offset = initOff * (1 - progress);
+        paper.style.transform = `translateY(${offset}px)`;
+
+        // open flap early
+        if (progress > 0.05) envelope.classList.add('open');
+
+        // reveal each line at thresholds
+        lines.forEach((ln, i) => {
+          const thresh = (i + 1) / (lines.length + 1);
+          if (progress > thresh) ln.classList.add('show');
+        });
+
+        // final flip, address, confetti at end
+        if (progress >= 1) {
+          envelope.classList.add('flip');
+          address.classList.add('show');
+          if (!doneConf) spawnConfetti();
+        }
       });
 
-      // after all 15 lines (at ~3200px), flip & show address & confetti
-      if (y > 3200) {
-        envelope.classList.add('flip');
-        address.classList.add('show');
-        if (!confettiDone) spawnConfetti();
+      function spawnConfetti() {
+        doneConf = true;
+        for (let i = 0; i < 120; i++) {
+          const c = document.createElement('div');
+          c.className = 'confetti';
+          c.style.left = Math.random() * 100 + 'vw';
+          c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
+          c.style.animationDelay = Math.random() * .8 + 's';
+          document.body.appendChild(c);
+        }
       }
     });
-
-    function spawnConfetti() {
-      confettiDone = true;
-      for (let i = 0; i < 150; i++) {
-        const c = document.createElement('div');
-        c.className = 'confetti';
-        c.style.left = Math.random() * 100 + 'vw';
-        c.style.backgroundColor = `hsl(${Math.random()*360},100%,50%)`;
-        c.style.animationDelay = Math.random() * 2 + 's';
-        document.body.appendChild(c);
-      }
-    }
   </script>
 
 </body>
