@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Colorful Envelope E‑Card</title>
+  <title>Seafoam Envelope E‑Card</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* reset & huge scroll area */
+    /* reset & giant scroll area */
     * { margin:0; padding:0; box-sizing:border-box }
     html, body { height:100%; }
     body {
@@ -16,7 +16,7 @@
       min-height:1800vh; /* 18×100vh */
     }
 
-    /* envelope container: starts lower, jumps up when flap opens */
+    /* envelope container */
     .envelope {
       position:fixed;
       top:65%; left:50%;
@@ -24,11 +24,14 @@
       transform:translate(-50%,-50%);
       perspective:800px;
       z-index:10;
-      transition:top .6s ease;
+      transition:top .6s ease, transform .8s ease;
     }
     .envelope.open { top:50%; }
+    .envelope.flip {
+      transform:translate(-50%,-50%) rotateY(180deg);
+    }
 
-    /* 1. paper (cream) */
+    /* cream paper */
     .paper {
       position:absolute;
       bottom:2px; left:2px;
@@ -38,10 +41,11 @@
       overflow:hidden;
       padding:2rem 1rem 0;
       box-shadow:0 2px 6px rgba(0,0,0,.1);
-      z-index:2;
       transition:height .1s linear;
+      z-index:2;
     }
-    /* 2. envelope body (seafoam green) */
+
+    /* seafoam green envelope body */
     .body {
       position:absolute; top:0; left:0;
       width:100%; height:100%;
@@ -50,13 +54,8 @@
       border-radius:4px;
       z-index:1;
     }
-    /* stamp on back, inside .body */
-    .stamp {
-      position:absolute;
-      bottom:10px; right:10px;
-      font-size:2rem;
-    }
-    /* 3. bottom mask (same color) */
+
+    /* bottom mask (the pocket) */
     .mask {
       position:absolute;
       bottom:2px; left:2px;
@@ -65,7 +64,8 @@
       background:#A8E6CF;
       z-index:3;
     }
-    /* 4. flap (darker seafoam) */
+
+    /* flap */
     .flap {
       position:absolute; top:0; left:0;
       width:100%; height:50%;
@@ -79,41 +79,39 @@
     }
     .envelope.open .flap {
       transform:rotateX(180deg);
-      z-index:-1;
+      z-index:2;
     }
 
-    /* 5. address, hidden until flip */
-    .address {
-      position:absolute; top:50%; left:50%;
-      transform:translate(-50%,-50%);
-      text-align:center; opacity:0;
-      transition:opacity .6s ease, transform .6s ease;
-      z-index:5;
-    }
-    .address.show { opacity:1 }
-    /* counter-rotate so text reads normally after flip */
-    .envelope.flip .address {
-      transform:translate(-50%,-50%) rotateY(180deg);
-    }
-
-    /* flip envelope */
-    .envelope.flip {
-      transform:translate(-50%,-50%) rotateY(180deg);
-      transition:transform .8s ease, top .8s ease;
-    }
-
-    /* lines */
+    /* lines on the paper */
     .line {
       margin:1rem 0;
       font-size:1.25rem;
       white-space:nowrap;
     }
+
+    /* address, hidden until flip */
+    .address {
+      position:absolute; top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      text-align:center;
+      opacity:0;
+      transition:opacity .6s ease, transform .6s ease;
+      z-index:5;
+      backface-visibility:hidden;
+    }
+    .address.show {
+      opacity:1;
+    }
+    .envelope.flip .address {
+      transform:translate(-50%,-50%) rotateY(180deg);
+    }
+
     /* confetti */
     .confetti {
       position:absolute; top:0; width:8px; height:8px;
       border-radius:50%;
       animation:fall 3s ease-out forwards;
-      z-index:2;
+      z-index:6;
     }
     @keyframes fall {
       to { transform:translateY(100vh); opacity:0 }
@@ -122,92 +120,86 @@
 </head>
 <body>
 
-<div class="envelope">
-  <div class="body">
-    <div class="stamp">🐦</div>
+  <div class="envelope">
+    <div class="body"></div>
+    <div class="mask"></div>
+    <div class="flap"></div>
+    <div class="paper">
+      <div class="line">Line 1: Your first message</div>
+      <div class="line">Line 2: A cheerful note</div>
+      <div class="line">Line 3: Keep smiling</div>
+      <div class="line">Line 4: You’re awesome</div>
+      <div class="line">Line 5: Believe in you</div>
+      <div class="line">Line 6: Shine on</div>
+      <div class="line">Line 7: Stay curious</div>
+      <div class="line">Line 8: Dream big</div>
+      <div class="line">Line 9: Spread joy</div>
+      <div class="line">Line 10: Keep going</div>
+      <div class="line">Line 11: ✨Typewriter✨</div>
+      <div class="line">Line 12: Rolling in</div>
+      <div class="line">Line 13: Spinning in</div>
+      <div class="line">Line 14: Sliding up</div>
+      <div class="line">Line 15: Jitter party!</div>
+    </div>
+    <div class="address">
+      <p>To: Recipient Name</p>
+      <p>From: Your Name</p>
+    </div>
   </div>
-  <div class="mask"></div>
-  <div class="flap"></div>
-  <div class="paper">
-    <div class="line">Line 1: Your first message</div>
-    <div class="line">Line 2: A cheerful note</div>
-    <div class="line">Line 3: Keep smiling</div>
-    <div class="line">Line 4: You’re awesome</div>
-    <div class="line">Line 5: Believe in you</div>
-    <div class="line">Line 6: Shine on</div>
-    <div class="line">Line 7: Stay curious</div>
-    <div class="line">Line 8: Dream big</div>
-    <div class="line">Line 9: Spread joy</div>
-    <div class="line">Line 10: Keep going</div>
-    <div class="line">Line 11: ✨Typewriter✨</div>
-    <div class="line">Line 12: Rolling in</div>
-    <div class="line">Line 13: Spinning in</div>
-    <div class="line">Line 14: Sliding up</div>
-    <div class="line">Line 15: Jitter party!</div>
-  </div>
-  <div class="address">
-    <p>To: Recipient Name</p>
-    <p>From: Your Name</p>
-  </div>
-</div>
 
-<script>
-window.addEventListener('DOMContentLoaded',()=> {
-  const env      = document.querySelector('.envelope');
-  const paper    = env.querySelector('.paper');
-  const addr     = env.querySelector('.address');
-  let flipped    = false;
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const env    = document.querySelector('.envelope');
+      const paper  = env.querySelector('.paper');
+      const addr   = env.querySelector('.address');
+      let flipped  = false;
 
-  // dimensions
-  const envH      = env.clientHeight;
-  const maskH     = envH * 0.6;
-  const fullH     = paper.scrollHeight;
-  const totalH    = maskH + fullH;
-  paper.style.height = '0px';
+      const vh      = window.innerHeight;
+      const maskH   = env.clientHeight * 0.6;
+      const fullH   = paper.scrollHeight;
+      const totalH  = maskH + fullH;
+      paper.style.height = '0px';
 
-  window.addEventListener('scroll',()=> {
-    const y       = window.scrollY;
-    const vh      = window.innerHeight;
-    const unroll  = 7.5 * vh;
-    const pause   = 50  * vh;   // 50vh pause
-    const retract = 7.5 * vh;
+      window.addEventListener('scroll', () => {
+        const y       = window.scrollY;
+        const unroll  = 7.5 * vh;
+        const pause   = 1   * vh;   // 1vh pause
+        const retract = 7.5 * vh;
 
-    // flap opens immediately
-    if (y > 10) env.classList.add('open');
+        // open flap immediately
+        if (y > 10) env.classList.add('open');
 
-    if (y <= unroll) {
-      // unroll
-      paper.style.height = `${totalH * (y / unroll)}px`;
-    } else if (y <= unroll + pause) {
-      // hold fully unrolled
-      paper.style.height = `${totalH}px`;
-    } else if (y <= unroll + pause + retract) {
-      // retract
-      const r = (y - unroll - pause) / retract;
-      paper.style.height = `${totalH * (1 - r)}px`;
-    } else if (!flipped) {
-      // after retract: close flap, then flip envelope, then show address & confetti
-      flipped = true;
-      env.classList.remove('open');  // flap closes
-      setTimeout(()=>{
-        env.classList.add('flip');    // envelope flips
-        addr.classList.add('show');   // address appears (counter‑rotated)
-        setInterval(()=>{
-          for (let i=0; i<8; i++){
-            const c = document.createElement('div');
-            c.className = 'confetti';
-            c.style.left = Math.random()*100+'vw';
-            c.style.backgroundColor =
-              `hsl(${Math.random()*360},100%,60%)`;
-            c.style.animationDelay = Math.random()*0.8+'s';
-            document.body.appendChild(c);
-          }
-        },800);
-      },600);
-    }
-  });
-});
-</script>
-
+        if (y <= unroll) {
+          // unroll
+          paper.style.height = `${totalH * (y / unroll)}px`;
+        } else if (y <= unroll + pause) {
+          // hold fully unrolled
+          paper.style.height = `${totalH}px`;
+        } else if (y <= unroll + pause + retract) {
+          // retract
+          const r = (y - unroll - pause) / retract;
+          paper.style.height = `${totalH * (1 - r)}px`;
+        } else if (!flipped) {
+          // after retract: close flap, flip envelope, show address & confetti
+          flipped = true;
+          env.classList.remove('open');
+          setTimeout(() => {
+            env.classList.add('flip');
+            addr.classList.add('show');
+            setInterval(() => {
+              for (let i = 0; i < 8; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
+                c.style.animationDelay = Math.random() * 0.8 + 's';
+                document.body.appendChild(c);
+              }
+            }, 800);
+          }, 600);
+        }
+      });
+    });
+  </script>
 </body>
 </html>
