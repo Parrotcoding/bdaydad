@@ -1,1 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Full‑Screen SVG</title>
+  <style>
+    /* Remove default margin and ensure full‑height */
+    html, body {
+      margin: 0;
+      height: 100%;
+    }
 
+    /* Style for the SVG image */
+    .fullscreen-svg {
+      display: block;          /* remove inline spacing */
+      width: 100vw;            /* span full viewport width */
+      height: 100vh;           /* span full viewport height */
+      object-fit: contain;     /* preserve aspect ratio, show whole image */
+      /* if you instead want it to cover and crop edges, use:
+         object-fit: cover;
+      */
+    }
+  </style>
+</head>
+<body>
+  <!-- Replace "your-image.svg" with your SVG file -->
+  <img src="youare.svg" alt="Full‑Screen SVG" class="fullscreen-svg">
+</body>
+</html>
