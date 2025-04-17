@@ -18,8 +18,7 @@
 
     /* envelope container */
     .envelope {
-      position:fixed;
-      top:65%; left:50%;
+      position:fixed; top:65%; left:50%;
       width:60vw; height:60vh;
       transform:translate(-50%,-50%);
       perspective:800px;
@@ -32,69 +31,59 @@
       transform:translate(-50%,-50%) rotateY(180deg);
     }
 
-    /* paper (cream) */
+    /* cream paper */
     .paper {
-      position:absolute;
-      bottom:2px; left:2px;
-      width:calc(100% - 4px);
-      height:0;
+      position:absolute; bottom:2px; left:2px;
+      width:calc(100% - 4px); height:0;
       background:#fff8e7;
       overflow:hidden;
-      padding:2rem 1rem 0;
+      padding:2rem 1rem 2rem; /* added bottom padding */
       box-shadow:0 2px 6px rgba(0,0,0,.1);
       transition:height .1s linear;
       z-index:2;
       text-align:center;
     }
 
-    /* seafoam body */
+    /* seafoam green body */
     .body {
       position:absolute; top:0; left:0;
       width:100%; height:100%;
       background:#A8E6CF;
-      border:2px solid #82C9A1;
-      border-radius:4px;
+      border:2px solid #82C9A1; border-radius:4px;
       z-index:1;
     }
 
     /* sticker */
     .sticker {
-      position:absolute;
-      top:50%; left:50%;
+      position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
       width:200px; height:200px;
-      z-index:5;
-      pointer-events:none;
+      z-index:5; pointer-events:none;
       transition:opacity .6s ease;
     }
     .envelope.flip .sticker { opacity:0 }
 
-    /* bottom mask */
+    /* pocket mask */
     .mask {
-      position:absolute;
-      bottom:2px; left:2px;
-      width:calc(100% - 4px);
-      height:60%;
-      background:#A8E6CF;
-      z-index:3;
+      position:absolute; bottom:2px; left:2px;
+      width:calc(100% - 4px); height:60%;
+      background:#A8E6CF; z-index:3;
     }
 
-    /* flap (darker seafoam) */
+    /* flap */
     .flap {
       position:absolute; top:0; left:0;
       width:100%; height:50%;
-      background:#76C69C;
-      border:2px solid #60A085;
+      background:#76C69C; border:2px solid #60A085;
       clip-path:polygon(0 0,100% 0,50% 100%);
-      transform-origin:top;
-      transform:rotateX(0deg);
+      transform-origin:top; transform:rotateX(0deg);
       transition:transform .6s ease;
       z-index:4;
       backface-visibility:visible;
     }
     .envelope.open .flap {
       transform:rotateX(180deg);
-      z-index:1; /* now behind the paper (paper is z-index:2) */
+      z-index:1; /* behind paper */
     }
 
     /* message lines */
@@ -107,11 +96,9 @@
 
     /* back‑side address */
     .address {
-      position:absolute;
-      top:50%; left:50%;
+      position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
-      text-align:center;
-      opacity:0;
+      text-align:center; opacity:0;
       transition:opacity .6s ease, transform .6s ease;
       z-index:20;
     }
@@ -123,8 +110,7 @@
     /* confetti */
     .confetti {
       position:absolute; top:0;
-      width:8px; height:8px;
-      border-radius:50%;
+      width:8px; height:8px; border-radius:50%;
       animation:fall 3s ease-out forwards;
       z-index:7;
     }
@@ -173,19 +159,20 @@
       const vh       = window.innerHeight;
       const maskH    = env.clientHeight * 0.6;
       const fullH    = paper.scrollHeight;
-      const totalH   = maskH + fullH;
+      const extra    = 50;                    // extra 50px so letters don't clip
+      const totalH   = maskH + fullH + extra;
       paper.style.height = '0px';
 
       window.addEventListener('scroll', () => {
         const y       = window.scrollY;
         const unroll  = 7.5 * vh;
-        const pause   = 0.5 * vh;
+        const pause   = 0.5 * vh;   // 50vh pause
         const retract = 7.5 * vh;
 
         if (y > 10) env.classList.add('open');
 
         if (y <= unroll) {
-          paper.style.height = `${totalH * (y/unroll)}px`;
+          paper.style.height = `${totalH * (y / unroll)}px`;
         } else if (y <= unroll + pause) {
           paper.style.height = `${totalH}px`;
         } else if (y <= unroll + pause + retract) {
@@ -197,16 +184,16 @@
           setTimeout(() => {
             env.classList.add('flip');
             setInterval(() => {
-              for (let i=0;i<8;i++){
-                const c=document.createElement('div');
-                c.className='confetti';
-                c.style.left=`${Math.random()*100}vw`;
-                c.style.backgroundColor=`hsl(${Math.random()*360},100%,60%)`;
-                c.style.animationDelay=`${Math.random()*0.8}s`;
+              for (let i = 0; i < 8; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
+                c.style.animationDelay = Math.random() * 0.8 + 's';
                 document.body.appendChild(c);
               }
-            },800);
-          },600);
+            }, 800);
+          }, 600);
         }
       });
     });
