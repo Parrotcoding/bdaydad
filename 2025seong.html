@@ -7,28 +7,22 @@
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Roboto&family=Lato&family=Montserrat&family=Open+Sans&family=Raleway&family=Merriweather&family=Oswald&family=Playfair+Display&family=Nunito&family=Ubuntu&family=PT+Sans&family=Work+Sans&family=Fira+Sans&family=Inconsolata&family=Source+Sans+Pro&display=swap" rel="stylesheet">
   <style>
-    /* reset & scroll‑snap container */
-    * { margin:0; padding:0; box-sizing:border-box }
-    html, body {
-      height:100%; scroll-behavior:smooth;
-    }
+    /* reset & scroll‑snap setup */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; scroll-behavior:smooth; }
     body {
-      overflow-y:scroll;
-      scroll-snap-type:y mandatory;
-      background:#f0f0f0;
-      font-family:Poppins,sans-serif;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      background: #f0f0f0;
+      font-family: Poppins, sans-serif;
     }
-    section {
-      height:100vh;
-      scroll-snap-align:start;
-    }
+    section { height:100vh; scroll-snap-align:start; }
 
-    /* fixed envelope center */
+    /* fixed envelope in center */
     .envelope {
-      position:fixed;
-      top:50%; left:50%;
+      position: fixed; top:50%; left:50%;
       width:260px; height:180px;
-      transform:translate(-50%,-50%);
+      transform: translate(-50%,-50%);
       perspective:800px;
       z-index:10;
     }
@@ -36,39 +30,38 @@
       position:absolute; top:0; left:0;
       width:100%; height:120px;
       background:#eee; border:2px solid #ccc;
-      transform-origin:top;
-      transform:rotateX(0deg);
-      transition:transform .8s ease;
+      transform-origin: top;
+      transform: rotateX(0deg);
+      transition: transform .8s ease;
       z-index:3;
     }
     .body {
       position:absolute; top:0; left:0;
       width:100%; height:100%;
-      background:#fff; border:2px solid #ccc;
+      background:white; border:2px solid #ccc;
       overflow:hidden;
       z-index:1;
     }
+    /* paper grows upward from bottom */
     .paper {
       position:absolute;
-      top:6px; /* inside border */
-      left:6px;
+      bottom:6px; left:6px;
       width:calc(100% - 12px);
-      height:0;           /* start “unrolled” at 0 */
-      padding:20px 0;     /* vertical padding but height=0 hides it */
-      background:#fff;
+      height:0;
+      background:white;
       box-shadow:0 2px 6px rgba(0,0,0,.1);
-      overflow:hidden;    /* clip content until height grows */
+      overflow:hidden;
       z-index:2;
     }
 
-    /* hidden lines inside paper */
+    /* lines inside paper */
     .line {
       opacity:0;
-      margin:12px 0;
+      margin:16px 0;
       font-size:1.4rem;
       white-space:nowrap;
     }
-    /* unique fonts */
+    /* assign fonts */
     #line1  { font-family:'Roboto',sans-serif; }
     #line2  { font-family:'Lato',sans-serif; }
     #line3  { font-family:'Montserrat',sans-serif; }
@@ -85,39 +78,39 @@
     #line14 { font-family:'Inconsolata',monospace; }
     #line15 { font-family:'Source Sans Pro',sans-serif; }
 
-    /* keyframes */
-    @keyframes slide-in-left  { from{transform:translateX(-100%);}to{transform:none;} }
-    @keyframes slide-in-right { from{transform:translateX(100%);} to{transform:none;} }
-    @keyframes fade-in        { from{opacity:0;}                to{opacity:1;}     }
+    /* animations */
+    @keyframes slide-in-left  { from{transform:translateX(-100%);} to{transform:none;} }
+    @keyframes slide-in-right { from{transform:translateX(100%);}  to{transform:none;} }
+    @keyframes fade-in        { from{opacity:0;}                 to{opacity:1;}     }
     @keyframes bounce-in      { 0%{transform:scale(.5);}60%{transform:scale(1.2);}100%{transform:none;} }
     @keyframes flip-in        { from{transform:rotateY(90deg);} to{transform:none;} }
     @keyframes rotate-in      { from{transform:rotate(-180deg);}to{transform:none;} }
-    @keyframes scale-up       { from{transform:scale(0);}       to{transform:none;} }
-    @keyframes skew-in        { from{transform:skewX(-30deg);}  to{transform:none;} }
+    @keyframes scale-up       { from{transform:scale(0);}        to{transform:none;} }
+    @keyframes skew-in        { from{transform:skewX(-30deg);}   to{transform:none;} }
     @keyframes fade-down      { from{transform:translateY(-30px);}to{transform:none;} }
-    @keyframes zoom-in        { from{transform:scale(2);}       to{transform:none;} }
-    @keyframes typewriter     { from{width:0;}                  to{width:100%;}    }
-    @keyframes roll-in        { from{transform:translateX(-100%) rotate(-360deg);}to{transform:none;} }
-    @keyframes spin-in        { from{transform:rotate(360deg);} to{transform:none;} }
+    @keyframes zoom-in        { from{transform:scale(2);}        to{transform:none;} }
+    @keyframes typewriter     { from{width:0;}                   to{width:100%;}    }
+    @keyframes roll-in        { from{transform:translateX(-100%) rotate(-360deg);} to{transform:none;} }
+    @keyframes spin-in        { from{transform:rotate(360deg);}  to{transform:none;} }
     @keyframes slide-up       { from{transform:translateY(100%);}to{transform:none;} }
     @keyframes jitter         { 0%,100%{transform:none;}25%{transform:translateX(-5px);}75%{transform:translateX(5px);} }
 
-    /* map .show to each animation */
-    #line1.show  { animation:slide-in-left  .8s ease forwards; }
-    #line2.show  { animation:slide-in-right .8s ease forwards; }
-    #line3.show  { animation:fade-in        .8s ease forwards; }
-    #line4.show  { animation:bounce-in     .8s ease forwards; }
-    #line5.show  { animation:flip-in       .8s ease forwards; }
-    #line6.show  { animation:rotate-in     .8s ease forwards; }
-    #line7.show  { animation:scale-up      .8s ease forwards; }
-    #line8.show  { animation:skew-in       .8s ease forwards; }
-    #line9.show  { animation:fade-down     .8s ease forwards; }
-    #line10.show { animation:zoom-in       .8s ease forwards; }
-    #line11.show { animation:typewriter    2s steps(20) forwards; }
-    #line12.show { animation:roll-in       .8s ease forwards; }
-    #line13.show { animation:spin-in       .8s ease forwards; }
-    #line14.show { animation:slide-up      .8s ease forwards; }
-    #line15.show { animation:jitter        1s ease infinite;   }
+    /* apply show animations */
+    #line1.show  { animation: slide-in-left  .8s ease forwards; }
+    #line2.show  { animation: slide-in-right .8s ease forwards; }
+    #line3.show  { animation: fade-in        .8s ease forwards; }
+    #line4.show  { animation: bounce-in     .8s ease forwards; }
+    #line5.show  { animation: flip-in       .8s ease forwards; }
+    #line6.show  { animation: rotate-in     .8s ease forwards; }
+    #line7.show  { animation: scale-up      .8s ease forwards; }
+    #line8.show  { animation: skew-in       .8s ease forwards; }
+    #line9.show  { animation: fade-down     .8s ease forwards; }
+    #line10.show { animation: zoom-in       .8s ease forwards; }
+    #line11.show { animation: typewriter    2s steps(20) forwards; }
+    #line12.show { animation: roll-in       .8s ease forwards; }
+    #line13.show { animation: spin-in       .8s ease forwards; }
+    #line14.show { animation: slide-up      .8s ease forwards; }
+    #line15.show { animation: jitter        1s ease infinite;   }
 
     /* envelope states */
     .envelope.open  .flap { transform:rotateX(-180deg); }
@@ -126,19 +119,17 @@
       transition:transform 1s ease;
     }
 
-    /* address appears on flip */
+    /* address on flip */
     .address {
       position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
       text-align:center;
       font-family:Poppins,sans-serif;
-      opacity:0;
-      transition:opacity .8s ease;
-      z-index:4;
+      opacity:0; transition:opacity .8s ease; z-index:4;
     }
     .address.show { opacity:1; }
 
-    /* confetti */
+    /* confetti bits */
     .confetti {
       position:absolute; top:0; width:8px; height:8px;
       border-radius:50%;
@@ -176,7 +167,7 @@
     </div>
   </div>
 
-  <!-- 18 snap‑sections drive unroll & reveal -->
+  <!-- 18 snap‑sections drive the unroll & reveal -->
   <section></section> <!-- 0: idle -->
   <section></section> <!-- 1: open flap -->
   <!-- 2–16: unroll & show lines 1–15 -->
@@ -188,60 +179,51 @@
   <section></section> <!-- 17: flip & confetti -->
 
   <script>
-    document.addEventListener('DOMContentLoaded',()=> {
-      const secs    = [...document.querySelectorAll('section')];
-      const env     = document.querySelector('.envelope');
-      const flap    = env.querySelector('.flap');
-      const bodyEl  = env.querySelector('.body');
-      const paper   = env.querySelector('.paper');
-      const lines   = [...paper.querySelectorAll('.line')];
-      const addr    = document.querySelector('.address');
-      let confDone  = false;
+    const sections = [...document.querySelectorAll('section')];
+    const env      = document.querySelector('.envelope');
+    const paper    = env.querySelector('.paper');
+    const lines    = [...paper.querySelectorAll('.line')];
+    const addr     = document.querySelector('.address');
+    let confDone   = false;
 
-      // measure full paper content height
-      const fullH = paper.scrollHeight;
-      // start hidden
-      paper.style.height = '0px';
+    // measure full paper height (including all lines)
+    const fullH = paper.scrollHeight;
+    paper.style.height = '0px'; // start hidden
 
-      const io = new IntersectionObserver(entries => {
-        entries.forEach(e => {
-          if (!e.isIntersecting) return;
-          const idx = secs.indexOf(e.target);
+    window.addEventListener('scroll', () => {
+      const vh  = window.innerHeight;
+      const idx = Math.min(Math.floor(window.scrollY / vh), 17);
 
-          // reset
-          env.classList.remove('open','flip');
-          lines.forEach(l=>l.classList.remove('show'));
-          addr.classList.remove('show');
+      // reset
+      env.classList.remove('open','flip');
+      lines.forEach(l=>l.classList.remove('show'));
+      addr.classList.remove('show');
 
-          if (idx >= 1) {
-            env.classList.add('open');
+      // flap opens on section 1
+      if (idx >= 1) env.classList.add('open');
+
+      // unroll & reveal lines on sections 2–16
+      if (idx >= 2 && idx <= 16) {
+        const li = idx - 2;
+        lines[li].classList.add('show');
+        const frac = (idx - 1) / 15;
+        paper.style.height = `${fullH * frac}px`;
+      }
+
+      // final flip & confetti on section 17
+      if (idx === 17) {
+        env.classList.add('flip');
+        addr.classList.add('show');
+        if (!confDone) {
+          confDone = true;
+          for (let i = 0; i < 120; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
+            c.style.animationDelay = Math.random() * 0.8 + 's';
+            document.body.appendChild(c);
           }
-          if (idx >= 2 && idx <= 16) {
-            const li = idx - 2;
-            lines[li].classList.add('show');
-            // unroll fraction = (idx-1)/15
-            const frac = (idx - 1)/15;
-            paper.style.height = `${fullH * frac}px`;
-          }
-          if (idx === 17) {
-            env.classList.add('flip');
-            addr.classList.add('show');
-            if (!confDone) spawnConfetti();
-          }
-        });
-      }, { threshold: 0.6 });
-
-      secs.forEach(s=>io.observe(s));
-
-      function spawnConfetti() {
-        confDone = true;
-        for (let i=0; i<120; i++){
-          const c = document.createElement('div');
-          c.className = 'confetti';
-          c.style.left = Math.random()*100+'vw';
-          c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
-          c.style.animationDelay = Math.random()*0.8+'s';
-          document.body.appendChild(c);
         }
       }
     });
