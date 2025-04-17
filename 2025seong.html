@@ -16,15 +16,16 @@
       min-height:1800vh; /* 18 × 100vh scroll */
     }
 
-    /* envelope container: 60vh × 60vw */
+    /* envelope lowered slightly: 60vh × 60vw */
     .envelope {
-      position:fixed; top:50%; left:50%;
+      position:fixed;
+      top:55%; left:50%;
       width:60vw; height:60vh;
       transform:translate(-50%,-50%);
       perspective:800px;
       z-index:10;
     }
-    /* 1. paper layer */
+    /* paper layer */
     .paper {
       position:absolute;
       bottom:2px; left:2px;
@@ -37,7 +38,7 @@
       z-index:2;
       transition:height .1s linear;
     }
-    /* 2. envelope body */
+    /* envelope body */
     .body {
       position:absolute; top:0; left:0;
       width:100%; height:100%;
@@ -46,7 +47,7 @@
       border-radius:4px;
       z-index:1;
     }
-    /* 3. bottom mask (60% of envelope height) */
+    /* bottom mask: 60% of envelope height */
     .mask {
       position:absolute;
       bottom:2px; left:2px;
@@ -55,7 +56,7 @@
       background:white;
       z-index:3;
     }
-    /* 4. flap: triangle, 50% height */
+    /* flap: triangle, 50% height */
     .flap {
       position:absolute; top:0; left:0;
       width:100%; height:50%;
@@ -70,7 +71,7 @@
       transform:rotateX(180deg);
       z-index:-1;
     }
-    /* 5. address text */
+    /* address text, hidden until flip */
     .address {
       position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
@@ -86,7 +87,7 @@
       transition:transform .8s ease;
     }
 
-    /* lines */
+    /* message lines */
     .line {
       margin:1rem 0;
       font-size:1.25rem;
@@ -169,7 +170,7 @@ window.addEventListener('DOMContentLoaded',()=> {
       const r = (y - unroll - pause) / retract;
       paper.style.height = `${totalH * (1 - r)}px`;
     } else if (!flipped) {
-      // after retract, close flap, flip, show address, infinite confetti
+      // after retract: close flap, then flip envelope, then show address, start confetti
       flipped = true;
       env.classList.remove('open');
       setTimeout(()=>{
@@ -191,5 +192,6 @@ window.addEventListener('DOMContentLoaded',()=> {
   });
 });
 </script>
+
 </body>
 </html>
