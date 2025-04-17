@@ -14,25 +14,24 @@
     family=Fira+Sans&family=Inconsolata&family=Source+Sans+Pro
     &display=swap" rel="stylesheet">
   <style>
-    /* reset & giant scrollable area (18 screens) */
+    /* reset & giant scroll area */
     * { margin:0; padding:0; box-sizing:border-box }
     html, body { height:100%; }
     body {
       background:#f0f0f0;
       font-family:Poppins,sans-serif;
-      min-height:1800vh;
+      min-height:1800vh; /* 18×100vh */
     }
 
-    /* envelope fixed in view: 60vh × 60vw */
+    /* envelope: 60vh×60vw centered */
     .envelope {
-      position:fixed;
-      top:50%; left:50%;
+      position:fixed; top:50%; left:50%;
       width:60vw; height:60vh;
       transform:translate(-50%,-50%);
       perspective:800px;
       z-index:10;
     }
-    /* paper (grows up under mask) */
+    /* paper grows under mask */
     .paper {
       position:absolute;
       bottom:2px; left:2px;
@@ -63,7 +62,7 @@
       background:#fff;
       z-index:3;
     }
-    /* flap: 50% height triangle */
+    /* flap: triangle, 50% height */
     .flap {
       position:absolute; top:0; left:0;
       width:100%; height:50%;
@@ -86,13 +85,13 @@
       z-index:5;
     }
     .address.show { opacity:1 }
-    /* final flip */
+    /* final 3D flip */
     .envelope.flip {
       transform:translate(-50%,-50%) rotateY(180deg);
       transition:transform .8s ease;
     }
 
-    /* message lines */
+    /* lines */
     .line {
       margin:1rem 0;
       font-size:1.25rem;
@@ -115,7 +114,7 @@
     #line14 { font-family:'Inconsolata',monospace; }
     #line15 { font-family:'Source Sans Pro',sans-serif; }
 
-    /* confetti bits */
+    /* confetti */
     .confetti {
       position:absolute; top:0; width:8px; height:8px;
       border-radius:50%;
@@ -158,27 +157,31 @@
 
   <script>
     window.addEventListener('DOMContentLoaded', () => {
-      const env = document.querySelector('.envelope');
-      const paper = env.querySelector('.paper');
-      const addr = env.querySelector('.address');
-      let flipped = false;
+      const env    = document.querySelector('.envelope');
+      const paper  = env.querySelector('.paper');
+      const addr   = env.querySelector('.address');
+      let flipped  = false;
 
-      // measure full paper height
-      const fullH = paper.scrollHeight;
+      // compute maskHeight + paperHeight total
+      const envH       = env.clientHeight;
+      const maskH      = envH * 0.6;
+      const fullH      = paper.scrollHeight;
+      const totalNeeded= maskH + fullH;
+
       paper.style.height = '0px';
 
       window.addEventListener('scroll', () => {
-        const y = window.scrollY;
+        const y  = window.scrollY;
         const vh = window.innerHeight;
 
         // open flap immediately
         if (y > 10) env.classList.add('open');
 
-        // unroll over next 15 viewports (y/vh from 0→15)
+        // unroll from y=0→y=15vh maps to paperHeight=0→totalNeeded
         const frac = Math.min(y / (15 * vh), 1);
-        paper.style.height = `${fullH * frac}px`;
+        paper.style.height = `${totalNeeded * frac}px`;
 
-        // flip only when fully unrolled
+        // only flip when fully unrolled (frac===1)
         if (frac === 1 && !flipped) {
           flipped = true;
           env.classList.add('flip');
@@ -188,8 +191,10 @@
             const c = document.createElement('div');
             c.className = 'confetti';
             c.style.left = Math.random() * 100 + 'vw';
-            c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
-            c.style.animationDelay = Math.random()*0.8 + 's';
+            c.style.backgroundColor = `
+              hsl(${Math.random()*360},100%,60%)
+            `;
+            c.style.animationDelay = Math.random() * 0.8 + 's';
             document.body.appendChild(c);
           }
         }
